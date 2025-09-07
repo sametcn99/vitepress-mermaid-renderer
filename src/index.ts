@@ -22,4 +22,22 @@ const createMermaidRenderer = (config?: MermaidConfig) => {
 };
 
 export { MermaidRenderer, createMermaidRenderer };
+
+// Export modular components and composables
+export {
+  MermaidDiagram,
+  MermaidControls,
+  MermaidError,
+  useMermaidNavigation,
+  useMermaidRenderer,
+} from "./components";
+
+export type {
+  MermaidNavigationState,
+  MermaidNavigationActions,
+  MermaidRendererState,
+  MermaidRendererActions,
+  MermaidRendererOptions,
+} from "./components";
+
 export default createMermaidRenderer;

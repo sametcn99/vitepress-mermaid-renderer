@@ -5,12 +5,14 @@ This is a test project that demonstrates the functionality of the vitepress-merm
 ## Quick Start
 
 ### Windows
+
 ```bash
 # Run the PowerShell installation script
 .\install.ps1
 ```
 
 ### Linux/macOS
+
 ```bash
 # Make the script executable
 chmod +x install.sh

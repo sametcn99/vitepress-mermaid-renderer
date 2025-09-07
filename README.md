@@ -56,7 +56,13 @@ export default {
   },
   enhanceApp({ app, router, siteData }) {
     // Use the client-safe wrapper for SSR compatibility
-    const mermaidRenderer = createMermaidRenderer();
+    // Optional: Pass custom Mermaid configuration
+    const mermaidRenderer = createMermaidRenderer({
+      // Example configuration options
+      // theme: 'dark',
+      // startOnLoad: false,
+      // flowchart: { useMaxWidth: true }
+    });
     mermaidRenderer.initialize();
 
     if (router) {
@@ -67,6 +73,28 @@ export default {
   },
 } satisfies Theme;
 ```
+
+## ⚙️ Configuration
+
+You can customize the Mermaid renderer by passing configuration options to `createMermaidRenderer()`:
+
+```typescript
+const mermaidRenderer = createMermaidRenderer({
+  theme: "dark", // 'default', 'dark', 'forest', 'neutral'
+  startOnLoad: false,
+  flowchart: {
+    useMaxWidth: true,
+    htmlLabels: true,
+  },
+  sequence: {
+    diagramMarginX: 50,
+    diagramMarginY: 10,
+  },
+  // Any other Mermaid configuration options
+});
+```
+
+For a complete list of available configuration options, refer to the [Mermaid Configuration Documentation](https://mermaid.js.org/config/schema-docs/config.html).
 
 ## 🔧 How It Works
 
@@ -83,9 +111,12 @@ Your Mermaid diagrams spring to life automatically! The plugin detects Mermaid c
 This plugin is designed to work only on the client side, making it fully compatible with server-side rendering (SSR). All rendering operations are protected by environment checks to ensure they only execute in the browser.
 
 To ensure SSR compatibility:
-- Use `createMermaidRenderer()` rather than `MermaidRenderer.getInstance()`
+
+- Use `createMermaidRenderer(config?)` rather than `MermaidRenderer.getInstance()`
 - Import styles from the distributed CSS file
 - Make sure browser environment checks are in place
+
+The `createMermaidRenderer` function accepts an optional configuration object that will be passed to Mermaid.js for customizing diagram appearance and behavior.
 
 ## 🤝 Contributing
 
@@ -121,4 +152,4 @@ npm install /path/to/vitepress-mermaid-renderer-1.0.0.tgz
 
 - [NPM Package](https://www.npmjs.com/package/vitepress-mermaid-renderer)
 - [GitHub Repository](https://github.com/sametcn99/vitepress-mermaid-renderer)
-- [Documentation](https://vitepress-mermaid-renderer.vercel.app/)
+- [Documentation](https://vitepress-mermaid-renderer.vercel.app)
