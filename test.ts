@@ -1,215 +1,281 @@
-import { access, readdir, rm } from "node:fs/promises";
-import { constants } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join, resolve } from "node:path";
-
 type Command = string[];
 
-const isTTY = process.stdout.isTTY;
-const colors = {
-  green: isTTY ? "\u001B[32m" : "",
-  gray: isTTY ? "\u001B[90m" : "",
-  red: isTTY ? "\u001B[31m" : "",
-  reset: isTTY ? "\u001B[0m" : "",
-};
+interface CommandOptions {
+  cwd?: string;
+  allowFailure?: boolean;
+}
 
-const logStep = (message: string, subtitle?: string) => {
-  console.log(`\n${colors.green}${message}${colors.reset}`);
-  if (subtitle) {
-    console.log(`${colors.gray}${subtitle}${colors.reset}`);
-  }
-};
+class Logger {
+  private readonly colors: {
+    green: string;
+    gray: string;
+    red: string;
+    reset: string;
+  };
 
-const logSubStep = (message: string) => {
-  console.log(`  - ${colors.gray}${message}${colors.reset}`);
-};
-
-const pathExists = async (path: string) => {
-  try {
-    await access(path, constants.F_OK);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const removeSafeItem = async (path: string, message: string) => {
-  const target = resolve(path);
-  if (await pathExists(target)) {
-    logSubStep(message);
-    await rm(target, { recursive: true, force: true });
-  }
-};
-
-const spawnCommand = async (
-  command: Command,
-  {
-    cwd,
-    allowFailure = false,
-  }: {
-    cwd?: string;
-    allowFailure?: boolean;
-  } = {},
-) => {
-  const [cmd, ...args] = command;
-  const proc = Bun.spawn([cmd, ...args], {
-    cwd,
-    stdout: "inherit",
-    stderr: "inherit",
-    stdin: "inherit",
-  });
-
-  const exitCode = await proc.exited;
-  if (exitCode !== 0 && !allowFailure) {
-    throw new Error(
-      `Command "${command.join(" ")}" failed with exit code ${exitCode}`,
-    );
+  constructor(private readonly isTTY = Boolean(process.stdout.isTTY)) {
+    const apply = (code: string) => (this.isTTY ? code : "");
+    this.colors = {
+      green: apply("\u001B[32m"),
+      gray: apply("\u001B[90m"),
+      red: apply("\u001B[31m"),
+      reset: apply("\u001B[0m"),
+    };
   }
 
-  return exitCode;
-};
-
-const preferBun = async () => {
-  const bunPath = await Bun.which("bun");
-  const npmPath = await Bun.which("npm");
-
-  if (!bunPath && !npmPath) {
-    throw new Error(
-      "Neither bun nor npm is available on PATH. Install Bun (recommended) or npm to continue.",
-    );
-  }
-
-  return { hasBun: Boolean(bunPath), hasNpm: Boolean(npmPath) };
-};
-
-const runScript = async (script: string, hasBun: boolean) => {
-  if (hasBun) {
-    await spawnCommand(["bun", "run", script]);
-  } else {
-    await spawnCommand(["npm", "run", script]);
-  }
-};
-
-const installDependencies = async (hasBun: boolean) => {
-  if (hasBun) {
-    await spawnCommand(["bun", "install"]);
-  } else {
-    await spawnCommand(["npm", "install"]);
-  }
-};
-
-const removePackage = async (pkg: string, hasBun: boolean) => {
-  if (hasBun) {
-    await spawnCommand(["bun", "remove", pkg], { allowFailure: true });
-  } else {
-    await spawnCommand(["npm", "uninstall", pkg], { allowFailure: true });
-  }
-};
-
-const installLocalPackage = async (
-  packagePath: string,
-  hasBun: boolean,
-  hasNpm: boolean,
-) => {
-  if (hasBun) {
-    await spawnCommand(["bun", "add", packagePath]);
-  } else if (hasNpm) {
-    await spawnCommand(["npm", "install", packagePath]);
-  } else {
-    throw new Error("No supported package manager available for installation.");
-  }
-};
-
-const createPackageArchive = async (hasNpm: boolean) => {
-  if (hasNpm) {
-    await spawnCommand(["npm", "pack"]);
-  } else {
-    await spawnCommand(["bun", "pack"]);
-  }
-};
-
-const cleanArtifacts = async (rootDir: string) => {
-  logStep("Cleaning previous build artifacts");
-
-  const entries = await readdir(rootDir);
-  await Promise.all(
-    entries
-      .filter((entry) => entry.endsWith(".tgz"))
-      .map(async (entry) => {
-        logSubStep(`Removing package: ${entry}`);
-        await rm(join(rootDir, entry), { force: true });
-      }),
-  );
-
-  await removeSafeItem(join(rootDir, "dist"), "Removing dist directory");
-};
-
-const setupTestProject = async (
-  testProjectDir: string,
-  hasBun: boolean,
-  hasNpm: boolean,
-) => {
-  logStep("Setting up test environment", "Switching to test-project directory");
-
-  const previousCwd = process.cwd();
-  process.chdir(testProjectDir);
-
-  try {
-    await removeSafeItem(".vitepress/cache", "Cleaning VitePress cache");
-    await removeSafeItem("dist", "Cleaning dist directory");
-    await removeSafeItem("node_modules", "Cleaning node_modules");
-
-    logStep("Installing dependencies");
-    await installDependencies(hasBun);
-
-    logSubStep("Removing existing package");
-    await removePackage("vitepress-mermaid-renderer", hasBun);
-
-    logSubStep("Installing local package");
-    const packageFile = await findPackageArchive();
-    if (!packageFile) {
-      throw new Error("No package archive found in parent directory.");
+  step(message: string, subtitle?: string) {
+    console.log(`\n${this.colors.green}${message}${this.colors.reset}`);
+    if (subtitle) {
+      console.log(`${this.colors.gray}${subtitle}${this.colors.reset}`);
     }
-    await installLocalPackage(packageFile, hasBun, hasNpm);
-
-    logStep(
-      "Starting development server",
-      "Press Ctrl+C to stop the server when ready",
-    );
-    await runScript("docs:dev", hasBun);
-  } finally {
-    process.chdir(previousCwd);
   }
-};
 
-const findPackageArchive = async () => {
-  const parentEntries = await readdir("..");
-  const archive = parentEntries.find((entry) => entry.endsWith(".tgz"));
-  return archive ? join("..", archive) : null;
-};
+  subStep(message: string) {
+    console.log(`  - ${this.colors.gray}${message}${this.colors.reset}`);
+  }
 
-const buildAndPack = async (hasBun: boolean, hasNpm: boolean) => {
-  logStep("Building the package");
-  await runScript("build", hasBun);
+  error(message: string) {
+    console.error(`\n${this.colors.red}${message}${this.colors.reset}`);
+  }
+}
 
-  logStep("Creating package archive");
-  await createPackageArchive(hasNpm);
-};
+class CommandRunner {
+  async run(command: Command, options: CommandOptions = {}) {
+    const [cmd, ...args] = command;
+    const proc = Bun.spawn([cmd, ...args], {
+      cwd: options.cwd,
+      stdout: "inherit",
+      stderr: "inherit",
+      stdin: "inherit",
+    });
+
+    const exitCode = await proc.exited;
+    if (exitCode !== 0 && !options.allowFailure) {
+      throw new Error(
+        `Command "${command.join(" ")}" failed with exit code ${exitCode}`,
+      );
+    }
+
+    return exitCode;
+  }
+}
+
+class FileManager {
+  constructor(
+    private readonly logger: Logger,
+    private readonly runner: CommandRunner,
+  ) {}
+
+  async pathExists(path: string) {
+    try {
+      await Bun.file(path).stat();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async removeSafeItem(path: string, message: string) {
+    if (await this.pathExists(path)) {
+      this.logger.subStep(message);
+      await this.remove(path);
+    }
+  }
+
+  async remove(path: string) {
+    const stats = await Bun.file(path).stat().catch(() => null);
+    if (stats?.isDirectory()) {
+      await this.runner.run(["rm", "-rf", path], { allowFailure: true });
+      return;
+    }
+
+    if (stats) {
+      try {
+        await Bun.file(path).delete();
+        return;
+      } catch {
+        // fall through and attempt shell removal
+      }
+    }
+
+    await this.runner.run(["rm", "-rf", path], { allowFailure: true });
+  }
+
+  async listMatching(pattern: string, cwd = process.cwd()) {
+    const glob = new Bun.Glob(pattern);
+    const matches: string[] = [];
+    for await (const match of glob.scan({ cwd })) {
+      matches.push(match);
+    }
+    return matches;
+  }
+}
+
+class PackageManager {
+  private constructor(
+    private readonly runner: CommandRunner,
+  ) {}
+
+  static async create(runner: CommandRunner) {
+    const bunPath = await Bun.which("bun");
+    if (!bunPath) {
+      throw new Error(
+        "Bun is not available on PATH. Install Bun to continue.",
+      );
+    }
+
+    return new PackageManager(runner);
+  }
+
+  async runScript(script: string) {
+    await this.runner.run(["bun", "run", script]);
+  }
+
+  async installDependencies() {
+    await this.runner.run(["bun", "install"]);
+  }
+
+  async removePackage(pkg: string) {
+    await this.runner.run(["bun", "remove", pkg], { allowFailure: true });
+  }
+
+  async installLocalPackage(packagePath: string) {
+    await this.runner.run(["bun", "add", packagePath]);
+  }
+
+  async createPackageArchive() {
+    await this.runner.run(["bun", "pm", "pack"]);
+  }
+}
+
+class TestWorkflow {
+  constructor(
+    private readonly rootDir: string,
+    private readonly logger: Logger,
+    private readonly fileManager: FileManager,
+    private readonly packageManager: PackageManager,
+  ) {}
+
+  async run() {
+    await this.withDirectory(this.rootDir, async () => {
+      await this.cleanArtifacts();
+      await this.buildAndPack();
+      await this.setupTestProject();
+    });
+  }
+
+  private async cleanArtifacts() {
+    this.logger.step("Cleaning previous build artifacts");
+
+    const archives = await this.fileManager.listMatching("*.tgz", this.rootDir);
+    for (const archive of archives) {
+      this.logger.subStep(`Removing package: ${archive}`);
+      await this.fileManager.remove(archive);
+    }
+
+    await this.fileManager.removeSafeItem(
+      "dist",
+      "Removing dist directory",
+    );
+  }
+
+  private async buildAndPack() {
+    this.logger.step("Building the package");
+    await this.packageManager.runScript("build");
+
+    this.logger.step("Creating package archive");
+    await this.packageManager.createPackageArchive();
+  }
+
+  private async setupTestProject() {
+    this.logger.step(
+      "Setting up test environment",
+      "Switching to test-project directory",
+    );
+
+    await this.withDirectory(this.resolvePath(this.rootDir, "test-project"), async () => {
+      await this.fileManager.removeSafeItem(
+        ".vitepress/cache",
+        "Cleaning VitePress cache",
+      );
+      await this.fileManager.removeSafeItem("dist", "Cleaning dist directory");
+      await this.fileManager.removeSafeItem(
+        "node_modules",
+        "Cleaning node_modules",
+      );
+
+      this.logger.step("Installing dependencies");
+      await this.packageManager.installDependencies();
+
+      this.logger.subStep("Removing existing package");
+      await this.packageManager.removePackage("vitepress-mermaid-renderer");
+
+      this.logger.subStep("Installing local package");
+      const packageFile = await this.findPackageArchive();
+      if (!packageFile) {
+        throw new Error("No package archive found in parent directory.");
+      }
+      await this.packageManager.installLocalPackage(packageFile);
+
+      this.logger.step(
+        "Starting development server",
+        "Press Ctrl+C to stop the server when ready",
+      );
+      await this.packageManager.runScript("docs:dev");
+    });
+  }
+
+  private async findPackageArchive() {
+    const archives = await this.fileManager.listMatching("*.tgz", this.rootDir);
+    const archive = archives[0];
+    return archive ? this.resolvePath(this.rootDir, archive) : null;
+  }
+
+  private async withDirectory<T>(
+    directory: string,
+    callback: () => Promise<T>,
+  ): Promise<T> {
+    const previousCwd = process.cwd();
+    process.chdir(directory);
+    try {
+      return await callback();
+    } finally {
+      process.chdir(previousCwd);
+    }
+  }
+
+  private resolvePath(base: string, child: string) {
+    if (child.startsWith("/") || /^[A-Za-z]:/.test(child)) {
+      return child;
+    }
+    const trimmedBase = base.replace(/[\\/]+$/, "");
+    const trimmedChild = child.replace(/^[\\/]+/, "");
+    const separator = process.platform === "win32" ? "\\" : "/";
+    return `${trimmedBase}${separator}${trimmedChild}`;
+  }
+}
+
+const logger = new Logger();
 
 const main = async () => {
-  const { hasBun, hasNpm } = await preferBun();
+  const commandRunner = new CommandRunner();
+  const packageManager = await PackageManager.create(commandRunner);
+  const fileManager = new FileManager(logger, commandRunner);
+  const rootDir = import.meta.dir;
 
-  const rootDir = dirname(fileURLToPath(new URL(import.meta.url)));
-  process.chdir(rootDir);
+  const workflow = new TestWorkflow(
+    rootDir,
+    logger,
+    fileManager,
+    packageManager,
+  );
 
-  await cleanArtifacts(rootDir);
-  await buildAndPack(hasBun, hasNpm);
-  await setupTestProject(join(rootDir, "test-project"), hasBun, hasNpm);
+  await workflow.run();
 };
 
 main().catch((error) => {
-  console.error(
-    `\n${colors.red}Error: ${error instanceof Error ? error.message : error}${colors.reset}`,
+  logger.error(
+    `Error: ${error instanceof Error ? error.message : String(error)}`,
   );
   process.exit(1);
 });

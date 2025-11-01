@@ -51,31 +51,31 @@ import "vitepress-mermaid-renderer/dist/style.css";
 import "./style.css";
 
 export default {
- extends: DefaultTheme,
- Layout: () => {
-  const { isDark } = useData();
+  extends: DefaultTheme,
+  Layout: () => {
+    const { isDark } = useData();
 
-  const initMermaid = () => {
-   nextTick(() =>
-    createMermaidRenderer({
-     theme: isDark.value ? "dark" : "forest",
-    }).initialize()
-   );
-  };
+    const initMermaid = () => {
+      nextTick(() =>
+        createMermaidRenderer({
+          theme: isDark.value ? "dark" : "forest",
+        }).initialize(),
+      );
+    };
 
-  // Initial render
-  nextTick(() => initMermaid());
+    // Initial render
+    nextTick(() => initMermaid());
 
-  // on theme change, re-render mermaid charts
-  watch(
-   () => isDark.value,
-   () => {
-    initMermaid();
-   }
-  );
+    // on theme change, re-render mermaid charts
+    watch(
+      () => isDark.value,
+      () => {
+        initMermaid();
+      },
+    );
 
-  return h(DefaultTheme.Layout);
- },
+    return h(DefaultTheme.Layout);
+  },
 } satisfies Theme;
 ```
 
