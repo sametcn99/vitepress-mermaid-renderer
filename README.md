@@ -56,13 +56,10 @@ export default {
     const { isDark } = useData();
     const router = useRouter();
 
-    const mermaidRenderer = createMermaidRenderer({
-      theme: isDark.value ? "dark" : "forest",
-    // Example configuration options
-    // startOnLoad: false,
-    // flowchart: { useMaxWidth: true }
-    });
     const initMermaid = () => {
+      const mermaidRenderer = createMermaidRenderer({
+        theme: isDark.value ? "dark" : "forest",
+      });
       mermaidRenderer.initialize();
       nextTick(() => mermaidRenderer!.renderMermaidDiagrams());
     };
@@ -77,11 +74,6 @@ export default {
         nextTick(() => initMermaid());
       },
     );
-
-      // site change - re render
-    router.onAfterRouteChange = () => {
-      nextTick(() => mermaidRenderer?.renderMermaidDiagrams());
-    };
 
     return h(DefaultTheme.Layout);
   },

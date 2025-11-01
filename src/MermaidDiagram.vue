@@ -35,7 +35,7 @@
       @touchend="handleTouchEnd"
     >
       <div
-        :id="id"
+        :id="diagramId"
         class="mermaid"
         :style="{
           opacity: isRendered ? 1 : 0,
@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts" clientOnly>
-import { onMounted, ref, onUnmounted, nextTick } from "vue";
+import { getCurrentInstance, onMounted, ref, onUnmounted, nextTick } from "vue";
 import type { MermaidConfig } from "mermaid";
 import "./style.css";
 import MermaidControls from "./components/MermaidControls.vue";
@@ -115,8 +115,9 @@ const {
 const controlsRef = ref<InstanceType<typeof MermaidControls> | null>(null);
 const diagramWrapper = ref<HTMLElement | null>(null);
 
-// Generate unique ID for the diagram
-const id = `mermaid-${Math.random().toString(36).slice(2)}`;
+// Generate deterministic ID for SSR/client consistency using component uid
+const instance = getCurrentInstance();
+const diagramId = `mermaid-${instance?.uid ?? Math.random().toString(36).slice(2)}`;
 
 // Handle fullscreen toggle with wrapper reference
 const handleToggleFullscreen = () => {
@@ -139,7 +140,7 @@ onMounted(async () => {
     await nextTick();
 
     // Start the rendering process with retry capabilities
-    await renderMermaidDiagram(id, props.code);
+    await renderMermaidDiagram(diagramId, props.code);
 
     // Add fullscreen change event listeners with cross-browser support
     document.addEventListener("fullscreenchange", handleFullscreenChange);

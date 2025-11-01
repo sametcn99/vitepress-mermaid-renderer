@@ -43,7 +43,7 @@ export default defineConfig({
       },
     ],
     ["meta", { name: "author", content: "sametcn99" }],
-    ["link", { rel: "icon", type: "image/png", href: "/favicon.png" }],
+    ["link", { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
   ],
 
   themeConfig: {
