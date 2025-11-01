@@ -70,43 +70,17 @@
 /* Mobile Controls */
 .mobile-controls {
   display: none;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  width: auto;
-}
-
-.mobile-zoom-controls {
-  display: flex;
-  align-items: center;
+  flex-direction: row;
   justify-content: center;
   gap: 0.5rem;
+  padding: 0.75rem;
+  width: auto;
+  z-index: 8;
 }
-
-.mobile-nav-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  justify-items: center;
-}
-
-.mobile-nav-buttons button:nth-child(1) {
-  grid-column: 2;
-} /* Up */
-.mobile-nav-buttons button:nth-child(2) {
-  grid-column: 2;
-} /* Down */
-.mobile-nav-buttons button:nth-child(3) {
-  grid-column: 1;
-  grid-row: 2;
-} /* Left */
-.mobile-nav-buttons button:nth-child(4) {
-  grid-column: 3;
-  grid-row: 2;
-} /* Right */
 
 .mobile-utility-controls {
   display: flex;
+  align-items: center;
   justify-content: center;
   gap: 0.5rem;
 }
@@ -121,6 +95,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  position: relative;
   transition:
     background 0.2s ease,
     transform 0.2s ease;
