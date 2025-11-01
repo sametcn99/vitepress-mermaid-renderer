@@ -42,37 +42,46 @@ bun add vitepress-mermaid-renderer
 Your `.vitepress/theme/index.ts` file should look like this:
 
 ```typescript
-// https://vitepress.dev/guide/custom-theme
-import { h, nextTick } from "vue";
+import { h, nextTick, watchEffect, watch } from "vue";
 import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import "./style.css";
 import { createMermaidRenderer } from "vitepress-mermaid-renderer";
 import "vitepress-mermaid-renderer/dist/style.css";
+import { useData, useRouter } from "vitepress";
 
 export default {
   extends: DefaultTheme,
   Layout: () => {
-    return h(DefaultTheme.Layout, null, {});
-  },
-  enhanceApp({ app, router, siteData }) {
-    // Use the client-safe wrapper for SSR compatibility
-    // Optional: Pass custom Mermaid configuration
-    const mermaidRenderer = createMermaidRenderer({
+    const { isDark } = useData();
+    const router = useRouter();
+
+    const initMermaid = () => {
+      mermaidRenderer = createMermaidRenderer({
+        theme: isDark.value ? "dark" : "forest",
       // Example configuration options
-      // theme: 'dark',
       // startOnLoad: false,
       // flowchart: { useMaxWidth: true }
-    });
-    mermaidRenderer.initialize();
+      });
+      mermaidRenderer.initialize();
+      nextTick(() => mermaidRenderer!.renderMermaidDiagrams());
+    };
 
-    if (router) {
-      router.onAfterRouteChange = () => {
-        nextTick(() => mermaidRenderer.renderMermaidDiagrams());
-      };
-    }
+    // Initial render
+    nextTick(() => initMermaid());
+
+    // on theme change, re-render mermaid charts
+    watch(
+      () => isDark.value,
+      () => {
+        nextTick(() => initMermaid());
+      },
+    );
+
+    return h(DefaultTheme.Layout);
   },
 } satisfies Theme;
+
 ```
 
 ## ⚙️ Configuration
@@ -127,6 +136,16 @@ We welcome contributions! Whether it's submitting pull requests, reporting issue
 
 Want to test the package locally? Here are two methods:
 
+### Automated test.ts script
+
+Run the `test.ts` helper to walk through the full local-preview flow in one step. The script (powered by Bun) cleans previous build artifacts, rebuilds the package, creates a `.tgz` archive, installs that archive into `test-project`, and finally launches the VitePress docs dev server.
+
+```bash
+bun test.ts
+```
+
+> Press `Ctrl+C` to stop the dev server when you are finished. The script requires Bun to execute, but will fall back to npm for package management if Bun is not installed globally.
+
 ### Method 1: npm link
 
 ```bash
@@ -153,4 +172,4 @@ npm install /path/to/vitepress-mermaid-renderer-1.0.0.tgz
 
 - [NPM Package](https://www.npmjs.com/package/vitepress-mermaid-renderer)
 - [GitHub Repository](https://github.com/sametcn99/vitepress-mermaid-renderer)
-- [Documentation](https://vitepress-mermaid-renderer.vercel.app)
+- [Documentation](https://vitepress-mermaid-renderer.sametcc.me)

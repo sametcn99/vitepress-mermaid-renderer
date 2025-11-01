@@ -29,7 +29,7 @@
       @mousemove="pan"
       @mouseup="endPan"
       @mouseleave="endPan"
-      @wheel.prevent="handleWheel"
+      @wheel="handleWheel"
       @touchstart="handleTouchStart"
       @touchmove="handleTouchMove"
       @touchend="handleTouchEnd"

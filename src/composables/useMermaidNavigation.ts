@@ -127,6 +127,13 @@ export function useMermaidNavigation(): MermaidNavigationState &
   };
 
   const handleWheel = (e: WheelEvent) => {
+    const shouldHandleEvent = e.ctrlKey || isFullscreen.value;
+    if (!shouldHandleEvent) {
+      return;
+    }
+
+    e.preventDefault();
+
     if (e.ctrlKey) {
       // Zoom
       const delta = -Math.sign(e.deltaY) * 0.1;
@@ -137,7 +144,7 @@ export function useMermaidNavigation(): MermaidNavigationState &
         scale.value = newScale;
       }
     } else {
-      // Pan
+      // Pan while in fullscreen mode
       translateX.value += -e.deltaX / scale.value;
       translateY.value += -e.deltaY / scale.value;
     }

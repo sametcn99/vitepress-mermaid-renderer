@@ -1,49 +1,36 @@
-// https://vitepress.dev/guide/custom-theme
-import { h, nextTick, onMounted } from "vue";
+import { h, nextTick, watchEffect, watch } from "vue";
 import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import "./style.css";
 import { createMermaidRenderer } from "vitepress-mermaid-renderer";
 import "vitepress-mermaid-renderer/dist/style.css";
+import { useData, useRouter } from "vitepress";
 
 export default {
   extends: DefaultTheme,
   Layout: () => {
-    return h(DefaultTheme.Layout, null, {
-      // Add a mounted hook to ensure diagrams render on initial page load
-      "layout-top": () =>
-        h({
-          setup() {
-            onMounted(() => {
-              // This will run when the component is mounted on initial page load
-              nextTick(() => {
-                const mermaidRenderer = createMermaidRenderer({
-                  theme: "default",
-                  securityLevel: "loose",
-                  startOnLoad: false,
-                });
-                mermaidRenderer.renderMermaidDiagrams();
-              });
-            });
-            return () => null;
-          },
-        }),
-    });
-  },
-  enhanceApp({ app, router }) {
-    // Use client-only safe implementation
-    const mermaidRenderer = createMermaidRenderer({
-      theme: "default",
-      securityLevel: "loose",
-      startOnLoad: false,
-    });
+    const { isDark } = useData();
+    const router = useRouter();
 
-    mermaidRenderer.initialize();
+    const initMermaid = () => {
+      mermaidRenderer = createMermaidRenderer({
+        theme: isDark.value ? "dark" : "forest",
+      });
+      mermaidRenderer.initialize();
+      nextTick(() => mermaidRenderer!.renderMermaidDiagrams());
+    };
 
-    if (router) {
-      router.onAfterRouteChange = () => {
-        nextTick(() => mermaidRenderer.renderMermaidDiagrams());
-      };
-    }
+    // Initial render
+    nextTick(() => initMermaid());
+
+    // on theme change, re-render mermaid charts
+    watch(
+      () => isDark.value,
+      () => {
+        nextTick(() => initMermaid());
+      },
+    );
+
+    return h(DefaultTheme.Layout);
   },
 } satisfies Theme;

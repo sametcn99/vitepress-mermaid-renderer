@@ -11,9 +11,11 @@ const createMermaidRenderer = (config?: MermaidConfig) => {
     return {
       initialize: () => {},
       renderMermaidDiagrams: () => false,
+      setConfig: () => {},
       getInstance: () => ({
         initialize: () => {},
         renderMermaidDiagrams: () => false,
+        setConfig: () => {},
       }),
     };
   }
@@ -39,5 +41,3 @@ export type {
   MermaidRendererActions,
   MermaidRendererOptions,
 } from "./components";
-
-export default createMermaidRenderer;

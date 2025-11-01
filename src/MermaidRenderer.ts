@@ -54,6 +54,21 @@ export class MermaidRenderer {
 
   public setConfig(config: MermaidConfig): void {
     this.config = { ...this.config, ...config };
+    this.dispatchConfigUpdate();
+  }
+
+  private dispatchConfigUpdate(): void {
+    if (!this.isClient) return;
+
+    try {
+      document.dispatchEvent(
+        new CustomEvent<MermaidConfig>("vitepress-mermaid:config-updated", {
+          detail: { ...this.config },
+        }),
+      );
+    } catch (error) {
+      console.error("Failed to dispatch Mermaid config update:", error);
+    }
   }
 
   private setupHydrationListeners(): void {
@@ -373,14 +388,9 @@ export class MermaidRenderer {
             namedItem(name: string) {
               return null; // We don't support named items in our custom collection
             },
-            // Implement Symbol.iterator directly on the object
-            [Symbol.iterator]: function* (): IterableIterator<Element> {
-              for (let i = 0; i < this.length; i++) {
-                const element = this.item(i);
-                if (element) {
-                  yield element;
-                }
-              }
+            // Implement Symbol.iterator using the array iterator to satisfy disposal typing
+            [Symbol.iterator](): ArrayIterator<Element> {
+              return filteredElements[Symbol.iterator]();
             },
             // Add indexed access
             ...filteredElements.reduce(

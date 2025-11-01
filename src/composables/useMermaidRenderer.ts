@@ -1,5 +1,13 @@
-import { ref, onMounted, nextTick, type Ref } from "vue";
+import { ref, onMounted, onUnmounted, nextTick, type Ref } from "vue";
 import mermaid, { type MermaidConfig } from "mermaid";
+
+let renderPipeline: Promise<void> = Promise.resolve();
+
+const enqueueMermaidRender = (task: () => Promise<void>): Promise<void> => {
+  const nextTask = renderPipeline.catch(() => {}).then(() => task());
+  renderPipeline = nextTask.catch(() => {});
+  return nextTask;
+};
 
 export interface MermaidRendererState {
   mounted: Ref<boolean>;
@@ -37,6 +45,93 @@ export function useMermaidRenderer(
   const renderError = ref(false);
   const renderErrorDetails = ref("");
   const originalDiagramSize = ref({ width: 0, height: 0 });
+  const lastRenderContext = ref<{ id: string; code: string } | null>(null);
+
+  const defaultConfig: MermaidConfig = {
+    theme: "default",
+    securityLevel: "loose",
+    startOnLoad: false,
+    flowchart: {
+      useMaxWidth: false,
+      htmlLabels: true,
+    },
+    sequence: {
+      diagramMarginX: 50,
+      diagramMarginY: 10,
+      actorMargin: 50,
+      width: 150,
+      height: 65,
+      boxMargin: 10,
+      boxTextMargin: 5,
+      noteMargin: 10,
+      messageMargin: 35,
+      mirrorActors: true,
+      bottomMarginAdj: 1,
+      useMaxWidth: false,
+      rightAngles: false,
+      showSequenceNumbers: false,
+    },
+    gantt: {
+      useMaxWidth: false,
+      topPadding: 50,
+      leftPadding: 50,
+      rightPadding: 50,
+      gridLineStartPadding: 35,
+      barHeight: 50,
+      barGap: 40,
+      displayMode: "compact",
+      axisFormat: "%Y-%m-%d",
+      topAxis: false,
+      tickInterval: "day",
+      useWidth: 2048,
+    },
+    class: {
+      arrowMarkerAbsolute: false,
+      useMaxWidth: false,
+    },
+    journey: {
+      useMaxWidth: false,
+    },
+    pie: {},
+    c4: {
+      useMaxWidth: false,
+      diagramMarginX: 20,
+      diagramMarginY: 20,
+    },
+    gitGraph: {
+      useMaxWidth: false,
+      rotateCommitLabel: false,
+      showBranches: true,
+      showCommitLabel: true,
+      mainBranchName: "main",
+    },
+  };
+
+  const initializeMermaid = (overrideConfig?: MermaidConfig) => {
+    const mergedConfig = {
+      ...defaultConfig,
+      ...options.config,
+      ...overrideConfig,
+    };
+
+    mermaid.initialize({
+      ...mergedConfig,
+    });
+  };
+
+  const handleConfigUpdated = (event: Event) => {
+    const customEvent = event as CustomEvent<MermaidConfig | undefined>;
+    initializeMermaid(customEvent.detail);
+
+    const context = lastRenderContext.value;
+    if (!context) return;
+
+    isRendered.value = false;
+
+    nextTick(() => {
+      void renderMermaidDiagram(context.id, context.code);
+    });
+  };
 
   // Helper function to detect diagram type
   const detectDiagramType = (code: string): string => {
@@ -101,121 +196,122 @@ export function useMermaidRenderer(
         throw new Error("Failed to find diagram container element");
       }
 
+      lastRenderContext.value = { id, code };
+
+      element.textContent = code;
+      element.removeAttribute("data-processed");
+      renderError.value = false;
+      renderErrorDetails.value = "";
+      isRendered.value = false;
+
       // Add a class to indicate rendering is in progress
       element.classList.add("mermaid-rendering");
 
-      try {
+      await enqueueMermaidRender(async () => {
         const isProduction = typeof window !== "undefined";
 
-        await mermaid.run({
-          nodes: [element],
-          suppressErrors: false,
-        });
+        try {
+          await mermaid.run({
+            nodes: [element],
+            suppressErrors: false,
+          });
 
-        // Add a longer delay for production environments
-        await new Promise((resolve) =>
-          setTimeout(resolve, isProduction ? 150 : 50),
-        );
+          // Add a longer delay for production environments
+          await new Promise((resolve) =>
+            setTimeout(resolve, isProduction ? 150 : 50),
+          );
 
-        isRendered.value = true;
-        renderError.value = false;
+          // Store original diagram size and apply container size adjustments
+          if (element.firstElementChild) {
+            const svgElement = element.querySelector("svg");
+            if (svgElement) {
+              // Wait for SVG to be fully rendered, longer in production
+              await new Promise((resolve) =>
+                setTimeout(resolve, isProduction ? 150 : 50),
+              );
 
-        // Remove the rendering indicator class
-        element.classList.remove("mermaid-rendering");
+              // Get the container dimensions
+              const containerElement =
+                element.parentElement?.querySelector(".diagram-wrapper");
+              if (containerElement) {
+                // Apply container-based sizing for C4 and GitGraph diagrams
+                const diagramType = detectDiagramType(code);
 
-        // Store original diagram size and apply container size adjustments
-        if (element.firstElementChild) {
-          const svgElement = element.querySelector("svg");
-          if (svgElement) {
-            // Wait for SVG to be fully rendered, longer in production
-            await new Promise((resolve) =>
-              setTimeout(resolve, isProduction ? 150 : 50),
-            );
+                // Add diagram type class to the element for CSS targeting
+                element.classList.add(`mermaid-${diagramType}`);
 
-            // Get the container dimensions
-            const containerElement =
-              element.parentElement?.querySelector(".diagram-wrapper");
-            if (containerElement) {
-              const containerRect = containerElement.getBoundingClientRect();
+                if (diagramType === "c4" || diagramType === "gitgraph") {
+                  // For C4 and GitGraph, ensure they use the full container width
+                  svgElement.style.width = "100%";
+                  svgElement.style.height = "auto";
+                  svgElement.style.maxWidth = "100%";
+                  svgElement.style.display = "block";
 
-              // Apply container-based sizing for C4 and GitGraph diagrams
-              const diagramType = detectDiagramType(code);
+                  // Remove any fixed width/height attributes that might constrain the diagram
+                  svgElement.removeAttribute("width");
+                  svgElement.removeAttribute("height");
 
-              // Add diagram type class to the element for CSS targeting
-              element.classList.add(`mermaid-${diagramType}`);
-
-              if (diagramType === "c4" || diagramType === "gitgraph") {
-                // For C4 and GitGraph, ensure they use the full container width
-                svgElement.style.width = "100%";
-                svgElement.style.height = "auto";
-                svgElement.style.maxWidth = "100%";
-                svgElement.style.display = "block";
-
-                // Remove any fixed width/height attributes that might constrain the diagram
-                svgElement.removeAttribute("width");
-                svgElement.removeAttribute("height");
-
-                // Set viewBox to maintain aspect ratio if not already set
-                if (!svgElement.getAttribute("viewBox")) {
-                  try {
-                    const bbox = svgElement.getBBox();
-                    if (bbox.width && bbox.height) {
-                      svgElement.setAttribute(
-                        "viewBox",
-                        `0 0 ${bbox.width} ${bbox.height}`,
-                      );
-                      svgElement.setAttribute(
-                        "preserveAspectRatio",
-                        "xMidYMid meet",
-                      );
+                  // Set viewBox to maintain aspect ratio if not already set
+                  if (!svgElement.getAttribute("viewBox")) {
+                    try {
+                      const bbox = svgElement.getBBox();
+                      if (bbox.width && bbox.height) {
+                        svgElement.setAttribute(
+                          "viewBox",
+                          `0 0 ${bbox.width} ${bbox.height}`,
+                        );
+                        svgElement.setAttribute(
+                          "preserveAspectRatio",
+                          "xMidYMid meet",
+                        );
+                      }
+                    } catch (error) {
+                      console.warn("Could not set viewBox for diagram:", error);
                     }
-                  } catch (error) {
-                    console.warn("Could not set viewBox for diagram:", error);
                   }
+
+                  // Force a reflow to ensure proper sizing
+                  svgElement.style.display = "none";
+                  (svgElement as any).offsetHeight; // Trigger reflow
+                  svgElement.style.display = "block";
                 }
-
-                // Force a reflow to ensure proper sizing
-                svgElement.style.display = "none";
-                (svgElement as any).offsetHeight; // Trigger reflow
-                svgElement.style.display = "block";
               }
+
+              originalDiagramSize.value = {
+                width: svgElement.getBoundingClientRect().width,
+                height: svgElement.getBoundingClientRect().height,
+              };
             }
-
-            originalDiagramSize.value = {
-              width: svgElement.getBoundingClientRect().width,
-              height: svgElement.getBoundingClientRect().height,
-            };
           }
+
+          isRendered.value = true;
+          renderError.value = false;
+
+          // Emit an event when rendering is complete
+          options.onRenderComplete?.({ id, success: true });
+        } catch (error) {
+          console.error("Failed to render mermaid diagram:", error);
+          renderError.value = true;
+          renderErrorDetails.value =
+            error instanceof Error
+              ? error.toString()
+              : "Unknown error rendering diagram";
+
+          // Still mark as rendered to display the error message
+          isRendered.value = true;
+
+          // Emit error event
+          options.onRenderComplete?.({ id, success: false, error });
+
+          if (isProduction && retryCount === 0) {
+            setTimeout(() => {
+              void renderMermaidDiagram(id, code, retryCount + 1, maxRetries);
+            }, 1000);
+          }
+        } finally {
+          element.classList.remove("mermaid-rendering");
         }
-
-        // Emit an event when rendering is complete
-        options.onRenderComplete?.({ id, success: true });
-      } catch (error) {
-        console.error("Failed to render mermaid diagram:", error);
-        renderError.value = true;
-        renderErrorDetails.value =
-          error instanceof Error
-            ? error.toString()
-            : "Unknown error rendering diagram";
-
-        // Still mark as rendered to display the error message
-        isRendered.value = true;
-
-        // Remove the rendering indicator class
-        element.classList.remove("mermaid-rendering");
-
-        // Emit error event
-        options.onRenderComplete?.({ id, success: false, error });
-
-        // In production, try one more time with a delay if this is the first error
-        const isProduction = typeof window !== "undefined";
-
-        if (isProduction && retryCount === 0) {
-          setTimeout(() => {
-            renderMermaidDiagram(id, code, retryCount + 1, maxRetries);
-          }, 1000);
-        }
-      }
+      });
     } catch (error) {
       console.error("Error in diagram initialization:", error);
       renderError.value = true;
@@ -234,74 +330,18 @@ export function useMermaidRenderer(
     // Set mounted to true only in client environment
     mounted.value = true;
 
-    const defaultConfig: MermaidConfig = {
-      theme: "default",
-      securityLevel: "loose",
-      startOnLoad: false,
-      flowchart: {
-        useMaxWidth: false,
-        htmlLabels: true,
-      },
-      sequence: {
-        diagramMarginX: 50,
-        diagramMarginY: 10,
-        actorMargin: 50,
-        width: 150,
-        height: 65,
-        boxMargin: 10,
-        boxTextMargin: 5,
-        noteMargin: 10,
-        messageMargin: 35,
-        mirrorActors: true,
-        bottomMarginAdj: 1,
-        useMaxWidth: false,
-        rightAngles: false,
-        showSequenceNumbers: false,
-      },
-      gantt: {
-        useMaxWidth: false,
-        topPadding: 50,
-        leftPadding: 50,
-        rightPadding: 50,
-        gridLineStartPadding: 35,
-        barHeight: 50,
-        barGap: 40,
-        displayMode: "compact",
-        axisFormat: "%Y-%m-%d",
-        topAxis: false,
-        tickInterval: "day",
-        useWidth: 2048,
-      },
-      class: {
-        arrowMarkerAbsolute: false,
-        useMaxWidth: false,
-      },
-      journey: {
-        useMaxWidth: false,
-      },
-      pie: {},
-      c4: {
-        useMaxWidth: false,
-        diagramMarginX: 20,
-        diagramMarginY: 20,
-      },
-      gitGraph: {
-        useMaxWidth: false,
-        rotateCommitLabel: false,
-        showBranches: true,
-        showCommitLabel: true,
-        mainBranchName: "main",
-      },
-    };
+    initializeMermaid();
+    document.addEventListener(
+      "vitepress-mermaid:config-updated",
+      handleConfigUpdated,
+    );
+  });
 
-    const mergedConfig = {
-      ...defaultConfig,
-      ...options.config,
-    };
-
-    mermaid.initialize({
-      ...mergedConfig,
-    });
+  onUnmounted(() => {
+    document.removeEventListener(
+      "vitepress-mermaid:config-updated",
+      handleConfigUpdated,
+    );
   });
 
   return {

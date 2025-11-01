@@ -1,8 +1,9 @@
 .mermaid-container {
   position: relative;
   min-height: 20rem;
+  max-height: 50vh;
   width: 100%;
-  overflow: visible !important;
+  overflow: hidden !important;
 }
 
 /* Base controls styles */
@@ -134,7 +135,7 @@
   transform: translateY(0);
 }
 
-.mobile-controls svg {
+.mobile-controls button svg {
   width: 20px;
   height: 20px;
   stroke: var(--vp-c-text-1);
@@ -147,6 +148,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--vp-c-text-2);
+  -webkit-user-select: none;
   user-select: none;
   padding: 0.25rem 0.375rem;
   background: var(--vp-c-bg);
@@ -320,7 +322,7 @@
   font-weight: 500;
 }
 
-.error-message svg {
+.diagram-error .error-message svg {
   stroke: var(--vp-c-danger);
   flex-shrink: 0;
 }
