@@ -83,7 +83,9 @@ class FileManager {
   }
 
   async remove(path: string) {
-    const stats = await Bun.file(path).stat().catch(() => null);
+    const stats = await Bun.file(path)
+      .stat()
+      .catch(() => null);
     if (stats?.isDirectory()) {
       await this.runner.run(["rm", "-rf", path], { allowFailure: true });
       return;
@@ -112,16 +114,12 @@ class FileManager {
 }
 
 class PackageManager {
-  private constructor(
-    private readonly runner: CommandRunner,
-  ) {}
+  private constructor(private readonly runner: CommandRunner) {}
 
   static async create(runner: CommandRunner) {
     const bunPath = await Bun.which("bun");
     if (!bunPath) {
-      throw new Error(
-        "Bun is not available on PATH. Install Bun to continue.",
-      );
+      throw new Error("Bun is not available on PATH. Install Bun to continue.");
     }
 
     return new PackageManager(runner);
@@ -173,10 +171,7 @@ class TestWorkflow {
       await this.fileManager.remove(archive);
     }
 
-    await this.fileManager.removeSafeItem(
-      "dist",
-      "Removing dist directory",
-    );
+    await this.fileManager.removeSafeItem("dist", "Removing dist directory");
   }
 
   private async buildAndPack() {
@@ -193,36 +188,42 @@ class TestWorkflow {
       "Switching to test-project directory",
     );
 
-    await this.withDirectory(this.resolvePath(this.rootDir, "test-project"), async () => {
-      await this.fileManager.removeSafeItem(
-        ".vitepress/cache",
-        "Cleaning VitePress cache",
-      );
-      await this.fileManager.removeSafeItem("dist", "Cleaning dist directory");
-      await this.fileManager.removeSafeItem(
-        "node_modules",
-        "Cleaning node_modules",
-      );
+    await this.withDirectory(
+      this.resolvePath(this.rootDir, "test-project"),
+      async () => {
+        await this.fileManager.removeSafeItem(
+          ".vitepress/cache",
+          "Cleaning VitePress cache",
+        );
+        await this.fileManager.removeSafeItem(
+          "dist",
+          "Cleaning dist directory",
+        );
+        await this.fileManager.removeSafeItem(
+          "node_modules",
+          "Cleaning node_modules",
+        );
 
-      this.logger.step("Installing dependencies");
-      await this.packageManager.installDependencies();
+        this.logger.step("Installing dependencies");
+        await this.packageManager.installDependencies();
 
-      this.logger.subStep("Removing existing package");
-      await this.packageManager.removePackage("vitepress-mermaid-renderer");
+        this.logger.subStep("Removing existing package");
+        await this.packageManager.removePackage("vitepress-mermaid-renderer");
 
-      this.logger.subStep("Installing local package");
-      const packageFile = await this.findPackageArchive();
-      if (!packageFile) {
-        throw new Error("No package archive found in parent directory.");
-      }
-      await this.packageManager.installLocalPackage(packageFile);
+        this.logger.subStep("Installing local package");
+        const packageFile = await this.findPackageArchive();
+        if (!packageFile) {
+          throw new Error("No package archive found in parent directory.");
+        }
+        await this.packageManager.installLocalPackage(packageFile);
 
-      this.logger.step(
-        "Starting development server",
-        "Press Ctrl+C to stop the server when ready",
-      );
-      await this.packageManager.runScript("docs:dev");
-    });
+        this.logger.step(
+          "Starting development server",
+          "Press Ctrl+C to stop the server when ready",
+        );
+        await this.packageManager.runScript("docs:dev");
+      },
+    );
   }
 
   private async findPackageArchive() {

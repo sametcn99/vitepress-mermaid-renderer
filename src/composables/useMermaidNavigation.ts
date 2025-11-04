@@ -134,19 +134,13 @@ export function useMermaidNavigation(): MermaidNavigationState &
 
     e.preventDefault();
 
-    if (e.ctrlKey) {
-      // Zoom
-      const delta = -Math.sign(e.deltaY) * 0.1;
-      const newScale = scale.value * (1 + delta);
+    // Always treat the wheel as zoom when fullscreen so mouse wheel behaves intuitively
+    const delta = -Math.sign(e.deltaY) * 0.1;
+    const newScale = scale.value * (1 + delta);
 
-      // Apply bounds to prevent extreme zooming
-      if (newScale >= 0.2 && newScale <= 10) {
-        scale.value = newScale;
-      }
-    } else {
-      // Pan while in fullscreen mode
-      translateX.value += -e.deltaX / scale.value;
-      translateY.value += -e.deltaY / scale.value;
+    // Apply bounds to prevent extreme zooming
+    if (newScale >= 0.2 && newScale <= 10) {
+      scale.value = newScale;
     }
   };
 
