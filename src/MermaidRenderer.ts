@@ -1,48 +1,44 @@
-import { h } from "vue";
-import { createApp } from "vue";
+import { createApp, h } from "vue";
 import MermaidDiagram from "./MermaidDiagram.vue";
 import { MermaidConfig } from "mermaid";
+import {
+  resolveToolbarConfig,
+  type MermaidToolbarOptions,
+  type ResolvedToolbarConfig,
+} from "./toolbar";
 
-// Enhanced browser detection
-const isBrowser =
-  typeof window !== "undefined" &&
-  typeof document !== "undefined" &&
-  typeof document.createElement === "function";
-
-// Custom type for HTMLCollection-like objects
-interface HTMLCollectionLike<T extends Element> {
-  length: number;
-  item(index: number): T;
-  [index: number]: T;
-  [Symbol.iterator](): IterableIterator<T>;
-}
-
+/**
+ * Central orchestrator that discovers Mermaid code blocks inside VitePress pages,
+ * mounts Vue-powered renderers for them, and retries rendering across hydration
+ * boundaries, navigation events, and slower environments.
+ */
 export class MermaidRenderer {
   private static instance: MermaidRenderer;
   private config: MermaidConfig;
-  private observer: MutationObserver | null = null;
+  private toolbarConfig: ResolvedToolbarConfig;
   private initialized = false;
   private renderAttempts = 0;
   private maxRenderAttempts = 15; // Increased to handle slower production environments
   private retryTimeout: NodeJS.Timeout | null = null;
-  private isClient: boolean;
   private renderQueue: HTMLPreElement[] = [];
   private isRendering = false;
   private initialPageRenderComplete = false;
   private hydrationComplete = false;
   private domContentLoaded = false;
   private windowLoaded = false;
+  private mutationObserver: MutationObserver | null = null;
 
   private constructor(config?: MermaidConfig) {
-    this.config = config || {};
-    this.isClient = isBrowser;
-
-    if (this.isClient) {
-      this.setupMutationObserver();
-      this.setupHydrationListeners();
-    }
+    this.config = config ? { ...config } : {};
+    this.toolbarConfig = resolveToolbarConfig();
+    this.initialize();
   }
 
+  /**
+   * Returns the singleton renderer instance, creating it on first call and merging any
+   * optional configuration overrides into the active Mermaid settings.
+   * @param config Optional partial Mermaid configuration supplied by the caller.
+   */
   public static getInstance(config?: MermaidConfig): MermaidRenderer {
     if (!MermaidRenderer.instance) {
       MermaidRenderer.instance = new MermaidRenderer(config);
@@ -52,14 +48,26 @@ export class MermaidRenderer {
     return MermaidRenderer.instance;
   }
 
-  public setConfig(config: MermaidConfig): void {
+  /**
+   * Merges the provided Mermaid options into the runtime config and notifies listeners so
+   * already-mounted diagrams can react to the new settings.
+   * @param config Partial Mermaid configuration object to merge.
+   */
+  private setConfig(config: MermaidConfig): void {
     this.config = { ...this.config, ...config };
     this.dispatchConfigUpdate();
   }
 
-  private dispatchConfigUpdate(): void {
-    if (!this.isClient) return;
+  /**
+   * Resolves and stores toolbar options used by upcoming diagram mounts, falling back to
+   * defaults when no explicit configuration is supplied.
+   * @param toolbar Toolbar customization options, optional.
+   */
+  public setToolbar(toolbar?: MermaidToolbarOptions): void {
+    this.toolbarConfig = resolveToolbarConfig(toolbar);
+  }
 
+  private dispatchConfigUpdate(): void {
     try {
       document.dispatchEvent(
         new CustomEvent<MermaidConfig>("vitepress-mermaid:config-updated", {
@@ -71,97 +79,28 @@ export class MermaidRenderer {
     }
   }
 
-  private setupHydrationListeners(): void {
-    if (!this.isClient) return;
-
-    // Listen for DOMContentLoaded event
-    if (document.readyState === "loading") {
-      document.addEventListener(
-        "DOMContentLoaded",
-        () => {
-          this.domContentLoaded = true;
-          this.tryRender("DOMContentLoaded");
-        },
-        { once: true },
-      );
-    } else {
-      this.domContentLoaded = true;
-    }
-
-    // Listen for window load event
-    window.addEventListener(
-      "load",
-      () => {
-        this.windowLoaded = true;
-        this.tryRender("window.load");
-      },
-      { once: true },
-    );
-
-    // Additional safety - if all else fails, try rendering after a delay
-    setTimeout(() => {
-      if (!this.initialPageRenderComplete) {
-        this.tryRender("safety-timeout");
-      }
-    }, 2000);
-  }
-
-  private tryRender(source: string): void {
-    if (this.initialPageRenderComplete) return;
-
-    this.renderWithRetry();
-  }
-
-  private setupMutationObserver(): void {
-    if (!this.isClient) return;
-
-    try {
-      // Create a mutation observer to detect when content is added to the page
-      this.observer = new MutationObserver((mutations) => {
-        // Check if any mutations include additions to the DOM that might contain mermaid code blocks
-        const shouldRender = mutations.some(
-          (mutation) =>
-            mutation.type === "childList" &&
-            Array.from(mutation.addedNodes).some(
-              (node) =>
-                node.nodeType === Node.ELEMENT_NODE &&
-                ((node as Element).querySelector?.(".language-mermaid") !==
-                  null ||
-                  (node as Element).classList?.contains("language-mermaid")),
-            ),
-        );
-
-        if (shouldRender) {
-          this.renderMermaidDiagrams();
-        }
-      });
-
-      // Start observing the document with the configured parameters
-      this.observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-    } catch (error) {
-      console.error("Failed to setup MutationObserver:", error);
-    }
-  }
-
   private cleanupMermaidWrapper(wrapper: Element): void {
-    if (!this.isClient) return;
     const button = wrapper.getElementsByClassName("copy");
     Array.from(button).forEach((element) => element.remove());
+
+    if (!this.toolbarConfig.showLanguageLabel) {
+      const languageLabels = wrapper.getElementsByClassName("lang");
+      Array.from(languageLabels).forEach((element) => element.remove());
+    }
   }
 
   private createMermaidComponent(code: string) {
-    if (!this.isClient) return null;
-
     try {
       const wrapper = document.createElement("div");
       wrapper.id = `mermaid-wrapper-${Math.random().toString(36).slice(2)}`;
       wrapper.className = "mermaid-wrapper";
       return {
         wrapper,
-        component: h(MermaidDiagram, { code, config: this.config }),
+        component: h(MermaidDiagram, {
+          code,
+          config: this.config,
+          toolbar: this.toolbarConfig,
+        }),
       };
     } catch (error) {
       console.error("Failed to create mermaid component:", error);
@@ -170,7 +109,7 @@ export class MermaidRenderer {
   }
 
   private async renderNextDiagram(): Promise<void> {
-    if (!this.isClient || this.renderQueue.length === 0 || this.isRendering) {
+    if (this.renderQueue.length === 0 || this.isRendering) {
       return;
     }
 
@@ -197,8 +136,6 @@ export class MermaidRenderer {
   }
 
   private async renderMermaidDiagram(element: HTMLPreElement): Promise<void> {
-    if (!this.isClient) return;
-
     try {
       if (!element || !element.parentNode) return;
       const code = element.textContent?.trim() || "";
@@ -223,8 +160,12 @@ export class MermaidRenderer {
     }
   }
 
-  public initialize(): void {
-    if (this.initialized || !this.isClient) return;
+  /**
+   * Initializes the renderer lifecycle exactly once by wiring DOM readiness hooks,
+   * VitePress navigation listeners, and the initial render/retry loop.
+   */
+  private initialize(): void {
+    if (this.initialized) return;
 
     try {
       const initOnReady = (): void => {
@@ -240,6 +181,7 @@ export class MermaidRenderer {
           // Use requestAnimationFrame for better timing with the browser's rendering cycle
           requestAnimationFrame(() => {
             try {
+              this.setupDomMutationObserver();
               this.initializeRenderer();
             } catch (error) {
               console.error(
@@ -314,6 +256,96 @@ export class MermaidRenderer {
     }
   }
 
+  private setupDomMutationObserver(): void {
+    if (
+      typeof window === "undefined" ||
+      typeof MutationObserver === "undefined" ||
+      typeof document === "undefined"
+    ) {
+      return;
+    }
+
+    const target =
+      document.getElementById("app") ||
+      document.querySelector(".Layout") ||
+      document.body;
+
+    if (!target) return;
+
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect();
+    }
+
+    let rerenderScheduled = false;
+    this.mutationObserver = new MutationObserver((mutations) => {
+      if (!this.hasNewMermaidNodes(mutations)) {
+        return;
+      }
+
+      if (rerenderScheduled) {
+        return;
+      }
+
+      rerenderScheduled = true;
+      requestAnimationFrame(() => {
+        rerenderScheduled = false;
+        this.handleRouteChange();
+      });
+    });
+
+    try {
+      this.mutationObserver.observe(target, {
+        childList: true,
+        subtree: true,
+      });
+    } catch (error) {
+      console.error("Failed to observe DOM mutations for Mermaid:", error);
+    }
+  }
+
+  private hasNewMermaidNodes(mutations: MutationRecord[]): boolean {
+    return mutations.some((mutation) =>
+      Array.from(mutation.addedNodes).some((node) =>
+        this.nodeContainsMermaidCode(node),
+      ),
+    );
+  }
+
+  private nodeContainsMermaidCode(node: Node | null): boolean {
+    if (!node) return false;
+
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as Element;
+
+      if (element.closest(".mermaid-wrapper")) {
+        return false;
+      }
+
+      if (
+        element.classList.contains("language-mermaid") ||
+        element.matches?.("code.mermaid")
+      ) {
+        return true;
+      }
+
+      if (
+        element.querySelector(
+          ".language-mermaid, pre.language-mermaid, code.language-mermaid, code.mermaid",
+        )
+      ) {
+        return true;
+      }
+    }
+
+    if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE && node.hasChildNodes()) {
+      return Array.from(node.childNodes).some((child) =>
+        this.nodeContainsMermaidCode(child),
+      );
+    }
+
+    return false;
+  }
+
   private initializeRenderer(): void {
     this.renderAttempts = 0;
     this.initialPageRenderComplete = false;
@@ -353,9 +385,12 @@ export class MermaidRenderer {
       }, backoffTime);
     }
   }
-
-  public renderMermaidDiagrams(): boolean {
-    if (!this.isClient) return false;
+  /**
+   * Searches the document for Mermaid code blocks, cleans their wrappers, and pushes them
+   * onto the rendering queue handled by the Vue-driven renderer.
+   * @returns True if at least one diagram is discovered, otherwise false.
+   */
+  private renderMermaidDiagrams(): boolean {
     try {
       // First try to find diagrams using the standard class
       let mermaidWrappers = document.getElementsByClassName("language-mermaid");

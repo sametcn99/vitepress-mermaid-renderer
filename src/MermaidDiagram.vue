@@ -1,5 +1,10 @@
 <template>
-  <div class="mermaid-container" v-if="mounted">
+  <div
+    v-if="mounted"
+    ref="fullscreenWrapper"
+    class="mermaid-container"
+    data-fullscreen-wrapper
+  >
     <!-- Controls Component -->
     <MermaidControls
       ref="controlsRef"
@@ -14,6 +19,7 @@
       @pan-down="panDown"
       @pan-left="panLeft"
       @pan-right="panRight"
+      :toolbar="resolvedToolbar"
     />
 
     <!-- Error Component -->
@@ -24,15 +30,14 @@
 
     <div
       class="diagram-wrapper"
-      ref="diagramWrapper"
-      @mousedown="startPan"
-      @mousemove="pan"
-      @mouseup="endPan"
-      @mouseleave="endPan"
-      @wheel="handleWheel"
-      @touchstart="handleTouchStart"
-      @touchmove="handleTouchMove"
-      @touchend="handleTouchEnd"
+      @mousedown="handleMouseDown"
+      @mousemove="handleMouseMove"
+      @mouseup="handleMouseUp"
+      @mouseleave="handleMouseLeave"
+      @wheel="handleWheelEvent"
+      @touchstart="handleTouchStartEvent"
+      @touchmove="handleTouchMoveEvent"
+      @touchend="handleTouchEndEvent"
     >
       <div
         :id="diagramId"
@@ -50,13 +55,26 @@
 </template>
 
 <script setup lang="ts" clientOnly>
-import { getCurrentInstance, onMounted, ref, onUnmounted, nextTick } from "vue";
+import {
+  computed,
+  getCurrentInstance,
+  onMounted,
+  ref,
+  onUnmounted,
+  nextTick,
+} from "vue";
 import type { MermaidConfig } from "mermaid";
 import "./style.css";
 import MermaidControls from "./components/MermaidControls.vue";
 import MermaidError from "./components/MermaidError.vue";
 import { useMermaidNavigation } from "./composables/useMermaidNavigation";
 import { useMermaidRenderer } from "./composables/useMermaidRenderer";
+import {
+  resolveToolbarConfig,
+  type MermaidToolbarOptions,
+  type ResolvedToolbarConfig,
+  isResolvedToolbarConfig,
+} from "./toolbar";
 
 // Define emits
 const emit = defineEmits<{
@@ -69,7 +87,15 @@ const emit = defineEmits<{
 const props = defineProps<{
   code: string;
   config?: MermaidConfig;
+  toolbar?: MermaidToolbarOptions | ResolvedToolbarConfig;
 }>();
+
+const resolvedToolbar = computed<ResolvedToolbarConfig>(() => {
+  if (props.toolbar && isResolvedToolbarConfig(props.toolbar)) {
+    return props.toolbar;
+  }
+  return resolveToolbarConfig(props.toolbar);
+});
 
 // Use composables
 const navigation = useMermaidNavigation();
@@ -113,7 +139,7 @@ const {
 
 // Component refs
 const controlsRef = ref<InstanceType<typeof MermaidControls> | null>(null);
-const diagramWrapper = ref<HTMLElement | null>(null);
+const fullscreenWrapper = ref<HTMLElement | null>(null);
 
 // Generate deterministic ID for SSR/client consistency using component uid
 const instance = getCurrentInstance();
@@ -121,7 +147,39 @@ const diagramId = `mermaid-${instance?.uid ?? Math.random().toString(36).slice(2
 
 // Handle fullscreen toggle with wrapper reference
 const handleToggleFullscreen = () => {
-  toggleFullscreen(diagramWrapper.value);
+  toggleFullscreen(fullscreenWrapper.value);
+};
+
+const handleMouseDown = (event: MouseEvent) => {
+  startPan(event);
+};
+
+const handleMouseMove = (event: MouseEvent) => {
+  pan(event);
+};
+
+const handleMouseUp = () => {
+  endPan();
+};
+
+const handleMouseLeave = () => {
+  endPan();
+};
+
+const handleWheelEvent = (event: WheelEvent) => {
+  handleWheel(event);
+};
+
+const handleTouchStartEvent = (event: TouchEvent) => {
+  handleTouchStart(event);
+};
+
+const handleTouchMoveEvent = (event: TouchEvent) => {
+  handleTouchMove(event);
+};
+
+const handleTouchEndEvent = () => {
+  handleTouchEnd();
 };
 
 // Track fullscreen changes to update controls visibility

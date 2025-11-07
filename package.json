@@ -1,6 +1,6 @@
 {
   "name": "vitepress-mermaid-renderer",
-  "version": "1.0.20",
+  "version": "1.1.0",
   "description": "A VitePress plugin to render Mermaid diagrams with interactive controls",
   "type": "module",
   "main": "./dist/vitepress-mermaid-renderer.umd.cjs",
@@ -13,11 +13,6 @@
       "require": "./dist/vitepress-mermaid-renderer.umd.cjs",
       "default": "./dist/vitepress-mermaid-renderer.js"
     },
-    "./dist/style.css": {
-      "import": "./dist/vitepress-mermaid-renderer.css",
-      "require": "./dist/vitepress-mermaid-renderer.css",
-      "default": "./dist/vitepress-mermaid-renderer.css"
-    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -26,12 +21,8 @@
   "readme": "README.md",
   "author": "sametcn99",
   "scripts": {
-    "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "prepublishOnly": "bun run build",
-    "pack": "bun run build && bun pack",
-    "test-pack": "bun pack --dry-run",
+    "pack": "bun pm pack",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
@@ -67,10 +58,10 @@
     "prettier": "3.6.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3",
-    "vite": "^7.1.12",
+    "vite": "^7.2.1",
     "vite-plugin-dts": "^4.5.4",
     "vitepress": "^1.6.4",
-    "vue": "^3.5.22",
+    "vue": "^3.5.23",
     "vue-eslint-parser": "^10.2.0"
   },
   "repository": {

@@ -16,6 +16,8 @@
   position: absolute;
   bottom: 0.75rem;
   right: 0.75rem;
+  top: auto;
+  left: auto;
   z-index: 20;
   padding: var(--control-padding);
   border-radius: var(--control-radius);
@@ -25,6 +27,26 @@
   pointer-events: auto;
   transition: all 0.2s ease;
   background: var(--vp-c-bg);
+}
+
+.controls.toolbar-vertical-top {
+  top: 0.75rem;
+  bottom: auto;
+}
+
+.controls.toolbar-vertical-bottom {
+  bottom: 0.75rem;
+  top: auto;
+}
+
+.controls.toolbar-horizontal-left {
+  left: 0.75rem;
+  right: auto;
+}
+
+.controls.toolbar-horizontal-right {
+  right: 0.75rem;
+  left: auto;
 }
 
 /* Desktop Controls */
@@ -130,6 +152,15 @@
   border-radius: 0.25rem;
 }
 
+.mobile-controls .zoom-level {
+  margin-right: 0.5rem;
+  min-width: 3rem;
+}
+
+.mobile-controls .mobile-zoom-level {
+  order: -1;
+}
+
 /* Responsive behavior */
 @media (max-width: 768px) {
   .desktop-controls {
@@ -156,7 +187,7 @@
   transform: translateY(0);
 }
 
-.diagram-wrapper:fullscreen .controls {
+.mermaid-container:fullscreen .controls {
   opacity: 1 !important;
   transform: translateY(0) !important;
 }
@@ -170,7 +201,7 @@
   z-index: 1;
 }
 
-.diagram-wrapper:fullscreen {
+.mermaid-container:fullscreen .diagram-wrapper {
   background: var(--vp-c-bg);
   color: var(--vp-c-text-1);
   padding: 20px;

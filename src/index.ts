@@ -1,43 +1,19 @@
 import { MermaidRenderer } from "./MermaidRenderer";
+import { ensureStylesInjected } from "./styleManager";
 import type { MermaidConfig } from "mermaid";
 
-// Check if we're in a browser environment
-const isBrowser =
-  typeof window !== "undefined" && typeof document !== "undefined";
+ensureStylesInjected();
 
-// Create a safe export that won't run on the server
+/**
+ * Creates a reusable `MermaidRenderer` singleton that can be shared across
+ * Vue components, ensuring Mermaid gets initialized only once per app.
+ *
+ * @param config Optional Mermaid configuration object that will be merged
+ *               into the underlying instance on first creation.
+ * @returns The shared `MermaidRenderer` instance ready to render diagrams.
+ */
 const createMermaidRenderer = (config?: MermaidConfig) => {
-  if (!isBrowser) {
-    return {
-      initialize: () => {},
-      renderMermaidDiagrams: () => false,
-      setConfig: () => {},
-      getInstance: () => ({
-        initialize: () => {},
-        renderMermaidDiagrams: () => false,
-        setConfig: () => {},
-      }),
-    };
-  }
-
   return MermaidRenderer.getInstance(config);
 };
 
-export { MermaidRenderer, createMermaidRenderer };
-
-// Export modular components and composables
-export {
-  MermaidDiagram,
-  MermaidControls,
-  MermaidError,
-  useMermaidNavigation,
-  useMermaidRenderer,
-} from "./components";
-
-export type {
-  MermaidNavigationState,
-  MermaidNavigationActions,
-  MermaidRendererState,
-  MermaidRendererActions,
-  MermaidRendererOptions,
-} from "./components";
+export { createMermaidRenderer };

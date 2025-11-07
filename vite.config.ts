@@ -28,11 +28,6 @@ export default defineConfig({
           vue: "Vue",
           mermaid: "mermaid",
         },
-        assetFileNames: (assetInfo) => {
-          if (assetInfo.name === "style.css")
-            return "vitepress-mermaid-renderer.css";
-          return assetInfo.name || "assets/[name]-[hash][extname]";
-        },
       },
     },
     sourcemap: true,

@@ -5,6 +5,8 @@
 
 Transform your static Mermaid diagrams into interactive, dynamic visualizations in VitePress! This powerful plugin brings life to your documentation by enabling interactive features like zooming, panning, and fullscreen viewing.
 
+Stay up to date with new releases in the [CHANGELOG](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/CHANGELOG.md).
+
 ## ✨ Key Features
 
 - 🔍 Smooth Zoom In/Out capabilities
@@ -15,7 +17,6 @@ Transform your static Mermaid diagrams into interactive, dynamic visualizations 
 - 🎨 Seamless VitePress Theme Integration
 - ⚡ Lightning-fast Performance
 - 🛠️ Easy Configuration
-- 🌐 Client-Side Only Rendering (SSR safe)
 
 ## 🚀 Quick Start
 
@@ -24,6 +25,9 @@ Transform your static Mermaid diagrams into interactive, dynamic visualizations 
 Choose your preferred package manager:
 
 ```bash
+# Using bun
+bun add vitepress-mermaid-renderer
+
 # Using npm
 npm install vitepress-mermaid-renderer
 
@@ -32,9 +36,6 @@ yarn add vitepress-mermaid-renderer
 
 # Using pnpm
 pnpm add vitepress-mermaid-renderer
-
-# Using bun
-bun add vitepress-mermaid-renderer
 ```
 
 ### VitePress Configuration
@@ -42,13 +43,11 @@ bun add vitepress-mermaid-renderer
 Your `.vitepress/theme/index.ts` file should look like this:
 
 ```typescript
-import { h, nextTick, watch } from "vue";
+import { h, nextTick, watchEffect, watch } from "vue";
 import type { Theme } from "vitepress";
-import { useData } from "vitepress";
 import DefaultTheme from "vitepress/theme";
+import { useData } from "vitepress";
 import { createMermaidRenderer } from "vitepress-mermaid-renderer";
-import "vitepress-mermaid-renderer/dist/style.css";
-import "./style.css";
 
 export default {
   extends: DefaultTheme,
@@ -56,14 +55,12 @@ export default {
     const { isDark } = useData();
 
     const initMermaid = () => {
-      nextTick(() =>
-        createMermaidRenderer({
-          theme: isDark.value ? "dark" : "forest",
-        }).initialize(),
-      );
+      const mermaidRenderer = createMermaidRenderer({
+        theme: isDark.value ? "dark" : "forest",
+      });
     };
 
-    // Initial render
+    // initial mermaid setup
     nextTick(() => initMermaid());
 
     // on theme change, re-render mermaid charts
@@ -83,9 +80,9 @@ export default {
 
 You can customize the Mermaid renderer by passing configuration options to `createMermaidRenderer()`:
 
-```typescript
+```ts
 const mermaidRenderer = createMermaidRenderer({
-  theme: "dark", // 'default', 'dark', 'forest', 'neutral'
+  theme: "dark",
   startOnLoad: false,
   flowchart: {
     useMaxWidth: true,
@@ -95,9 +92,53 @@ const mermaidRenderer = createMermaidRenderer({
     diagramMarginX: 50,
     diagramMarginY: 10,
   },
-  // Any other Mermaid configuration options
 });
 ```
+
+Use `setToolbar()` whenever you need to enable or disable specific controls for desktop, mobile, or fullscreen toolbars.
+
+The optional toolbar configuration accepts `desktop`, `mobile`, and `fullscreen` objects. Each button can be set to `"enabled"` or `"disabled"`. Desktop and mobile controls default to `"enabled"`, while fullscreen controls default to `"disabled"` so you can opt in explicitly. You can also define a `positions` object inside each mode to anchor the toolbar to any corner without using a separate block, and `zoomLevel` to keep the zoom percentage visible even if the zoom buttons are disabled:
+
+```ts
+mermaidRenderer.setToolbar({
+  showLanguageLabel: true,
+  desktop: {
+    zoomIn: "disabled",
+    zoomLevel: "enabled",
+    positions: { vertical: "top", horizontal: "left" },
+  },
+  mobile: {
+    zoomLevel: "disabled",
+    positions: { vertical: "bottom", horizontal: "left" },
+  },
+  fullscreen: {
+    zoomLevel: "enabled",
+    positions: { vertical: "top", horizontal: "right" },
+  },
+});
+```
+
+If you omit `positions`, every mode defaults to the bottom-right corner. `zoomLevel` defaults to `"enabled"` across all modes.
+
+Need to hide the little `mermaid` label that VitePress renders in the top-right corner of the original code block? Set `showLanguageLabel: false` in `setToolbar()` (or the `<MermaidDiagram toolbar>` prop) and the renderer will strip it out when it swaps the code fence with the interactive diagram.
+
+### Toolbar option reference
+
+| Key                                 | Type                   | Default                  | Description                                                                                                                               |
+| ----------------------------------- | ---------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `showLanguageLabel`                 | `boolean`              | `true`                   | Toggles the original VitePress `mermaid` badge that normally appears on fenced code blocks.                                               |
+| `desktop` / `mobile` / `fullscreen` | `ToolbarModeOverrides` | `DEFAULT_TOOLBAR_CONFIG` | Mode-specific overrides for buttons, zoom text, and toolbar placement. Each mode is optional—omit it to inherit the defaults shown below. |
+
+| Mode field             | Modes                       | Type                      | Default (desktop / mobile / fullscreen) | Notes                                                                                |
+| ---------------------- | --------------------------- | ------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------ |
+| `zoomIn`               | Desktop, Mobile, Fullscreen | `"enabled" \| "disabled"` | `enabled / disabled / disabled`         | Mobile defaults to disabled but can be enabled when you need on-the-go zooming.      |
+| `zoomOut`              | Desktop, Mobile, Fullscreen | `"enabled" \| "disabled"` | `enabled / disabled / disabled`         | Mobile defaults to disabled but can be enabled when you need on-the-go zooming.      |
+| `resetView`            | Desktop, Mobile, Fullscreen | `"enabled" \| "disabled"` | `enabled / enabled / disabled`          | Resets zoom + pan to the initial state.                                              |
+| `copyCode`             | Desktop, Mobile, Fullscreen | `"enabled" \| "disabled"` | `enabled / enabled / disabled`          | Copies the raw Mermaid source to the clipboard.                                      |
+| `toggleFullscreen`     | Desktop, Mobile, Fullscreen | `"enabled" \| "disabled"` | `enabled / enabled / enabled`           | Expands the diagram container to fullscreen.                                         |
+| `zoomLevel`            | Desktop, Mobile, Fullscreen | `"enabled" \| "disabled"` | `enabled / enabled / enabled`           | Controls the visibility of the percentage indicator even if zoom buttons are hidden. |
+| `positions.vertical`   | Desktop, Mobile, Fullscreen | `"top" \| "bottom"`       | `bottom / bottom / bottom`              | Anchors the toolbar to the top or bottom edge inside the diagram container.          |
+| `positions.horizontal` | Desktop, Mobile, Fullscreen | `"left" \| "right"`       | `right / right / right`                 | Anchors the toolbar to the left or right edge inside the diagram container.          |
 
 For a complete list of available configuration options, refer to the [Mermaid Configuration Documentation](https://mermaid.js.org/config/schema-docs/config.html).
 
@@ -110,18 +151,6 @@ Your Mermaid diagrams spring to life automatically! The plugin detects Mermaid c
 - 🎯 One-click view reset
 - 📺 Immersive fullscreen experience
 - 📝 Easy code copying
-
-## 📝 Client-Side Only Rendering
-
-This plugin is designed to work only on the client side, making it fully compatible with server-side rendering (SSR). All rendering operations are protected by environment checks to ensure they only execute in the browser.
-
-To ensure SSR compatibility:
-
-- Use `createMermaidRenderer(config?)` rather than `MermaidRenderer.getInstance()`
-- Import styles from the distributed CSS file
-- Make sure browser environment checks are in place
-
-The `createMermaidRenderer` function accepts an optional configuration object that will be passed to Mermaid.js for customizing diagram appearance and behavior.
 
 ## 🤝 Contributing
 
