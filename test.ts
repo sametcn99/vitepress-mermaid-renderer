@@ -217,11 +217,14 @@ class TestWorkflow {
         }
         await this.packageManager.installLocalPackage(packageFile);
 
+        this.logger.step("Building documentation");
+        await this.packageManager.runScript("docs:build");
+
         this.logger.step(
-          "Starting development server",
-          "Press Ctrl+C to stop the server when ready",
+          "Previewing production build",
+          "Press Ctrl+C to stop the preview when ready",
         );
-        await this.packageManager.runScript("docs:dev");
+        await this.packageManager.runScript("docs:preview");
       },
     );
   }

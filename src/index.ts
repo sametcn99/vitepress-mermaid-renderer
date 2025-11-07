@@ -2,7 +2,15 @@ import { MermaidRenderer } from "./MermaidRenderer";
 import { ensureStylesInjected } from "./styleManager";
 import type { MermaidConfig } from "mermaid";
 
-ensureStylesInjected();
+const isClientEnvironment =
+  typeof window !== "undefined" && typeof document !== "undefined";
+const noopRenderer = {
+  setToolbar: () => {},
+};
+
+if (isClientEnvironment) {
+  ensureStylesInjected();
+}
 
 /**
  * Creates a reusable `MermaidRenderer` singleton that can be shared across
@@ -13,6 +21,9 @@ ensureStylesInjected();
  * @returns The shared `MermaidRenderer` instance ready to render diagrams.
  */
 const createMermaidRenderer = (config?: MermaidConfig) => {
+  if (!isClientEnvironment) {
+    return noopRenderer as unknown as MermaidRenderer;
+  }
   return MermaidRenderer.getInstance(config);
 };
 
