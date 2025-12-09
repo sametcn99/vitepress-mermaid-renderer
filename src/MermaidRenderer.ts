@@ -28,6 +28,12 @@ export class MermaidRenderer {
   private windowLoaded = false;
   private mutationObserver: MutationObserver | null = null;
 
+  /**
+   * Private constructor to enforce singleton pattern.
+   * Initializes the configuration and sets up the renderer environment.
+   *
+   * @param config - Optional initial Mermaid configuration.
+   */
   private constructor(config?: MermaidConfig) {
     this.config = config ? { ...config } : {};
     this.toolbarConfig = resolveToolbarConfig();
@@ -67,6 +73,12 @@ export class MermaidRenderer {
     this.toolbarConfig = resolveToolbarConfig(toolbar);
   }
 
+  /**
+   * Dispatches a custom event to notify other parts of the application
+   * that the Mermaid configuration has been updated.
+   *
+   * @event vitepress-mermaid:config-updated
+   */
   private dispatchConfigUpdate(): void {
     try {
       document.dispatchEvent(
@@ -79,6 +91,12 @@ export class MermaidRenderer {
     }
   }
 
+  /**
+   * Removes unnecessary UI elements (like copy buttons and language labels)
+   * from the Mermaid wrapper element to prepare it for rendering.
+   *
+   * @param wrapper - The DOM element containing the Mermaid code block.
+   */
   private cleanupMermaidWrapper(wrapper: Element): void {
     const button = wrapper.getElementsByClassName("copy");
     Array.from(button).forEach((element) => element.remove());
@@ -89,6 +107,13 @@ export class MermaidRenderer {
     }
   }
 
+  /**
+   * Creates a Virtual DOM node for the Mermaid diagram using Vue's `h` function.
+   * Encapsulates the logic for creating the wrapper div and determining the component props.
+   *
+   * @param code - The Mermaid source code string to be rendered.
+   * @returns An object containing the wrapper DOM element and the Vue component VNode, or null if creation fails.
+   */
   private createMermaidComponent(code: string) {
     try {
       const wrapper = document.createElement("div");
@@ -108,6 +133,13 @@ export class MermaidRenderer {
     }
   }
 
+  /**
+   * Processes the next diagram in the rendering queue.
+   * This method ensures diagrams are rendered sequentially to avoid race conditions
+   * or heavy load spikes, and handles the completion of the initial page render.
+   *
+   * @returns A promise that resolves when the next diagram has been processed.
+   */
   private async renderNextDiagram(): Promise<void> {
     if (this.renderQueue.length === 0 || this.isRendering) {
       return;
@@ -135,6 +167,13 @@ export class MermaidRenderer {
     }
   }
 
+  /**
+   * Renders a single Mermaid diagram by replacing the original `<pre>` element
+   * with a Vue-mounted component.
+   *
+   * @param element - The HTMLPreElement containing the Mermaid code.
+   * @returns A promise that resolves when the diagram is successfully mounted and rendered.
+   */
   private async renderMermaidDiagram(element: HTMLPreElement): Promise<void> {
     try {
       if (!element || !element.parentNode) return;
@@ -256,6 +295,11 @@ export class MermaidRenderer {
     }
   }
 
+  /**
+   * Sets up a MutationObserver to detect dynamic changes in the DOM.
+   * This is crucial for determining when new Mermaid blocks are added to the page,
+   * for instance during client-side navigation or asynchronous content loading.
+   */
   private setupDomMutationObserver(): void {
     if (
       typeof window === "undefined" ||
@@ -303,6 +347,12 @@ export class MermaidRenderer {
     }
   }
 
+  /**
+   * Checks if any of the mutated nodes contain Mermaid code blocks.
+   *
+   * @param mutations - The list of MutationRecords from the MutationObserver.
+   * @returns `true` if a relevant Mermaid node was added, `false` otherwise.
+   */
   private hasNewMermaidNodes(mutations: MutationRecord[]): boolean {
     return mutations.some((mutation) =>
       Array.from(mutation.addedNodes).some((node) =>
@@ -311,6 +361,12 @@ export class MermaidRenderer {
     );
   }
 
+  /**
+   * Recursively checks if a DOM node or its children contain a Mermaid code block.
+   *
+   * @param node - The DOM node to inspect.
+   * @returns `true` if the node is or contains a Mermaid code element, `false` otherwise.
+   */
   private nodeContainsMermaidCode(node: Node | null): boolean {
     if (!node) return false;
 
@@ -346,12 +402,20 @@ export class MermaidRenderer {
     return false;
   }
 
+  /**
+   * Resets the rendering state and initiates the render-retry loop.
+   * Typically called on page load or after a significant DOM change.
+   */
   private initializeRenderer(): void {
     this.renderAttempts = 0;
     this.initialPageRenderComplete = false;
     this.renderWithRetry();
   }
 
+  /**
+   * Handles route changes in the VitePress application.
+   * Clears existing timeouts and resets the renderer to process diagrams on the new page.
+   */
   private handleRouteChange(): void {
     // Reset attempts and start fresh on route change
     this.renderAttempts = 0;
@@ -363,6 +427,11 @@ export class MermaidRenderer {
     this.renderWithRetry();
   }
 
+  /**
+   * Attempts to discover and render Mermaid diagrams.
+   * If no diagrams are found initially, it uses an exponential backoff strategy
+   * to retry, accommodating slower environments or delayed hydration.
+   */
   private renderWithRetry(): void {
     // First attempt to render
     const diagramsFound = this.renderMermaidDiagrams();

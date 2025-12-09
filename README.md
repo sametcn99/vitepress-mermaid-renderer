@@ -17,6 +17,7 @@ Stay up to date with new releases in the [CHANGELOG](https://github.com/sametcn9
 - 🎨 Seamless VitePress Theme Integration
 - ⚡ Lightning-fast Performance
 - 🛠️ Easy Configuration
+- 📥 Download Diagrams
 
 ## 🚀 Quick Start
 

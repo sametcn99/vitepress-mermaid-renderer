@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.6
+
+- **Updated Dependencies**: Updated dependencies to their latest versions.
+- **Download Diagrams**: Users can now download diagrams directly from the toolbar.
+- **New Toolbar Button**: Added a `download` button to the toolbar (disabled by default). Enable it via `setToolbar({ desktop: { buttons: { download: 'enabled' } } })`.
+- **Export Formats**: Support for `svg`, `png`, and `jpg` formats. Configure the preferred format using the new `downloadFormat` option in `MermaidToolbarOptions` (default: `"svg"`).
+
 ## 1.1.5
 
 ### Basic

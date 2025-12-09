@@ -19,6 +19,7 @@
       @pan-down="panDown"
       @pan-left="panLeft"
       @pan-right="panRight"
+      @download="handleDownload"
       :toolbar="resolvedToolbar"
     />
 
@@ -74,6 +75,7 @@ import {
   type MermaidToolbarOptions,
   type ResolvedToolbarConfig,
   isResolvedToolbarConfig,
+  type DownloadFormat,
 } from "./toolbar";
 
 // Define emits
@@ -148,6 +150,83 @@ const diagramId = `mermaid-${instance?.uid ?? Math.random().toString(36).slice(2
 // Handle fullscreen toggle with wrapper reference
 const handleToggleFullscreen = () => {
   toggleFullscreen(fullscreenWrapper.value);
+};
+
+const handleDownload = async (format: DownloadFormat) => {
+  const container = document.getElementById(diagramId);
+  const svgElement = container?.querySelector("svg");
+
+  if (!svgElement) {
+    console.error("SVG element not found for download");
+    return;
+  }
+
+  // Clone to avoid modifying the displayed diagram
+  const svgClone = svgElement.cloneNode(true) as SVGElement;
+
+  // Add white background for non-transparent export (important for PNG/JPG)
+  if (format !== "svg") {
+    svgClone.style.backgroundColor = "white";
+  }
+
+  const svgData = new XMLSerializer().serializeToString(svgClone);
+  const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  const downloadLink = document.createElement("a");
+  // Simple sanitizer for filename
+  const filename = "diagram";
+  downloadLink.download = `${filename}.${format}`;
+
+  if (format === "svg") {
+    downloadLink.href = url;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(url);
+  } else {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      // Use bounding box or viewBox for size
+      const bbox = svgElement.viewBox.baseVal;
+      // Fallback to width/height attributes if viewBox is missing, or getBoundingClientRect
+      let width = bbox?.width;
+      let height = bbox?.height;
+
+      if (!width || !height) {
+        const rect = svgElement.getBoundingClientRect();
+        width = rect.width;
+        height = rect.height;
+      }
+      
+      // Handle scaling for better quality? 
+      // Current implementation uses 1:1 of the viewBox/size.
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        // Fill white background again for canvas
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0);
+        
+        const imageType = format === "png" ? "image/png" : "image/jpeg";
+        const dataUrl = canvas.toDataURL(imageType);
+        downloadLink.href = dataUrl;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = (e) => {
+      console.error("Failed to load SVG for conversion", e);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
 };
 
 const handleMouseDown = (event: MouseEvent) => {

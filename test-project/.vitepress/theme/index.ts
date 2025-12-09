@@ -22,13 +22,16 @@ export default {
           zoomOut: "enabled",
           zoomIn: "enabled",
           zoomLevel: "enabled",
+          download: "enabled",
         },
         fullscreen: {
           copyCode: "disabled",
           toggleFullscreen: "enabled",
           resetView: "disabled",
           zoomLevel: "disabled",
-        },
+          download: "enabled",
+        }
+        ,downloadFormat: "svg",
       });
     };
 

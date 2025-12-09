@@ -4,6 +4,11 @@
 export type ToolbarButtonState = "enabled" | "disabled";
 
 /**
+ * Supported download formats for the diagram.
+ */
+export type DownloadFormat = "svg" | "png" | "jpg";
+
+/**
  * All buttons that can ever appear inside the toolbar regardless of mode.
  */
 export type ToolbarButton =
@@ -11,7 +16,8 @@ export type ToolbarButton =
   | "zoomOut"
   | "resetView"
   | "copyCode"
-  | "toggleFullscreen";
+  | "toggleFullscreen"
+  | "download";
 
 /**
  * Desktop view can expose every toolbar button.
@@ -27,7 +33,8 @@ export type MobileToolbarButton =
   | "copyCode"
   | "toggleFullscreen"
   | "zoomIn"
-  | "zoomOut";
+  | "zoomOut"
+  | "download";
 
 /**
  * Valid vertical anchors for the toolbar container inside the diagram.
@@ -42,7 +49,13 @@ export type ToolbarHorizontalPosition = "left" | "right";
  * Combination of vertical and horizontal anchors, effectively selecting a corner.
  */
 export interface ToolbarPosition {
+  /**
+   * Vertical alignment of the toolbar.
+   */
   vertical: ToolbarVerticalPosition;
+  /**
+   * Horizontal alignment of the toolbar.
+   */
   horizontal: ToolbarHorizontalPosition;
 }
 
@@ -54,12 +67,29 @@ export interface ToolbarPosition {
 export type ToolbarModeOverrides<ButtonType extends string> = Partial<
   Record<ButtonType, ToolbarButtonState>
 > & {
+  /**
+   * Optional overrides for the toolbar's position options.
+   */
   positions?: Partial<ToolbarPosition>;
+  /**
+   * Controls the visibility of the zoom level indicator.
+   */
   zoomLevel?: ToolbarButtonState;
 };
 
+/**
+ * Options specifically for the desktop toolbar mode.
+ */
 export type DesktopToolbarOptions = ToolbarModeOverrides<DesktopToolbarButton>;
+
+/**
+ * Options specifically for the mobile toolbar mode.
+ */
 export type MobileToolbarOptions = ToolbarModeOverrides<MobileToolbarButton>;
+
+/**
+ * Options specifically for the fullscreen toolbar mode.
+ */
 export type FullscreenToolbarOptions = ToolbarModeOverrides<ToolbarButton>;
 
 /**
@@ -74,8 +104,22 @@ export interface MermaidToolbarOptions {
    * diagram. Defaults to true.
    */
   showLanguageLabel?: boolean;
+  /**
+   * Specifies the format to use when downloading the diagram.
+   * Defaults to "svg".
+   */
+  downloadFormat?: DownloadFormat;
+  /**
+   * Configuration options for the desktop toolbar.
+   */
   desktop?: ToolbarModeOverrides<DesktopToolbarButton>;
+  /**
+   * Configuration options for the mobile toolbar.
+   */
   mobile?: ToolbarModeOverrides<MobileToolbarButton>;
+  /**
+   * Configuration options for the fullscreen toolbar.
+   */
   fullscreen?: ToolbarModeOverrides<ToolbarButton>;
 }
 
@@ -83,8 +127,17 @@ export interface MermaidToolbarOptions {
  * Internal shape describing a mode once overrides and defaults have been resolved.
  */
 export interface ToolbarModeConfig<ButtonType extends string> {
+  /**
+   * Button states for the current toolbar mode.
+   */
   buttons: Record<ButtonType, ToolbarButtonState>;
+  /**
+   * Position configuration for the current toolbar mode.
+   */
   positions: ToolbarPosition;
+  /**
+   * State of the zoom level indicator.
+   */
   zoomLevel: ToolbarButtonState;
 }
 
@@ -93,10 +146,26 @@ export interface ToolbarModeConfig<ButtonType extends string> {
  * down to Vue components.
  */
 export interface ResolvedToolbarConfig {
+  /**
+   * Resolved configuration for the desktop toolbar.
+   */
   desktop: ToolbarModeConfig<DesktopToolbarButton>;
+  /**
+   * Resolved configuration for the mobile toolbar.
+   */
   mobile: ToolbarModeConfig<MobileToolbarButton>;
+  /**
+   * Resolved configuration for the fullscreen toolbar.
+   */
   fullscreen: ToolbarModeConfig<ToolbarButton>;
+  /**
+   * Whether to show the language label.
+   */
   showLanguageLabel: boolean;
+  /**
+   * The format for downloading the diagram.
+   */
+  downloadFormat: DownloadFormat;
 }
 
 /**
@@ -114,7 +183,8 @@ export const isResolvedToolbarConfig = (
       "buttons" in candidate.desktop &&
       "positions" in candidate.desktop &&
       "zoomLevel" in candidate.desktop &&
-      typeof candidate.showLanguageLabel === "boolean",
+      typeof candidate.showLanguageLabel === "boolean" &&
+      typeof candidate.downloadFormat === "string",
   );
 };
 
@@ -130,6 +200,7 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
       resetView: "enabled",
       copyCode: "enabled",
       toggleFullscreen: "enabled",
+      download: "disabled",
     },
     positions: {
       vertical: "bottom",
@@ -144,6 +215,7 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
       resetView: "enabled",
       copyCode: "enabled",
       toggleFullscreen: "enabled",
+      download: "disabled",
     },
     positions: {
       vertical: "bottom",
@@ -158,6 +230,7 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
       resetView: "disabled",
       copyCode: "disabled",
       toggleFullscreen: "enabled",
+      download: "disabled",
     },
     positions: {
       vertical: "bottom",
@@ -166,6 +239,7 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
     zoomLevel: "enabled",
   },
   showLanguageLabel: true,
+  downloadFormat: "svg",
 } as const;
 
 /**
@@ -240,6 +314,9 @@ export const resolveToolbarConfig = (
   const showLanguageLabel =
     toolbar?.showLanguageLabel ?? DEFAULT_TOOLBAR_CONFIG.showLanguageLabel;
 
+  const downloadFormat =
+    toolbar?.downloadFormat ?? DEFAULT_TOOLBAR_CONFIG.downloadFormat;
+
   return {
     desktop: resolveToolbarMode(
       DEFAULT_TOOLBAR_CONFIG.desktop,
@@ -251,5 +328,6 @@ export const resolveToolbarConfig = (
       toolbar?.fullscreen,
     ),
     showLanguageLabel,
+    downloadFormat,
   };
 };
