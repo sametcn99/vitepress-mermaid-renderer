@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "mermaid": "^11.5.0",
-    "vitepress-mermaid-renderer": "/home/samet/Documents/SwProjects/vitepress-mermaid-renderer/vitepress-mermaid-renderer-1.1.5.tgz"
+    "vitepress-mermaid-renderer": "/home/samet/Documents/SwProjects/vitepress-mermaid-renderer/vitepress-mermaid-renderer-1.1.6.tgz"
   },
   "engines": {
     "node": ">=20.0.0"

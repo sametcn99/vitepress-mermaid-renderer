@@ -24,8 +24,6 @@ export class MermaidRenderer {
   private isRendering = false;
   private initialPageRenderComplete = false;
   private hydrationComplete = false;
-  private domContentLoaded = false;
-  private windowLoaded = false;
   private mutationObserver: MutationObserver | null = null;
 
   /**
