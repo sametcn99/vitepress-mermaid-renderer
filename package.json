@@ -27,17 +27,21 @@
     "format": "prettier --write ."
   },
   "keywords": [
-    "vitepress",
+    "plugin",
     "mermaid",
     "diagrams",
-    "documentation",
     "markdown",
-    "plugin",
-    "vitepress-mermaid",
+    "vitepress",
+    "mermaid-js",
+    "documentation",
+    "mermaid-diagrams",
+    "mermaid-renderer",
     "vitepress-plugin",
+    "vitepress-mermaid",
+    "vitepress-diagrams",
     "vitepress-plugin-mermaid",
-    "vitepress-plugin-mermaid-renderer",
-    "vitepress-plugin-mermaid"
+    "vitepress-mermaid-renderer",
+    "vitepress-plugin-mermaid-renderer"
   ],
   "license": "GPL-3.0-only",
   "peerDependencies": {
