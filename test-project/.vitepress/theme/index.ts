@@ -30,8 +30,8 @@ export default {
           resetView: "disabled",
           zoomLevel: "disabled",
           download: "enabled",
-        }
-        ,downloadFormat: "svg",
+        },
+        downloadFormat: "svg",
       });
     };
 

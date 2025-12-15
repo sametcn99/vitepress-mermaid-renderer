@@ -178,13 +178,13 @@ export const isResolvedToolbarConfig = (
   const candidate = value as Partial<ResolvedToolbarConfig> | undefined;
   return Boolean(
     candidate &&
-      candidate.desktop &&
-      typeof candidate.desktop === "object" &&
-      "buttons" in candidate.desktop &&
-      "positions" in candidate.desktop &&
-      "zoomLevel" in candidate.desktop &&
-      typeof candidate.showLanguageLabel === "boolean" &&
-      typeof candidate.downloadFormat === "string",
+    candidate.desktop &&
+    typeof candidate.desktop === "object" &&
+    "buttons" in candidate.desktop &&
+    "positions" in candidate.desktop &&
+    "zoomLevel" in candidate.desktop &&
+    typeof candidate.showLanguageLabel === "boolean" &&
+    typeof candidate.downloadFormat === "string",
   );
 };
 

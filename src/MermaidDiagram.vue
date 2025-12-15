@@ -199,10 +199,10 @@ const handleDownload = async (format: DownloadFormat) => {
         width = rect.width;
         height = rect.height;
       }
-      
-      // Handle scaling for better quality? 
+
+      // Handle scaling for better quality?
       // Current implementation uses 1:1 of the viewBox/size.
-      
+
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext("2d");
@@ -211,7 +211,7 @@ const handleDownload = async (format: DownloadFormat) => {
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0);
-        
+
         const imageType = format === "png" ? "image/png" : "image/jpeg";
         const dataUrl = canvas.toDataURL(imageType);
         downloadLink.href = dataUrl;
