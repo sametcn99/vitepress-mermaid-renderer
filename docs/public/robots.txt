@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://vitepress-mermaid-renderer.sametcc.me/sitemap.xml

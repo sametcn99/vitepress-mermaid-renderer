@@ -1,14 +1,8 @@
-<div align="center">
-
 # VitePress Mermaid Renderer
-
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://vitepress-mermaid-renderer.sametcc.me) [![NPM Downloads](https://img.shields.io/npm/dw/vitepress-mermaid-renderer)](https://www.npmjs.com/package/vitepress-mermaid-renderer) [![Version](https://img.shields.io/npm/v/vitepress-mermaid-renderer)](https://www.npmjs.com/package/vitepress-mermaid-renderer)
 
 Transform your static Mermaid diagrams into interactive, dynamic visualizations in VitePress. This powerful plugin brings life to your documentation by enabling interactive features like zooming, panning, and fullscreen viewing.
 
-<i>Stay up to date with new releases in the [CHANGELOG](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/CHANGELOG.md).</i>
-
-</div>
+_Stay up to date with new releases in the [CHANGELOG](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/CHANGELOG.md)._
 
 ## Key Features
 
@@ -31,17 +25,7 @@ Your Mermaid diagrams spring to life automatically. The plugin detects Mermaid c
 Install the package using your preferred package manager:
 
 ```bash
-# Using bun
-bun add vitepress-mermaid-renderer
-
-# Using npm
 npm install vitepress-mermaid-renderer
-
-# Using yarn
-yarn add vitepress-mermaid-renderer
-
-# Using pnpm
-pnpm add vitepress-mermaid-renderer
 ```
 
 ### VitePress Configuration
@@ -125,44 +109,6 @@ mermaidRenderer.setToolbar({
   },
 });
 ```
-
-#### Top-Level Configuration
-
-| Option              | Type                      | Default | Description                                     |
-| :------------------ | :------------------------ | :------ | :---------------------------------------------- |
-| `showLanguageLabel` | `boolean`                 | `true`  | Toggles the original VitePress `mermaid` badge. |
-| `downloadFormat`    | `'svg' \| 'png' \| 'jpg'` | `'svg'` | Specifies the download format.                  |
-| `desktop`           | `object`                  | `{}`    | Configuration for desktop view.                 |
-| `mobile`            | `object`                  | `{}`    | Configuration for mobile view.                  |
-| `fullscreen`        | `object`                  | `{}`    | Configuration for fullscreen view.              |
-
-#### Toolbar Mode Options
-
-Inside `desktop`, `mobile`, or `fullscreen`, use these keys:
-
-| Key            | Type                      | Description                                     |
-| :------------- | :------------------------ | :---------------------------------------------- |
-| `[buttonName]` | `'enabled' \| 'disabled'` | Enable or disable specific buttons.             |
-| `zoomLevel`    | `'enabled' \| 'disabled'` | Controls the visibility of the zoom percentage. |
-| `positions`    | `object`                  | Defines where the toolbar is anchored.          |
-
-#### Default Button States
-
-| Button             | Desktop    | Mobile     | Fullscreen | Description              |
-| :----------------- | :--------- | :--------- | :--------- | :----------------------- |
-| `zoomIn`           | `enabled`  | `disabled` | `disabled` | Zoom in button.          |
-| `zoomOut`          | `enabled`  | `disabled` | `disabled` | Zoom out button.         |
-| `resetView`        | `enabled`  | `enabled`  | `disabled` | Resets zoom and pan.     |
-| `copyCode`         | `enabled`  | `enabled`  | `disabled` | Copies Mermaid source.   |
-| `download`         | `disabled` | `disabled` | `disabled` | Downloads the diagram.   |
-| `toggleFullscreen` | `enabled`  | `enabled`  | `enabled`  | Toggles fullscreen mode. |
-
-#### Position Configuration
-
-| Key          | Values              | Default  | Description                 |
-| :----------- | :------------------ | :------- | :-------------------------- |
-| `vertical`   | `'top' \| 'bottom'` | `bottom` | Vertical anchor position.   |
-| `horizontal` | `'left' \| 'right'` | `right`  | Horizontal anchor position. |
 
 ## Contributing
 

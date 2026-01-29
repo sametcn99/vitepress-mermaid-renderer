@@ -5,6 +5,9 @@
   "main": "index.js",
   "type": "module",
   "description": "Test project for vitepress-mermaid-renderer",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "keywords": [
     "vitepress",
     "mermaid",
@@ -25,16 +28,12 @@
     "docs:preview": "vitepress preview",
     "docs:serve": "vitepress serve",
     "lint": "eslint . --ext .js,.ts,.vue",
-    "format": "prettier --write \"**/*.{js,ts,vue,md}\""
-  },
-  "devDependencies": {
-    "vitepress": "^1.6.3"
+    "format": "prettier --write \"**/*.{js,ts,vue,md}\"",
+    "start": "vitepress build && vitepress serve --port ${PORT:-80} --host 0.0.0.0"
   },
   "dependencies": {
-    "mermaid": "^11.5.0",
-    "vitepress-mermaid-renderer": "/home/samet/Documents/SwProjects/vitepress-mermaid-renderer/vitepress-mermaid-renderer-1.1.7.tgz"
-  },
-  "engines": {
-    "node": ">=20.0.0"
+    "vitepress": "^1.6.4",
+    "mermaid": "^11.12.2",
+    "vitepress-mermaid-renderer": "^1.1.7"
   }
 }

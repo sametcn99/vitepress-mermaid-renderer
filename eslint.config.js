@@ -7,7 +7,13 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["dist/**", "node_modules/**", "test-project/**"],
+    // Use flat-config `ignores` and match nested dist folders.
+    ignores: [
+      "**/dist/**",
+      "node_modules/**",
+      "test-project/**",
+      "**/cache/**",
+    ],
   },
   {
     files: ["**/*.{js,cjs,mjs,ts,tsx,vue}"],

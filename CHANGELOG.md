@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.8
+
+- **Updated Dependencies**: Updated dependencies to their latest versions.
+- **Added Documentation Project to Repo**: Added a dedicated documentation project within the repository to provide comprehensive guides and examples for users.
+
 ## 1.1.6
 
 - **Updated Dependencies**: Updated dependencies to their latest versions.
