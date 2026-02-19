@@ -49,6 +49,18 @@ export function useMermaidNavigation(): MermaidNavigationState &
   const lastTouchX = ref(0);
   const lastTouchY = ref(0);
 
+  /**
+   * Returns true when the viewport is mobile-sized AND not in fullscreen.
+   * Touch behavior differs in this state: single finger scrolls the page,
+   * two fingers control the diagram (zoom + pan).
+   */
+  const isMobileNonFullscreen = (): boolean => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.matchMedia("(max-width: 768px)").matches && !isFullscreen.value
+    );
+  };
+
   // Constants
   const PAN_STEP = 50; // Pixels to pan per button press
 
@@ -145,6 +157,26 @@ export function useMermaidNavigation(): MermaidNavigationState &
   };
 
   const handleTouchStart = (e: TouchEvent) => {
+    if (isMobileNonFullscreen()) {
+      if (e.touches.length === 2) {
+        // Two fingers on mobile (non-fullscreen): track for pinch zoom + pan.
+        // Prevent browser native viewport zoom for this gesture.
+        e.preventDefault();
+        touchPanning.value = false;
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        initialTouchDistance.value = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY,
+        );
+        // Track midpoint so we can pan while pinching
+        lastTouchX.value = (touch1.clientX + touch2.clientX) / 2;
+        lastTouchY.value = (touch1.clientY + touch2.clientY) / 2;
+      }
+      // Single touch on mobile: do not intercept — let the page scroll.
+      return;
+    }
+
     if (e.touches.length === 1) {
       // Single touch - pan
       touchPanning.value = true;
@@ -163,6 +195,44 @@ export function useMermaidNavigation(): MermaidNavigationState &
   };
 
   const handleTouchMove = (e: TouchEvent) => {
+    if (isMobileNonFullscreen()) {
+      if (e.touches.length === 1) {
+        // Single touch on mobile (non-fullscreen): do not intercept.
+        // The browser will scroll the page naturally.
+        return;
+      }
+
+      if (e.touches.length === 2) {
+        // Two fingers on mobile (non-fullscreen): handle pinch zoom + pan.
+        e.preventDefault();
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+
+        // Pinch zoom
+        const currentDistance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY,
+        );
+        if (initialTouchDistance.value > 0) {
+          const zoomRatio = currentDistance / initialTouchDistance.value;
+          const newScale = scale.value * (1 + (zoomRatio - 1) * 0.2);
+          if (newScale >= 0.2 && newScale <= 10) {
+            scale.value = newScale;
+          }
+          initialTouchDistance.value = currentDistance;
+        }
+
+        // Two-finger pan (midpoint tracking)
+        const midX = (touch1.clientX + touch2.clientX) / 2;
+        const midY = (touch1.clientY + touch2.clientY) / 2;
+        translateX.value += (midX - lastTouchX.value) / scale.value;
+        translateY.value += (midY - lastTouchY.value) / scale.value;
+        lastTouchX.value = midX;
+        lastTouchY.value = midY;
+      }
+      return;
+    }
+
     e.preventDefault(); // Prevent scrolling while interacting with diagram
 
     if (touchPanning.value && e.touches.length === 1) {

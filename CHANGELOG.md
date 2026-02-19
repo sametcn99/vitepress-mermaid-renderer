@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.9
+
+- **Mobile Touch Interaction Improved**: On mobile screens, Mermaid diagrams now require a two-finger gesture for pinch-zoom and pan while not in fullscreen, allowing normal one-finger page scrolling.
+- **Fullscreen Behavior Preserved**: In fullscreen mode, touch navigation continues to work normally so users can freely interact with the diagram.
+
 ## 1.1.8
 
 - **Updated Dependencies**: Updated dependencies to their latest versions.

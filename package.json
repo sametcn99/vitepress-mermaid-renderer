@@ -1,6 +1,6 @@
 {
   "name": "vitepress-mermaid-renderer",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "A VitePress plugin to render Mermaid diagrams with interactive controls",
   "type": "module",
   "main": "./dist/vitepress-mermaid-renderer.umd.cjs",

@@ -209,6 +209,7 @@
   align-items: center;
   justify-content: center;
   max-height: none;
+  touch-action: none;
 }
 
 .mermaid {

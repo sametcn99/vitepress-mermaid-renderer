@@ -61,10 +61,7 @@ class CommandRunner {
 }
 
 class FileManager {
-  constructor(
-    private readonly logger: Logger,
-    private readonly runner: CommandRunner,
-  ) {}
+  constructor(private readonly logger: Logger) {}
 
   async pathExists(path: string) {
     try {
@@ -86,21 +83,31 @@ class FileManager {
     const stats = await Bun.file(path)
       .stat()
       .catch(() => null);
-    if (stats?.isDirectory()) {
-      await this.runner.run(["rm", "-rf", path], { allowFailure: true });
+
+    if (!stats) {
       return;
     }
 
-    if (stats) {
-      try {
-        await Bun.file(path).delete();
-        return;
-      } catch {
-        // fall through and attempt shell removal
-      }
+    if (!stats.isDirectory()) {
+      await Bun.file(path).delete();
+      return;
     }
 
-    await this.runner.run(["rm", "-rf", path], { allowFailure: true });
+    const command =
+      process.platform === "win32"
+        ? ["cmd", "/c", "rmdir", "/s", "/q", path]
+        : ["rm", "-rf", path];
+
+    const proc = Bun.spawn(command, {
+      stdout: "inherit",
+      stderr: "inherit",
+      stdin: "inherit",
+    });
+    const exitCode = await proc.exited;
+
+    if (exitCode !== 0) {
+      throw new Error(`Failed to remove directory: ${path}`);
+    }
   }
 
   async listMatching(pattern: string, cwd = process.cwd()) {
@@ -125,8 +132,8 @@ class PackageManager {
     return new PackageManager(runner);
   }
 
-  async runScript(script: string) {
-    await this.runner.run(["bun", "run", script]);
+  async runScript(script: string, scriptArgs: string[] = []) {
+    await this.runner.run(["bun", "run", script, ...scriptArgs]);
   }
 
   async installDependencies() {
@@ -204,11 +211,11 @@ class TestWorkflow {
           "Cleaning node_modules",
         );
 
-        this.logger.step("Installing dependencies");
-        await this.packageManager.installDependencies();
-
         this.logger.subStep("Removing existing package");
         await this.packageManager.removePackage("vitepress-mermaid-renderer");
+
+        this.logger.step("Installing dependencies");
+        await this.packageManager.installDependencies();
 
         this.logger.subStep("Installing local package");
         const packageFile = await this.findPackageArchive();
@@ -222,9 +229,13 @@ class TestWorkflow {
 
         this.logger.step(
           "Previewing production build",
-          "Press Ctrl+C to stop the preview when ready",
+          "Press Ctrl+C to stop the preview when ready. Use your PC LAN IP from mobile.",
         );
-        await this.packageManager.runScript("docs:preview");
+        await this.packageManager.runScript("docs:preview", [
+          "--",
+          "--host",
+          "0.0.0.0",
+        ]);
       },
     );
   }
@@ -264,7 +275,7 @@ const logger = new Logger();
 const main = async () => {
   const commandRunner = new CommandRunner();
   const packageManager = await PackageManager.create(commandRunner);
-  const fileManager = new FileManager(logger, commandRunner);
+  const fileManager = new FileManager(logger);
   const rootDir = import.meta.dir;
 
   const workflow = new TestWorkflow(

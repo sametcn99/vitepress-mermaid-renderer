@@ -15,6 +15,8 @@ hero:
 features:
   - title: 🔍 Interactive Controls
     details: Zoom, pan, and control your Mermaid diagrams with an intuitive interface
+  - title: 📱 Mobile Gesture Smart Mode
+    details: On mobile, one finger scrolls the page while two-finger gestures control diagram zoom and pan (outside fullscreen)
   - title: 🎨 Theme Compatible
     details: Seamlessly integrates with VitePress themes and color schemes
   - title: 📋 Easy to Use
