@@ -28,11 +28,11 @@
     "format": "prettier --write \"**/*.{js,ts,vue,md}\""
   },
   "devDependencies": {
-    "vitepress": "^1.6.3"
+    "vitepress": "^1.6.4"
   },
   "dependencies": {
-    "mermaid": "^11.5.0",
-    "vitepress-mermaid-renderer": "C:/Users/samet/Documents/projects/sametcn99/vitepress-mermaid-renderer/vitepress-mermaid-renderer-1.1.10.tgz"
+    "mermaid": "^11.12.3",
+    "vitepress-mermaid-renderer": "C:/Users/samet/Documents/projects/sametcn99/vitepress-mermaid-renderer/vitepress-mermaid-renderer-1.1.11.tgz"
   },
   "engines": {
     "node": ">=20.0.0"

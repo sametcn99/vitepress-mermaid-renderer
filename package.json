@@ -1,6 +1,6 @@
 {
   "name": "vitepress-mermaid-renderer",
-  "version": "1.1.10",
+  "version": "1.1.11",
   "description": "A VitePress plugin to render Mermaid diagrams with interactive controls",
   "type": "module",
   "main": "./dist/vitepress-mermaid-renderer.umd.cjs",
@@ -58,7 +58,7 @@
     "@typescript-eslint/eslint-plugin": "^8.56.0",
     "@typescript-eslint/parser": "^8.56.0",
     "@vitejs/plugin-vue": "^6.0.4",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.8.0",
     "globals": "^17.3.0",
@@ -79,7 +79,7 @@
   "bugs": {
     "url": "https://github.com/sametcn99/vitepress-mermaid-renderer/issues"
   },
-  "homepage": "https://vitepress-mermaid-renderer.sametcc.me",
+  "homepage": "https://vitepress-mermaid-renderer.vercel.app",
   "engines": {
     "node": ">=16.0.0"
   },
