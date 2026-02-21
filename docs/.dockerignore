@@ -1,0 +1,12 @@
+node_modules
+.DS_Store
+.git
+.github
+.vscode
+.vitepress/dist
+.vitepress/cache
+Dockerfile
+.dockerignore
+.gitignore
+README.md
+LICENSE
