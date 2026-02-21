@@ -1,0 +1,4 @@
+{
+	"buildCommand": "bun run docs:build",
+	"outputDirectory": ".vitepress/dist"
+}
