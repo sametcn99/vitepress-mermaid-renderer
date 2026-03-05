@@ -27,6 +27,14 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
+          always-auth: false
+
+      - name: Prepare npm trusted publishing context
+        run: |
+          npm i -g npm@latest
+          npm --version
+          npm config delete //registry.npmjs.org/:_authToken || true
+          rm -f ~/.npmrc
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
