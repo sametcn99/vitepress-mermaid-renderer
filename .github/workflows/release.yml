@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Prepare npm trusted publishing context
+        run: |
+          npm i -g npm@latest
+          npm --version
+          npm config delete //registry.npmjs.org/:_authToken || true
+          rm -f ~/.npmrc
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build package
+        run: bun run build
+
+      - name: Read version from package.json
+        id: pkg
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure tag does not already exist on origin
+        run: |
+          TAG="${{ steps.pkg.outputs.tag }}"
+          if git ls-remote --tags origin "refs/tags/$TAG" | grep -q "$TAG"; then
+            echo "Tag $TAG already exists on origin. Please bump package.json version first."
+            exit 1
+          fi
+
+      - name: Create and push tag from package.json version
+        run: |
+          TAG="${{ steps.pkg.outputs.tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Publish package with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ""
+          NPM_TOKEN: ""
+
+      - name: Verify published version on npm registry
+        run: |
+          VERSION="${{ steps.pkg.outputs.version }}"
+          for i in 1 2 3 4 5 6; do
+            PUBLISHED_VERSION=$(npm view vitepress-mermaid-renderer version || true)
+            if [ "$PUBLISHED_VERSION" = "$VERSION" ]; then
+              echo "Verified npm latest=$PUBLISHED_VERSION"
+              exit 0
+            fi
+            echo "Waiting for npm propagation... attempt $i (latest=$PUBLISHED_VERSION, expected=$VERSION)"
+            sleep 10
+          done
+          echo "Published version was not visible on npm after waiting."
+          exit 1
+
+      - name: Extract release notes from changelog
+        run: |
+          VERSION="${{ steps.pkg.outputs.version }}"
+          awk -v version="$VERSION" '
+            BEGIN { in_section = 0; found = 0 }
+            $0 ~ "^##[[:space:]]+" version "$" { in_section = 1; found = 1; next }
+            $0 ~ "^##[[:space:]]+" && in_section { exit }
+            in_section { print }
+            END { if (!found) exit 1 }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "No release notes found for version $VERSION in CHANGELOG.md"
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.pkg.outputs.tag }}
+          name: ${{ steps.pkg.outputs.tag }}
+          body_path: RELEASE_NOTES.md
