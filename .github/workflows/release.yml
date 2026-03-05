@@ -76,12 +76,11 @@ jobs:
             $0 ~ "^##[[:space:]]+" version "$" { in_section = 1; found = 1; next }
             $0 ~ "^##[[:space:]]+" && in_section { exit }
             in_section { print }
-            END { if (!found) exit 1 }
+            END { if (!found) exit 0 }
           ' CHANGELOG.md > RELEASE_NOTES.md
 
           if [ ! -s RELEASE_NOTES.md ]; then
-            echo "No release notes found for version $VERSION in CHANGELOG.md"
-            exit 1
+            echo "Version information was not added to CHANGELOG.md for $VERSION." > RELEASE_NOTES.md
           fi
 
       - name: Create GitHub Release
