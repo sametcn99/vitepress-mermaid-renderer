@@ -6,13 +6,14 @@ This page provides a detailed reference for the configuration options available 
 
 These options are passed to the `createMermaidRenderer()` function or set via `mermaidRenderer.setConfig()`.
 
-| Option              | Type                      | Default | Description                                         |
-| :------------------ | :------------------------ | :------ | :-------------------------------------------------- |
-| `showLanguageLabel` | `boolean`                 | `true`  | Toggles the original VitePress `mermaid` badge.     |
-| `downloadFormat`    | `'svg' \| 'png' \| 'jpg'` | `'svg'` | Specifies the default download format for diagrams. |
-| `desktop`           | `object`                  | `{}`    | Toolbar configuration for desktop devices.          |
-| `mobile`            | `object`                  | `{}`    | Toolbar configuration for mobile devices.           |
-| `fullscreen`        | `object`                  | `{}`    | Toolbar configuration when in fullscreen mode.      |
+| Option              | Type                      | Default     | Description                                                           |
+| :------------------ | :------------------------ | :---------- | :-------------------------------------------------------------------- |
+| `showLanguageLabel` | `boolean`                 | `true`      | Toggles the original VitePress `mermaid` badge.                       |
+| `downloadFormat`    | `'svg' \| 'png' \| 'jpg'` | `'svg'`     | Specifies the default download format for diagrams.                   |
+| `fullscreenMode`    | `'browser' \| 'dialog'`   | `'browser'` | Controls whether fullscreen uses the native API or an in-page dialog. |
+| `desktop`           | `object`                  | `{}`        | Toolbar configuration for desktop devices.                            |
+| `mobile`            | `object`                  | `{}`        | Toolbar configuration for mobile devices.                             |
+| `fullscreen`        | `object`                  | `{}`        | Toolbar configuration when in fullscreen mode.                        |
 
 ---
 

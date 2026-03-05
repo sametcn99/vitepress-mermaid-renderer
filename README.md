@@ -1,5 +1,10 @@
 # VitePress Mermaid Renderer
 
+[![npm version](https://img.shields.io/npm/v/vitepress-mermaid-renderer)](https://www.npmjs.com/package/vitepress-mermaid-renderer)
+[![npm monthly downloads](https://img.shields.io/npm/dm/vitepress-mermaid-renderer)](https://www.npmjs.com/package/vitepress-mermaid-renderer)
+[![Release](https://github.com/sametcn99/vitepress-mermaid-renderer/actions/workflows/release.yml/badge.svg)](https://github.com/sametcn99/vitepress-mermaid-renderer/actions/workflows/release.yml)
+[![npm provenance](https://img.shields.io/badge/npm-provenance%20enabled-2ea44f)](https://www.npmjs.com/package/vitepress-mermaid-renderer?activeTab=versions)
+
 Transform your static Mermaid diagrams into interactive, dynamic visualizations in VitePress. This powerful plugin brings life to your documentation by enabling interactive features like zooming, panning, and fullscreen viewing.
 
 _Stay up to date with new releases in the [CHANGELOG](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/CHANGELOG.md)._
@@ -94,6 +99,7 @@ You can fully customize the toolbar for desktop, mobile, and fullscreen modes us
 ```typescript
 mermaidRenderer.setToolbar({
   showLanguageLabel: true,
+  fullscreenMode: "browser", // "browser" (default) | "dialog"
   desktop: {
     zoomIn: "disabled",
     zoomLevel: "enabled",

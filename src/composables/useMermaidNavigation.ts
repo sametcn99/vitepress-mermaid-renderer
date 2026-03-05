@@ -1,5 +1,7 @@
 import { ref, type Ref } from "vue";
 
+export type FullscreenBehavior = "browser" | "dialog";
+
 export interface MermaidNavigationState {
   scale: Ref<number>;
   translateX: Ref<number>;
@@ -12,7 +14,10 @@ export interface MermaidNavigationActions {
   zoomIn: () => void;
   zoomOut: () => void;
   resetView: () => void;
-  toggleFullscreen: (diagramWrapper: HTMLElement | null) => void;
+  toggleFullscreen: (
+    diagramWrapper: HTMLElement | null,
+    behavior?: FullscreenBehavior,
+  ) => void;
   startPan: (e: MouseEvent) => void;
   pan: (e: MouseEvent) => void;
   endPan: () => void;
@@ -82,8 +87,16 @@ export function useMermaidNavigation(): MermaidNavigationState &
     translateY.value = 0;
   };
 
-  const toggleFullscreen = (diagramWrapper: HTMLElement | null) => {
+  const toggleFullscreen = (
+    diagramWrapper: HTMLElement | null,
+    behavior: FullscreenBehavior = "browser",
+  ) => {
     try {
+      if (behavior === "dialog") {
+        isFullscreen.value = !isFullscreen.value;
+        return;
+      }
+
       if (!document.fullscreenElement) {
         if (diagramWrapper?.requestFullscreen) {
           diagramWrapper.requestFullscreen();

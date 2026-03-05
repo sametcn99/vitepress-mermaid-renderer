@@ -1,16 +1,23 @@
 <template>
   <div
+    v-if="mounted && isDialogFullscreenActive"
+    class="mermaid-dialog-backdrop"
+    @click="handleToggleFullscreen"
+    aria-hidden="true"
+  ></div>
+  <div
     v-if="mounted"
     ref="fullscreenWrapper"
     class="mermaid-container"
+    :class="{ 'dialog-fullscreen-active': isDialogFullscreenActive }"
     data-fullscreen-wrapper
   >
-    <!-- Controls Component -->
     <MermaidControls
       ref="controlsRef"
       :scale="scale"
       :code="code"
       :is-fullscreen="isFullscreen"
+      :toolbar="resolvedToolbar"
       @zoom-in="zoomIn"
       @zoom-out="zoomOut"
       @reset-view="resetView"
@@ -20,10 +27,8 @@
       @pan-left="panLeft"
       @pan-right="panRight"
       @download="handleDownload"
-      :toolbar="resolvedToolbar"
     />
 
-    <!-- Error Component -->
     <MermaidError
       :render-error="renderError"
       :render-error-details="renderErrorDetails"
@@ -59,10 +64,11 @@
 import {
   computed,
   getCurrentInstance,
-  onMounted,
-  ref,
-  onUnmounted,
   nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
 } from "vue";
 import type { MermaidConfig } from "mermaid";
 import "./style.css";
@@ -71,14 +77,13 @@ import MermaidError from "./components/MermaidError.vue";
 import { useMermaidNavigation } from "./composables/useMermaidNavigation";
 import { useMermaidRenderer } from "./composables/useMermaidRenderer";
 import {
+  isResolvedToolbarConfig,
   resolveToolbarConfig,
+  type DownloadFormat,
   type MermaidToolbarOptions,
   type ResolvedToolbarConfig,
-  isResolvedToolbarConfig,
-  type DownloadFormat,
 } from "./toolbar";
 
-// Define emits
 const emit = defineEmits<{
   (
     event: "renderComplete",
@@ -92,21 +97,25 @@ const props = defineProps<{
   toolbar?: MermaidToolbarOptions | ResolvedToolbarConfig;
 }>();
 
-const resolvedToolbar = computed<ResolvedToolbarConfig>(() => {
-  if (props.toolbar && isResolvedToolbarConfig(props.toolbar)) {
-    return props.toolbar;
+const resolveIncomingToolbar = (
+  toolbar?: MermaidToolbarOptions | ResolvedToolbarConfig,
+): ResolvedToolbarConfig => {
+  if (toolbar && isResolvedToolbarConfig(toolbar)) {
+    return toolbar;
   }
-  return resolveToolbarConfig(props.toolbar);
-});
+  return resolveToolbarConfig(toolbar);
+};
 
-// Use composables
+const resolvedToolbar = ref<ResolvedToolbarConfig>(
+  resolveIncomingToolbar(props.toolbar),
+);
+
 const navigation = useMermaidNavigation();
 const renderer = useMermaidRenderer({
   config: props.config,
   onRenderComplete: (payload) => emit("renderComplete", payload),
 });
 
-// Extract state and actions from composables
 const {
   scale,
   translateX,
@@ -139,17 +148,26 @@ const {
   renderMermaidDiagram,
 } = renderer;
 
-// Component refs
 const controlsRef = ref<InstanceType<typeof MermaidControls> | null>(null);
 const fullscreenWrapper = ref<HTMLElement | null>(null);
 
-// Generate deterministic ID for SSR/client consistency using component uid
 const instance = getCurrentInstance();
 const diagramId = `mermaid-${instance?.uid ?? Math.random().toString(36).slice(2)}`;
 
-// Handle fullscreen toggle with wrapper reference
+const fullscreenBehavior = computed(() => resolvedToolbar.value.fullscreenMode);
+const isDialogFullscreenActive = computed(
+  () => isFullscreen.value && fullscreenBehavior.value === "dialog",
+);
+
+const handleToolbarUpdated = (event: Event) => {
+  const customEvent = event as CustomEvent<
+    MermaidToolbarOptions | ResolvedToolbarConfig | undefined
+  >;
+  resolvedToolbar.value = resolveIncomingToolbar(customEvent.detail);
+};
+
 const handleToggleFullscreen = () => {
-  toggleFullscreen(fullscreenWrapper.value);
+  toggleFullscreen(fullscreenWrapper.value, fullscreenBehavior.value);
 };
 
 const handleDownload = async (format: DownloadFormat) => {
@@ -161,10 +179,7 @@ const handleDownload = async (format: DownloadFormat) => {
     return;
   }
 
-  // Clone to avoid modifying the displayed diagram
   const svgClone = svgElement.cloneNode(true) as SVGElement;
-
-  // Add white background for non-transparent export (important for PNG/JPG)
   if (format !== "svg") {
     svgClone.style.backgroundColor = "white";
   }
@@ -174,9 +189,7 @@ const handleDownload = async (format: DownloadFormat) => {
   const url = URL.createObjectURL(blob);
 
   const downloadLink = document.createElement("a");
-  // Simple sanitizer for filename
-  const filename = "diagram";
-  downloadLink.download = `${filename}.${format}`;
+  downloadLink.download = `diagram.${format}`;
 
   if (format === "svg") {
     downloadLink.href = url;
@@ -184,84 +197,58 @@ const handleDownload = async (format: DownloadFormat) => {
     downloadLink.click();
     document.body.removeChild(downloadLink);
     URL.revokeObjectURL(url);
-  } else {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      // Use bounding box or viewBox for size
-      const bbox = svgElement.viewBox.baseVal;
-      // Fallback to width/height attributes if viewBox is missing, or getBoundingClientRect
-      let width = bbox?.width;
-      let height = bbox?.height;
-
-      if (!width || !height) {
-        const rect = svgElement.getBoundingClientRect();
-        width = rect.width;
-        height = rect.height;
-      }
-
-      // Handle scaling for better quality?
-      // Current implementation uses 1:1 of the viewBox/size.
-
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        // Fill white background again for canvas
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0);
-
-        const imageType = format === "png" ? "image/png" : "image/jpeg";
-        const dataUrl = canvas.toDataURL(imageType);
-        downloadLink.href = dataUrl;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      }
-      URL.revokeObjectURL(url);
-    };
-    img.onerror = (e) => {
-      console.error("Failed to load SVG for conversion", e);
-      URL.revokeObjectURL(url);
-    };
-    img.src = url;
+    return;
   }
+
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    const bbox = svgElement.viewBox.baseVal;
+    let width = bbox?.width;
+    let height = bbox?.height;
+
+    if (!width || !height) {
+      const rect = svgElement.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0);
+
+      const imageType = format === "png" ? "image/png" : "image/jpeg";
+      const dataUrl = canvas.toDataURL(imageType);
+      downloadLink.href = dataUrl;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+
+    URL.revokeObjectURL(url);
+  };
+
+  img.onerror = (error) => {
+    console.error("Failed to load SVG for conversion", error);
+    URL.revokeObjectURL(url);
+  };
+
+  img.src = url;
 };
 
-const handleMouseDown = (event: MouseEvent) => {
-  startPan(event);
-};
+const handleMouseDown = (event: MouseEvent) => startPan(event);
+const handleMouseMove = (event: MouseEvent) => pan(event);
+const handleMouseUp = () => endPan();
+const handleMouseLeave = () => endPan();
+const handleWheelEvent = (event: WheelEvent) => handleWheel(event);
+const handleTouchStartEvent = (event: TouchEvent) => handleTouchStart(event);
+const handleTouchMoveEvent = (event: TouchEvent) => handleTouchMove(event);
+const handleTouchEndEvent = () => handleTouchEnd();
 
-const handleMouseMove = (event: MouseEvent) => {
-  pan(event);
-};
-
-const handleMouseUp = () => {
-  endPan();
-};
-
-const handleMouseLeave = () => {
-  endPan();
-};
-
-const handleWheelEvent = (event: WheelEvent) => {
-  handleWheel(event);
-};
-
-const handleTouchStartEvent = (event: TouchEvent) => {
-  handleTouchStart(event);
-};
-
-const handleTouchMoveEvent = (event: TouchEvent) => {
-  handleTouchMove(event);
-};
-
-const handleTouchEndEvent = () => {
-  handleTouchEnd();
-};
-
-// Track fullscreen changes to update controls visibility
 const handleFullscreenChange = () => {
   const controlsElements = {
     controls: controlsRef.value?.$refs.controls as HTMLElement | null,
@@ -273,24 +260,33 @@ const handleFullscreenChange = () => {
 
 onMounted(async () => {
   try {
-    // Use nextTick to ensure the DOM is updated
     await nextTick();
-
-    // Start the rendering process with retry capabilities
     await renderMermaidDiagram(diagramId, props.code);
 
-    // Add fullscreen change event listeners with cross-browser support
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
     document.addEventListener("mozfullscreenchange", handleFullscreenChange);
     document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+    document.addEventListener(
+      "vitepress-mermaid:toolbar-updated",
+      handleToolbarUpdated,
+    );
   } catch (error) {
     console.error("Error in component initialization:", error);
   }
 });
 
-// Clean up event listeners
+watch(isDialogFullscreenActive, (active) => {
+  if (typeof document === "undefined") {
+    return;
+  }
+  document.body.classList.toggle("mermaid-dialog-open", active);
+});
+
 onUnmounted(() => {
+  if (typeof document !== "undefined") {
+    document.body.classList.remove("mermaid-dialog-open");
+  }
   document.removeEventListener("fullscreenchange", handleFullscreenChange);
   document.removeEventListener(
     "webkitfullscreenchange",
@@ -298,5 +294,9 @@ onUnmounted(() => {
   );
   document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
   document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
+  document.removeEventListener(
+    "vitepress-mermaid:toolbar-updated",
+    handleToolbarUpdated,
+  );
 });
 </script>

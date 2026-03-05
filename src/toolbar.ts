@@ -9,6 +9,13 @@ export type ToolbarButtonState = "enabled" | "disabled";
 export type DownloadFormat = "svg" | "png" | "jpg";
 
 /**
+ * Determines how fullscreen mode is presented to users.
+ * - browser: Uses the browser Fullscreen API (current default behavior).
+ * - dialog: Opens the diagram in an in-page modal dialog overlay.
+ */
+export type FullscreenMode = "browser" | "dialog";
+
+/**
  * All buttons that can ever appear inside the toolbar regardless of mode.
  */
 export type ToolbarButton =
@@ -110,6 +117,11 @@ export interface MermaidToolbarOptions {
    */
   downloadFormat?: DownloadFormat;
   /**
+   * Controls how fullscreen is displayed when the fullscreen button is clicked.
+   * Defaults to "browser" for backwards compatibility.
+   */
+  fullscreenMode?: FullscreenMode;
+  /**
    * Configuration options for the desktop toolbar.
    */
   desktop?: ToolbarModeOverrides<DesktopToolbarButton>;
@@ -166,6 +178,10 @@ export interface ResolvedToolbarConfig {
    * The format for downloading the diagram.
    */
   downloadFormat: DownloadFormat;
+  /**
+   * Resolved fullscreen display mode.
+   */
+  fullscreenMode: FullscreenMode;
 }
 
 /**
@@ -184,7 +200,8 @@ export const isResolvedToolbarConfig = (
     "positions" in candidate.desktop &&
     "zoomLevel" in candidate.desktop &&
     typeof candidate.showLanguageLabel === "boolean" &&
-    typeof candidate.downloadFormat === "string",
+    typeof candidate.downloadFormat === "string" &&
+    typeof candidate.fullscreenMode === "string",
   );
 };
 
@@ -240,6 +257,7 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
   },
   showLanguageLabel: true,
   downloadFormat: "svg",
+  fullscreenMode: "browser",
 } as const;
 
 /**
@@ -317,6 +335,9 @@ export const resolveToolbarConfig = (
   const downloadFormat =
     toolbar?.downloadFormat ?? DEFAULT_TOOLBAR_CONFIG.downloadFormat;
 
+  const fullscreenMode =
+    toolbar?.fullscreenMode ?? DEFAULT_TOOLBAR_CONFIG.fullscreenMode;
+
   return {
     desktop: resolveToolbarMode(
       DEFAULT_TOOLBAR_CONFIG.desktop,
@@ -329,5 +350,6 @@ export const resolveToolbarConfig = (
     ),
     showLanguageLabel,
     downloadFormat,
+    fullscreenMode,
   };
 };

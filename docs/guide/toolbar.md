@@ -12,6 +12,7 @@ The built-in toolbar gives you zoom, pan, reset, fullscreen, download, and copy 
 mermaidRenderer.setToolbar({
   showLanguageLabel: true,
   downloadFormat: "svg",
+  fullscreenMode: "browser", // "browser" (default) | "dialog"
   desktop: {
     zoomIn: "enabled",
     zoomOut: "enabled",
@@ -32,6 +33,10 @@ mermaidRenderer.setToolbar({
   },
 });
 ```
+
+- `fullscreenMode` controls the fullscreen experience:
+  - `browser` uses the native browser Fullscreen API (default).
+  - `dialog` opens the diagram in an in-page modal overlay.
 
 - **Desktop** should surface all controls because mouse and keyboard navigation are available.
 - **Mobile** hides zoom buttons but keeps reset/copy so thumbs stay clear of the diagram area.

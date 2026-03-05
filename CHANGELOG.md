@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.1.12
+
+### Added
+
+- **Configurable Fullscreen Behavior**: Added `fullscreenMode` to toolbar configuration with `"browser"` (default) and `"dialog"` options.
+- **Manual Release Workflow**: Added a dedicated manual release flow using `workflow_dispatch` that reads version from `package.json`, creates/pushes `v<version>` tag, publishes to npm with provenance, and creates a GitHub release.
+- **Release Badges**: Added npm version/download, release workflow, and provenance badges to `README.md`.
+
+### Changed
+
+- **Dialog Fullscreen Layout**: Reworked dialog fullscreen layout to be centered and constrained for a cleaner modal-like experience on desktop and mobile.
+- **Theme Alignment for Copy Feedback**: Updated the `Copied` notification to use VitePress theme variables (`var(--vp-c-bg)` and `var(--vp-c-text-1)`).
+- **Fullscreen Backdrop Styling**: Updated fullscreen/dialog backdrop styling to better match VitePress theme colors.
+
+### Fixed
+
+- **Dialog Background Experience**: Replaced the flat white/opaque backdrop feel with a translucent blurred backdrop using `backdrop-filter`, so underlying page content remains visible and softly blurred.
+
 ## 1.1.10
 
 - **Updated Dependencies**: Updated dependencies to their latest versions.

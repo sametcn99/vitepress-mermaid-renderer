@@ -15,6 +15,7 @@ export default {
       });
       mermaidRenderer.setToolbar({
         showLanguageLabel: false,
+        fullscreenMode: "browser",
         desktop: {
           copyCode: "enabled",
           toggleFullscreen: "enabled",
