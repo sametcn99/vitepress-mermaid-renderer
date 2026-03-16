@@ -1,20 +1,34 @@
 # Changelog
 
+## 1.1.19
+
+### Added in 1.1.19
+
+- **Improved API Documentation**: Added comprehensive JSDoc coverage for the main entrypoint, toolbar utilities, and style manager to improve editor hints and package discoverability.
+- **Expanded CSS Module Typings**: Added inline CSS module declarations so TypeScript correctly understands `?inline` style imports used by the package.
+
+### Changed in 1.1.19
+
+- **Toolbar Type Safety**: Refined toolbar configuration typing with stronger type guards and resolved configuration types for a safer developer experience.
+- **Renderer and Component Documentation**: Expanded internal documentation across renderer, composables, and Vue components to make the codebase easier to maintain.
+- **Documentation Package References**: Updated README and documentation configuration links to use `npx.dev` package references.
+- **Example Project Dependencies**: Refreshed the documentation and test project package versions to align with the `1.1.19` release.
+
 ## 1.1.14
 
-### Added
+### Added in 1.1.14
 
 - **Configurable Fullscreen Behavior**: Added `fullscreenMode` to toolbar configuration with `"browser"` (default) and `"dialog"` options.
 - **Manual Release Workflow**: Added a dedicated manual release flow using `workflow_dispatch` that reads version from `package.json`, creates/pushes `v<version>` tag, publishes to npm with provenance, and creates a GitHub release.
 - **Release Badges**: Added npm version/download, release workflow, and provenance badges to `README.md`.
 
-### Changed
+### Changed in 1.1.14
 
 - **Dialog Fullscreen Layout**: Reworked dialog fullscreen layout to be centered and constrained for a cleaner modal-like experience on desktop and mobile.
 - **Theme Alignment for Copy Feedback**: Updated the `Copied` notification to use VitePress theme variables (`var(--vp-c-bg)` and `var(--vp-c-text-1)`).
 - **Fullscreen Backdrop Styling**: Updated fullscreen/dialog backdrop styling to better match VitePress theme colors.
 
-### Fixed
+### Fixed in 1.1.14
 
 - **Dialog Background Experience**: Replaced the flat white/opaque backdrop feel with a translucent blurred backdrop using `backdrop-filter`, so underlying page content remains visible and softly blurred.
 
@@ -41,20 +55,20 @@
 
 ## 1.1.5
 
-### Basic
+### Basic in 1.1.5
 
 - No more manual `import "vitepress-mermaid-renderer/dist/style.css"`; styles are injected automatically when the renderer boots.
 - `setToolbar()` lets you toggle every button per mode, move the toolbar to any corner, decide whether the zoom percentage stays visible, and hide the built-in VitePress language badge when you prefer a cleaner frame.
 - Mobile gained optional `zoomIn`/`zoomOut` buttons (disabled by default) so touch users can zoom without relying on gestures, and the toolbar now disappears entirely when all controls are off.
 - Tooling has been refreshed (Vite, Vue, lockfiles, etc.) to match the latest VitePress ecosystem.
 
-### Added
+### Added in 1.1.5
 
 - Introduced a dedicated `toolbar.ts` module that models all toolbar controls, resolves per-mode overrides, and adds the new `showLanguageLabel` flag plus opt-in mobile `zoomIn`/`zoomOut` buttons.
 - Exposed `MermaidRenderer#setToolbar()` and plumbed toolbar data through `<MermaidDiagram>` and `<MermaidControls>`, enabling consumers to fully customize button states, placement, zoom readouts, and whether the original VitePress language badge should remain.
 - Added a `styleManager` that injects the package CSS exactly once on the client and declared `*.css?inline` modules so TypeScript understands the new import pattern.
 
-### Changed
+### Changed in 1.1.5
 
 - `MermaidRenderer` now initializes itself on construction, listens for DOM readiness, and uses a scoped `MutationObserver` plus exponential backoff retries to re-render diagrams after VitePress navigations or late content loads. Manual `initialize()`/`renderMermaidDiagrams()` calls are no longer needed.
 - Wrapper cleanup now strips VitePress’ default “mermaid” corner label when `showLanguageLabel` is disabled, preventing duplicate badges inside the rendered container.
@@ -68,7 +82,7 @@
 - Updated CSS to support per-corner positioning classes, fullscreen transitions tied to the container, and better spacing for the zoom readout in mobile layouts.
 - Bumped dev dependencies (e.g., `vite@7.2.1`, `vue@3.5.23`) and refreshed both lockfiles to pick up the latest patches.
 
-### Fixed
+### Fixed in 1.1.5
 
 - Added guards that prevent re-render attempts from looping on already-processed nodes by ignoring existing `.mermaid-wrapper` roots and batching mutation callbacks.
 - Ensured the mobile toolbar hides entirely when every control is disabled, eliminating empty floating containers.
