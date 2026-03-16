@@ -157,6 +157,7 @@ npm install /path/to/vitepress-mermaid-renderer-1.0.0.tgz
 ## Links
 
 - [NPM Package](https://www.npmjs.com/package/vitepress-mermaid-renderer)
+- [npmx Package Link](https://npmx.dev/package/vitepress-mermaid-renderer)
 - [GitHub Repository](https://github.com/sametcn99/vitepress-mermaid-renderer)
 - [Live Examples](https://vitepress-mermaid-renderer.vercel.app)
 

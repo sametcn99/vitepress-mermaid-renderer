@@ -132,7 +132,7 @@ export default defineConfig({
       },
       {
         icon: "npm",
-        link: "https://www.npmjs.com/package/vitepress-mermaid-renderer",
+        link: "https://npmx.dev/package/vitepress-mermaid-renderer",
       },
     ],
 
