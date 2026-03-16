@@ -1,3 +1,17 @@
+<!--
+  @module MermaidError
+
+  Error display component rendered when a Mermaid diagram fails to
+  compile or render. Shows a fixed "Failed to render diagram" banner
+  with an expandable details section containing the raw error message.
+
+  **Props:**
+  - `renderError`        — `true` to show the error banner.
+  - `renderErrorDetails` — The raw error string (stack trace / parse
+    error from Mermaid).
+
+  Used by {@link MermaidDiagram} as a child component.
+-->
 <template>
   <div v-if="renderError" class="diagram-error">
     <div class="error-message">
@@ -27,13 +41,30 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
+/**
+ * Component props.
+ *
+ * @property renderError - When `true` the error banner is rendered.
+ *   Bound to the rendering state managed by
+ *   {@link useMermaidRenderer}.
+ * @property renderErrorDetails - The full error message/stack trace
+ *   that will be shown inside the expandable `<pre>` block.
+ */
 const props = defineProps<{
   renderError: boolean;
   renderErrorDetails: string;
 }>();
 
+/**
+ * Controls visibility of the detailed error `<pre>` block.
+ * Toggled by clicking the "Show Details" / "Hide Details" button.
+ */
 const showErrorDetails = ref(false);
 
+/**
+ * Toggles the {@link showErrorDetails} flag between `true` and
+ * `false`, showing or hiding the raw error output.
+ */
 const toggleErrorDetails = () => {
   showErrorDetails.value = !showErrorDetails.value;
 };

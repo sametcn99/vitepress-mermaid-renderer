@@ -243,7 +243,7 @@ class TestWorkflow {
   private async findPackageArchive() {
     const archives = await this.fileManager.listMatching("*.tgz", this.rootDir);
     const archive = archives[0];
-    return archive ? this.resolvePath(this.rootDir, archive) : null;
+    return archive ? `../${archive}` : null;
   }
 
   private async withDirectory<T>(
