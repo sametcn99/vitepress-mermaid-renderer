@@ -136,7 +136,7 @@ bun test.ts
 
 ```bash
 # In the package directory
-npm run build
+bun run build
 npm link
 
 # In your test project
@@ -147,12 +147,14 @@ npm link vitepress-mermaid-renderer
 
 ```bash
 # In the package directory
-npm run build
-npm pack
+bun run build
+bun pm pack
 
 # In your test project
 npm install /path/to/vitepress-mermaid-renderer-1.0.0.tgz
 ```
+
+Use `bun run build` to generate the smallest distributable bundle.
 
 ## Links
 

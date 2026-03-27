@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.20
+
+use terser for aggressive minification and create a release profile that combines build and release processes into a single command. Streamline the build process by eliminating the separate build:release command and ensuring that the build command directly applies release optimizations.
+
 ## 1.1.19
 
 ### Added in 1.1.19
