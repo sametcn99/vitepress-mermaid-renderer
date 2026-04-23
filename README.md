@@ -122,9 +122,27 @@ We welcome contributions! Whether it's submitting pull requests, reporting issue
 
 ## Local Development
 
-To test the package locally, you can use one of the following methods:
+For automated verification, run the test suite before building or publishing:
 
-### Automated Test Script
+```bash
+bun run test
+```
+
+For coverage output:
+
+```bash
+bun run test:coverage
+```
+
+For the packaged VitePress smoke test:
+
+```bash
+bun run test:e2e
+```
+
+To preview the packaged plugin inside the bundled example VitePress site, you can use one of the following methods:
+
+### Local Preview Helper
 
 Run the `test.ts` helper to walk through the full local-preview flow in one step. This script cleans artifacts, rebuilds, packs, installs, and launches the dev server.
 
@@ -165,6 +183,4 @@ Use `bun run build` to generate the smallest distributable bundle.
 
 ---
 
-<div align="center">
-  <strong>If you found this project helpful, please consider giving it a star on GitHub!</strong>
-</div>
+**If you found this project helpful, please consider giving it a star on GitHub!**

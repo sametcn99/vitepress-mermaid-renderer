@@ -137,3 +137,5 @@ dist
 
 test-project/node_modules
 test-project/.yalc
+playwright-report
+test-results

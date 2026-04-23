@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
 import { resolve } from "path";
 import dts from "vite-plugin-dts";
@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       vue(),
       dts({
-        exclude: ["test.ts", "docs/**", "test-project/**"],
+        exclude: ["test.ts", "docs/**", "test-project/**", "tests/**"],
         insertTypesEntry: true,
         rollupTypes: true,
       }),
@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
         formats: ["es", "umd"],
       },
       rollupOptions: {
-        treeshake: "smallest",
+        treeshake: true,
         external: ["vue", "mermaid"],
         output: {
           globals: {
@@ -61,6 +61,18 @@ export default defineConfig(({ mode }) => {
       cssCodeSplit: false,
       outDir: "dist",
       emptyOutDir: true,
+    },
+    test: {
+      environment: "happy-dom",
+      setupFiles: ["./vitest.setup.ts"],
+      include: ["tests/**/*.test.ts"],
+      exclude: ["dist/**", "docs/**", "test-project/**"],
+      coverage: {
+        provider: "v8",
+        reporter: ["text", "html"],
+        include: ["src/**/*.{ts,vue}"],
+        exclude: ["src/types/**"],
+      },
     },
   };
 });

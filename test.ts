@@ -5,6 +5,12 @@ interface CommandOptions {
   allowFailure?: boolean;
 }
 
+interface WorkflowOptions {
+  preview: boolean;
+  host: string;
+  port: string;
+}
+
 class Logger {
   private readonly colors: {
     green: string;
@@ -144,8 +150,13 @@ class PackageManager {
     await this.runner.run(["bun", "remove", pkg], { allowFailure: true });
   }
 
-  async installLocalPackage(packagePath: string) {
-    await this.runner.run(["bun", "add", packagePath]);
+  async installLocalPackage(packagePath: string, save = true) {
+    const command = ["bun", "add"];
+    if (!save) {
+      command.push("--no-save");
+    }
+    command.push(packagePath);
+    await this.runner.run(command);
   }
 
   async createPackageArchive() {
@@ -159,6 +170,7 @@ class TestWorkflow {
     private readonly logger: Logger,
     private readonly fileManager: FileManager,
     private readonly packageManager: PackageManager,
+    private readonly options: WorkflowOptions,
   ) {}
 
   async run() {
@@ -211,9 +223,6 @@ class TestWorkflow {
           "Cleaning node_modules",
         );
 
-        this.logger.subStep("Removing existing package");
-        await this.packageManager.removePackage("vitepress-mermaid-renderer");
-
         this.logger.step("Installing dependencies");
         await this.packageManager.installDependencies();
 
@@ -222,10 +231,18 @@ class TestWorkflow {
         if (!packageFile) {
           throw new Error("No package archive found in parent directory.");
         }
-        await this.packageManager.installLocalPackage(packageFile);
+        await this.packageManager.installLocalPackage(packageFile, false);
 
         this.logger.step("Building documentation");
         await this.packageManager.runScript("docs:build");
+
+        if (!this.options.preview) {
+          this.logger.step(
+            "Prepared test project",
+            "Smoke-test assets are ready.",
+          );
+          return;
+        }
 
         this.logger.step(
           "Previewing production build",
@@ -234,7 +251,9 @@ class TestWorkflow {
         await this.packageManager.runScript("docs:preview", [
           "--",
           "--host",
-          "0.0.0.0",
+          this.options.host,
+          "--port",
+          this.options.port,
         ]);
       },
     );
@@ -272,17 +291,68 @@ class TestWorkflow {
 
 const logger = new Logger();
 
+/**
+ * Parses command-line flags for the local preview helper.
+ *
+ * Supported flags:
+ * - `--prepare-only` skips launching the preview server.
+ * - `--host <value>` overrides the preview host.
+ * - `--port <value>` overrides the preview port.
+ *
+ * @param argv - Raw process arguments.
+ * @returns Normalized workflow options.
+ */
+const parseWorkflowOptions = (argv: string[]): WorkflowOptions => {
+  const args = [...argv];
+  const options: WorkflowOptions = {
+    preview: true,
+    host: "0.0.0.0",
+    port: "4173",
+  };
+
+  while (args.length > 0) {
+    const arg = args.shift();
+
+    if (arg === "--prepare-only") {
+      options.preview = false;
+      continue;
+    }
+
+    if (arg === "--host") {
+      const host = args.shift();
+      if (!host) {
+        throw new Error("Missing value for --host");
+      }
+      options.host = host;
+      continue;
+    }
+
+    if (arg === "--port") {
+      const port = args.shift();
+      if (!port) {
+        throw new Error("Missing value for --port");
+      }
+      options.port = port;
+      continue;
+    }
+  }
+
+  return options;
+};
+
 const main = async () => {
   const commandRunner = new CommandRunner();
   const packageManager = await PackageManager.create(commandRunner);
   const fileManager = new FileManager(logger);
   const rootDir = import.meta.dir;
+  const workflowOptions = parseWorkflowOptions(process.argv.slice(2));
 
   const workflow = new TestWorkflow(
     rootDir,
     logger,
     fileManager,
     packageManager,
+    workflowOptions,
   );
 
   await workflow.run();

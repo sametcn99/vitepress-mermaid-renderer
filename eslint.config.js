@@ -13,6 +13,7 @@ export default tseslint.config(
       "node_modules/**",
       "test-project/**",
       "**/cache/**",
+      "coverage/**",
     ],
   },
   {

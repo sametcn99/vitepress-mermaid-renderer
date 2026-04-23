@@ -36,18 +36,42 @@ This project uses [Bun](https://bun.sh) as the package manager and runtime. Plea
 
 1. Fork the repository on GitHub.
 2. Clone your forked repository:
+
    ```bash
    git clone https://github.com/sametcn99/vitepress-mermaid-renderer.git
    cd vitepress-mermaid-renderer
    ```
+
 3. Install dependencies:
+
    ```bash
    bun install
    ```
 
 ### Local Development
 
-For testing changes locally, you can use the provided test helper script which cleans, builds, packs, and runs a test instance:
+Run the automated test suite before opening a pull request:
+
+```bash
+bun run test
+```
+
+For a coverage report:
+
+```bash
+bun run test:coverage
+```
+
+For the Playwright smoke test against the bundled VitePress example:
+
+```bash
+bun run test:e2e
+```
+
+For the full testing strategy, source-to-test ownership map, and regression
+protocol, see [docs/testing.md](docs/testing.md).
+
+If you want to preview the packaged plugin in the bundled VitePress example, use the provided helper script which cleans, builds, packs, and runs a test instance:
 
 ```bash
 bun test.ts
@@ -63,14 +87,9 @@ bun run build
 
 This project follows specific coding standards to ensure consistency.
 
-- **Linting**: We use ESLint. Run the linter before pushing your changes:
-  ```bash
-  bun run lint
-  ```
-- **Formatting**: We use Prettier. Format your code using:
-  ```bash
-  bun run format
-  ```
+- **Linting**: We use ESLint. Run `bun run lint` before pushing your changes.
+
+- **Formatting**: We use Prettier. Run `bun run format` before submitting your changes.
 
 ## Pull Request Process
 

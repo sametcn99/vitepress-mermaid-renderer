@@ -26,6 +26,9 @@
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
+    "playwright.config.ts",
+    "tests/**/*.ts",
+    "vitest.setup.ts",
     "test.ts"
   ]
 }
