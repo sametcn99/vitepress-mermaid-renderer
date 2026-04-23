@@ -16,26 +16,24 @@ safety for the VitePress Mermaid Renderer plugin.
 
 ## Source → Test Ownership Map
 
-| Source                                                                             | Primary tests                                                                                    |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [src/toolbar.ts](src/toolbar.ts)                                                   | [tests/toolbar.test.ts](tests/toolbar.test.ts)                                                   |
-| [src/styleManager.ts](src/styleManager.ts)                                         | [tests/styleManager.test.ts](tests/styleManager.test.ts)                                         |
-| [src/MermaidRenderer.ts](src/MermaidRenderer.ts)                                   | [tests/MermaidRenderer.test.ts](tests/MermaidRenderer.test.ts)                                   |
-| [src/composables/useMermaidRenderer.ts](src/composables/useMermaidRenderer.ts)     | [tests/composables/useMermaidRenderer.test.ts](tests/composables/useMermaidRenderer.test.ts)     |
-| [src/composables/useMermaidNavigation.ts](src/composables/useMermaidNavigation.ts) | [tests/composables/useMermaidNavigation.test.ts](tests/composables/useMermaidNavigation.test.ts) |
-| [src/MermaidDiagram.vue](src/MermaidDiagram.vue)                                   | [tests/components/MermaidDiagram.test.ts](tests/components/MermaidDiagram.test.ts)               |
-| [src/components/MermaidControls.vue](src/components/MermaidControls.vue)           | [tests/components/MermaidControls.test.ts](tests/components/MermaidControls.test.ts)             |
-| [src/components/MermaidError.vue](src/components/MermaidError.vue)                 | [tests/components/MermaidError.test.ts](tests/components/MermaidError.test.ts)                   |
+- [src/toolbar.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/src/toolbar.ts) → [tests/toolbar.test.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/toolbar.test.ts)
+- [src/styleManager.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/src/styleManager.ts) → [tests/styleManager.test.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/styleManager.test.ts)
+- [src/MermaidRenderer.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/src/MermaidRenderer.ts) → [tests/MermaidRenderer.test.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/MermaidRenderer.test.ts)
+- [src/composables/useMermaidRenderer.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/src/composables/useMermaidRenderer.ts) → [tests/composables/useMermaidRenderer.test.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/composables/useMermaidRenderer.test.ts)
+- [src/composables/useMermaidNavigation.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/src/composables/useMermaidNavigation.ts) → [tests/composables/useMermaidNavigation.test.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/composables/useMermaidNavigation.test.ts)
+- [src/MermaidDiagram.vue](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/src/MermaidDiagram.vue) → [tests/components/MermaidDiagram.test.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/components/MermaidDiagram.test.ts)
+- [src/components/MermaidControls.vue](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/src/components/MermaidControls.vue) → [tests/components/MermaidControls.test.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/components/MermaidControls.test.ts)
+- [src/components/MermaidError.vue](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/src/components/MermaidError.vue) → [tests/components/MermaidError.test.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/components/MermaidError.test.ts)
 
 End-to-end coverage for the integrated VitePress experience lives under
-[tests/e2e](tests/e2e):
+[tests/e2e](https://github.com/sametcn99/vitepress-mermaid-renderer/tree/main/tests/e2e):
 
-- [tests/e2e/landing.spec.ts](tests/e2e/landing.spec.ts) — landing page rendering and navigation.
-- [tests/e2e/examples.spec.ts](tests/e2e/examples.spec.ts) — basic and advanced example pages.
-- [tests/e2e/toolbar.spec.ts](tests/e2e/toolbar.spec.ts) — zoom, reset, and clipboard interactions.
-- [tests/e2e/fullscreen.spec.ts](tests/e2e/fullscreen.spec.ts) — Fullscreen API invocation.
-- [tests/e2e/routing.spec.ts](tests/e2e/routing.spec.ts) — diagram persistence across route changes.
-- [tests/e2e/test-project.smoke.spec.ts](tests/e2e/test-project.smoke.spec.ts) — original smoke baseline.
+- [tests/e2e/landing.spec.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/e2e/landing.spec.ts) — landing page rendering and navigation.
+- [tests/e2e/examples.spec.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/e2e/examples.spec.ts) — basic and advanced example pages.
+- [tests/e2e/toolbar.spec.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/e2e/toolbar.spec.ts) — zoom, reset, and clipboard interactions.
+- [tests/e2e/fullscreen.spec.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/e2e/fullscreen.spec.ts) — Fullscreen API invocation.
+- [tests/e2e/routing.spec.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/e2e/routing.spec.ts) — diagram persistence across route changes.
+- [tests/e2e/test-project.smoke.spec.ts](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/tests/e2e/test-project.smoke.spec.ts) — original smoke baseline.
 
 ## Regression Protocol
 
