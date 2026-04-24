@@ -17,7 +17,9 @@ test("renders Mermaid diagrams and toolbar controls in the VitePress smoke site"
   const diagrams = page.locator(".mermaid-container");
   await expect(diagrams.first()).toBeVisible();
   await expect(diagrams.first().locator(".mermaid > svg")).toBeVisible();
-  await expect(diagrams.first().locator('[title="Zoom In"]')).toBeVisible();
+  await expect(
+    diagrams.first().locator('[data-mermaid-control="zoomIn"]'),
+  ).toBeVisible();
 
   await expect
     .poll(async () => diagrams.count(), { timeout: 15000 })

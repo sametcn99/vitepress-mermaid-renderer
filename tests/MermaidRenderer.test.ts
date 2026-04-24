@@ -73,6 +73,28 @@ describe("MermaidRenderer", () => {
       });
       expect(expected).toEqual(sameAgain);
     });
+
+    it("dispatches vitepress-mermaid:toolbar-updated with resolved tooltip text", async () => {
+      const mod = await importFresh();
+      const renderer = mod.MermaidRenderer.getInstance();
+      const spy = vi.fn();
+      document.addEventListener("vitepress-mermaid:toolbar-updated", spy);
+
+      renderer.setToolbar({
+        i18n: {
+          localeIndex: "tr",
+          locales: {
+            tr: { tooltips: { copyCode: "Kodu kopyala" } },
+          },
+        },
+      });
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      const detail = (spy.mock.calls[0]![0] as CustomEvent).detail;
+      expect(detail.i18n.localeIndex).toBe("tr");
+      expect(detail.i18n.tooltips.copyCode).toBe("Kodu kopyala");
+      expect(detail.i18n.tooltips.zoomIn).toBe("Zoom In");
+    });
   });
 
   describe("DOM discovery and queueing", () => {

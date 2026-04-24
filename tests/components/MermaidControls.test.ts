@@ -30,7 +30,9 @@ describe("MermaidControls", () => {
     });
 
     expect(
-      wrapper.find('.desktop-controls [title="Download Diagram"]').exists(),
+      wrapper
+        .find('.desktop-controls [data-mermaid-control="download"]')
+        .exists(),
     ).toBe(false);
     expect(wrapper.get(".desktop-controls").classes()).toContain(
       "toolbar-vertical-bottom",
@@ -42,7 +44,9 @@ describe("MermaidControls", () => {
     await wrapper.setProps({ isFullscreen: true });
 
     expect(
-      wrapper.find('.desktop-controls [title="Download Diagram"]').exists(),
+      wrapper
+        .find('.desktop-controls [data-mermaid-control="download"]')
+        .exists(),
     ).toBe(true);
     expect(wrapper.get(".desktop-controls").classes()).toContain(
       "toolbar-vertical-top",
@@ -69,7 +73,9 @@ describe("MermaidControls", () => {
       },
     });
 
-    await wrapper.get('.desktop-controls [title="Copy Code"]').trigger("click");
+    await wrapper
+      .get('.desktop-controls [data-mermaid-control="copyCode"]')
+      .trigger("click");
     await Promise.resolve();
     expect(writeText).toHaveBeenCalledWith("graph TD; A-->B");
     expect(wrapper.text()).toContain("Copied");
@@ -92,10 +98,58 @@ describe("MermaidControls", () => {
     });
 
     await wrapper
-      .get('.desktop-controls [title="Download Diagram"]')
+      .get('.desktop-controls [data-mermaid-control="download"]')
       .trigger("click");
 
     expect(wrapper.emitted("download")).toEqual([["jpg"]]);
+  });
+
+  it("renders localized tooltip text on title and aria-label and exposes data-mermaid-control attributes", () => {
+    const toolbar = resolveToolbarConfig({
+      desktop: { download: "enabled" },
+      mobile: { zoomIn: "enabled" },
+      i18n: {
+        localeIndex: "tr",
+        locales: {
+          tr: {
+            tooltips: {
+              zoomIn: "Yakınlaştır",
+              copyCode: "Kodu kopyala",
+              download: "Diyagramı indir",
+              resetView: "Görünümü sıfırla",
+              toggleFullscreen: "Tam ekran",
+              zoomOut: "Uzaklaştır",
+            },
+          },
+        },
+      },
+    });
+
+    const wrapper = mount(MermaidControls, {
+      props: {
+        scale: 1,
+        code: "graph TD; A-->B",
+        isFullscreen: false,
+        toolbar,
+      },
+    });
+
+    const copyBtn = wrapper.get(
+      '.desktop-controls [data-mermaid-control="copyCode"]',
+    );
+    expect(copyBtn.attributes("title")).toBe("Kodu kopyala");
+    expect(copyBtn.attributes("aria-label")).toBe("Kodu kopyala");
+
+    const dlBtn = wrapper.get(
+      '.desktop-controls [data-mermaid-control="download"]',
+    );
+    expect(dlBtn.attributes("title")).toBe("Diyagramı indir");
+
+    const mobileZoomIn = wrapper.get(
+      '.mobile-controls [data-mermaid-control="zoomIn"]',
+    );
+    expect(mobileZoomIn.attributes("title")).toBe("Yakınlaştır");
+    expect(mobileZoomIn.attributes("aria-label")).toBe("Yakınlaştır");
   });
 
   it("hides the zoom-level indicator when desktop.zoomLevel is disabled", () => {

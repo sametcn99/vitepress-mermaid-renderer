@@ -209,6 +209,33 @@ describe("useMermaidNavigation", () => {
       expect(nav.isFullscreen.value).toBe(false);
     });
 
+    it("restores the previous view after exiting dialog fullscreen", () => {
+      const nav = useMermaidNavigation();
+
+      nav.zoomIn();
+      nav.panRight();
+      nav.panDown();
+
+      const previousScale = nav.scale.value;
+      const previousTranslateX = nav.translateX.value;
+      const previousTranslateY = nav.translateY.value;
+
+      nav.toggleFullscreen(null, "dialog");
+      nav.zoomIn();
+      nav.panLeft();
+      nav.panUp();
+
+      expect(nav.scale.value).not.toBeCloseTo(previousScale);
+      expect(nav.translateX.value).not.toBeCloseTo(previousTranslateX);
+      expect(nav.translateY.value).not.toBeCloseTo(previousTranslateY);
+
+      nav.toggleFullscreen(null, "dialog");
+
+      expect(nav.scale.value).toBeCloseTo(previousScale);
+      expect(nav.translateX.value).toBeCloseTo(previousTranslateX);
+      expect(nav.translateY.value).toBeCloseTo(previousTranslateY);
+    });
+
     it("alerts when no fullscreen API is available in browser mode", () => {
       const alertFn = vi.fn();
       vi.stubGlobal("alert", alertFn);
@@ -271,6 +298,58 @@ describe("useMermaidNavigation", () => {
       nav.toggleFullscreen(wrapper, "browser");
       expect(exitFullscreen).toHaveBeenCalledTimes(1);
       expect(nav.isFullscreen.value).toBe(false);
+    });
+
+    it("restores the previous view when browser fullscreen exits via fullscreenchange", () => {
+      const nav = useMermaidNavigation();
+      const wrapper = document.createElement("div");
+      const requestFullscreen = vi.fn();
+
+      Object.defineProperty(wrapper, "requestFullscreen", {
+        configurable: true,
+        value: requestFullscreen,
+      });
+
+      nav.zoomIn();
+      nav.panRight();
+      nav.panDown();
+
+      const previousScale = nav.scale.value;
+      const previousTranslateX = nav.translateX.value;
+      const previousTranslateY = nav.translateY.value;
+
+      Object.defineProperty(document, "fullscreenElement", {
+        configurable: true,
+        value: null,
+      });
+
+      nav.toggleFullscreen(wrapper, "browser");
+
+      Object.defineProperty(document, "fullscreenElement", {
+        configurable: true,
+        value: wrapper,
+      });
+      nav.updateFullscreenControls({ controls: null, mobileControls: null });
+
+      nav.zoomIn();
+      nav.panLeft();
+      nav.panUp();
+
+      expect(nav.scale.value).not.toBeCloseTo(previousScale);
+      expect(nav.translateX.value).not.toBeCloseTo(previousTranslateX);
+      expect(nav.translateY.value).not.toBeCloseTo(previousTranslateY);
+
+      Object.defineProperty(document, "fullscreenElement", {
+        configurable: true,
+        value: null,
+      });
+      nav.updateFullscreenControls({ controls: null, mobileControls: null });
+
+      expect(requestFullscreen).toHaveBeenCalledTimes(1);
+      expect(nav.isFullscreen.value).toBe(false);
+      expect(nav.scale.value).toBeCloseTo(previousScale);
+      expect(nav.translateX.value).toBeCloseTo(previousTranslateX);
+      expect(nav.translateY.value).toBeCloseTo(previousTranslateY);
     });
 
     it("updateFullscreenControls toggles the force-show class", () => {

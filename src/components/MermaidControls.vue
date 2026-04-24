@@ -35,7 +35,9 @@
       <button
         v-if="isDesktopEnabled('zoomIn')"
         @click="$emit('zoomIn')"
-        title="Zoom In"
+        :title="tooltipText('zoomIn')"
+        :aria-label="tooltipText('zoomIn')"
+        data-mermaid-control="zoomIn"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -57,7 +59,9 @@
       <button
         v-if="isDesktopEnabled('zoomOut')"
         @click="$emit('zoomOut')"
-        title="Zoom Out"
+        :title="tooltipText('zoomOut')"
+        :aria-label="tooltipText('zoomOut')"
+        data-mermaid-control="zoomOut"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -75,7 +79,9 @@
       <button
         v-if="isDesktopEnabled('resetView')"
         @click="$emit('resetView')"
-        title="Reset View"
+        :title="tooltipText('resetView')"
+        :aria-label="tooltipText('resetView')"
+        data-mermaid-control="resetView"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -92,7 +98,9 @@
       <button
         v-if="isDesktopEnabled('copyCode')"
         @click="copyDiagramCode"
-        title="Copy Code"
+        :title="tooltipText('copyCode')"
+        :aria-label="tooltipText('copyCode')"
+        data-mermaid-control="copyCode"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -112,7 +120,9 @@
       <button
         v-if="isDesktopEnabled('download')"
         @click="emitDownload"
-        title="Download Diagram"
+        :title="tooltipText('download')"
+        :aria-label="tooltipText('download')"
+        data-mermaid-control="download"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -130,7 +140,9 @@
       <button
         v-if="isDesktopEnabled('toggleFullscreen')"
         @click="$emit('toggleFullscreen')"
-        title="Toggle Fullscreen"
+        :title="tooltipText('toggleFullscreen')"
+        :aria-label="tooltipText('toggleFullscreen')"
+        data-mermaid-control="toggleFullscreen"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -158,7 +170,9 @@
         <button
           v-if="isMobileEnabled('zoomIn')"
           @click="$emit('zoomIn')"
-          title="Zoom In"
+          :title="tooltipText('zoomIn')"
+          :aria-label="tooltipText('zoomIn')"
+          data-mermaid-control="zoomIn"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -183,7 +197,9 @@
         <button
           v-if="isMobileEnabled('zoomOut')"
           @click="$emit('zoomOut')"
-          title="Zoom Out"
+          :title="tooltipText('zoomOut')"
+          :aria-label="tooltipText('zoomOut')"
+          data-mermaid-control="zoomOut"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -201,7 +217,9 @@
         <button
           v-if="isMobileEnabled('resetView')"
           @click="$emit('resetView')"
-          title="Reset View"
+          :title="tooltipText('resetView')"
+          :aria-label="tooltipText('resetView')"
+          data-mermaid-control="resetView"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -218,7 +236,9 @@
         <button
           v-if="isMobileEnabled('copyCode')"
           @click="copyDiagramCode"
-          title="Copy Code"
+          :title="tooltipText('copyCode')"
+          :aria-label="tooltipText('copyCode')"
+          data-mermaid-control="copyCode"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -238,7 +258,9 @@
         <button
           v-if="isMobileEnabled('download')"
           @click="emitDownload"
-          title="Download Diagram"
+          :title="tooltipText('download')"
+          :aria-label="tooltipText('download')"
+          data-mermaid-control="download"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -256,7 +278,9 @@
         <button
           v-if="isMobileEnabled('toggleFullscreen')"
           @click="$emit('toggleFullscreen')"
-          title="Toggle Fullscreen"
+          :title="tooltipText('toggleFullscreen')"
+          :aria-label="tooltipText('toggleFullscreen')"
+          data-mermaid-control="toggleFullscreen"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -284,6 +308,7 @@ import type {
   ResolvedToolbarConfig,
   ToolbarPosition,
   ToolbarButtonState,
+  ToolbarTooltipKey,
   DownloadFormat,
 } from "../toolbar";
 
@@ -337,6 +362,20 @@ const isMobileEnabled = (button: MobileToolbarButton) => {
   const source = getMobileSource();
   return source.buttons[button] === "enabled";
 };
+
+/**
+ * Returns the resolved tooltip text for a given button key.
+ *
+ * Reads from `props.toolbar.i18n.tooltips`, which is always fully
+ * populated by `resolveToolbarConfig()`. Used as the value of both the
+ * native `title` attribute and `aria-label` so the visual tooltip and
+ * accessible name stay in sync across locales.
+ *
+ * @param key - The canonical tooltip key (matches the button id).
+ * @returns The localized tooltip string for the active locale.
+ */
+const tooltipText = (key: ToolbarTooltipKey): string =>
+  props.toolbar.i18n.tooltips[key];
 
 // Define emits
 const emit = defineEmits<{

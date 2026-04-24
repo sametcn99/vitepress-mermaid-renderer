@@ -14,6 +14,7 @@ These options are passed to the `createMermaidRenderer()` function or set via `m
 | `desktop`           | `object`                  | `{}`        | Toolbar configuration for desktop devices.                            |
 | `mobile`            | `object`                  | `{}`        | Toolbar configuration for mobile devices.                             |
 | `fullscreen`        | `object`                  | `{}`        | Toolbar configuration when in fullscreen mode.                        |
+| `i18n`              | `object`                  | `{}`        | Tooltip localization, keyed by VitePress `localeIndex`.               |
 
 ---
 
@@ -48,6 +49,31 @@ The `positions` object allows you to anchor the toolbar to different corners of 
 | :----------- | :------------------ | :------- | :-------------------------- |
 | `vertical`   | `'top' \| 'bottom'` | `bottom` | Vertical anchor position.   |
 | `horizontal` | `'left' \| 'right'` | `right`  | Horizontal anchor position. |
+
+---
+
+## Tooltip Localization (`i18n`)
+
+The `i18n` option lets the toolbar mirror the active VitePress locale. It accepts the following shape:
+
+| Key           | Type                                                | Description                                                     |
+| :------------ | :-------------------------------------------------- | :-------------------------------------------------------------- |
+| `localeIndex` | `string`                                            | Active VitePress locale key (matches `useData().localeIndex`).  |
+| `tooltips`    | `Partial<ToolbarTooltipText>`                       | Global overrides applied when no locale-specific entry matches. |
+| `locales`     | `Record<string, { tooltips?: ToolbarTooltipText }>` | Per-locale tooltip tables, keyed by `localeIndex`.              |
+
+### `ToolbarTooltipText`
+
+| Key                | Default English     |
+| :----------------- | :------------------ |
+| `zoomIn`           | `Zoom In`           |
+| `zoomOut`          | `Zoom Out`          |
+| `resetView`        | `Reset View`        |
+| `copyCode`         | `Copy Code`         |
+| `download`         | `Download Diagram`  |
+| `toggleFullscreen` | `Toggle Fullscreen` |
+
+Resolution order per key: `locales[localeIndex].tooltips[key]` → `tooltips[key]` → built-in default. Empty strings are ignored at every level.
 
 ---
 

@@ -18,6 +18,7 @@ _Stay up to date with new releases in the [CHANGELOG](https://github.com/sametcn
 - **Fullscreen Mode**: View diagrams in a distraction-free fullscreen mode.
 - **Theme Integration**: Automatically adapts to Light and Dark modes.
 - **Download Options**: Export diagrams as SVG, PNG, or JPG.
+- **i18n Support**: Localize toolbar tooltips based on VitePress locale.
 
 ## How It Works
 
@@ -115,6 +116,42 @@ mermaidRenderer.setToolbar({
   },
 });
 ```
+
+#### Localized tooltip text (VitePress i18n)
+
+Pair `setToolbar` with `useData().localeIndex` to translate the built-in tooltip strings per VitePress locale. Each call dispatches a `vitepress-mermaid:toolbar-updated` event so already-mounted diagrams pick up the new tooltips without re-rendering.
+
+```typescript
+import { watch } from "vue";
+import { useData } from "vitepress";
+
+const { localeIndex } = useData();
+
+const applyToolbar = () => {
+  mermaidRenderer.setToolbar({
+    i18n: {
+      localeIndex: localeIndex.value,
+      locales: {
+        tr: {
+          tooltips: {
+            zoomIn: "Yakınlaştır",
+            zoomOut: "Uzaklaştır",
+            resetView: "Görünümü sıfırla",
+            copyCode: "Kodu kopyala",
+            download: "Diyagramı indir",
+            toggleFullscreen: "Tam ekranı aç/kapa",
+          },
+        },
+      },
+    },
+  });
+};
+
+applyToolbar();
+watch(localeIndex, applyToolbar);
+```
+
+Resolution order per tooltip key: `i18n.locales[localeIndex].tooltips[key]` → `i18n.tooltips[key]` → built-in English default. Empty strings are ignored at every level.
 
 ## Contributing
 

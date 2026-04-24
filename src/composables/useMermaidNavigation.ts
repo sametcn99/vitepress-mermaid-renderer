@@ -26,7 +26,7 @@
  * @see {@link MermaidDiagram} for the component that uses this composable.
  * @see {@link useMermaidRenderer} for the rendering counterpart.
  */
-import { ref, type Ref } from "vue";
+import { ref, watch, type Ref } from "vue";
 
 /**
  * Determines how the diagram enters fullscreen mode.
@@ -181,6 +181,11 @@ export function useMermaidNavigation(): MermaidNavigationState &
   const touchPanning = ref(false);
   const lastTouchX = ref(0);
   const lastTouchY = ref(0);
+  const fullscreenViewState = ref<{
+    scale: number;
+    translateX: number;
+    translateY: number;
+  } | null>(null);
 
   /**
    * Returns `true` when the viewport width is ≤ 768 px **and** the diagram
@@ -230,6 +235,38 @@ export function useMermaidNavigation(): MermaidNavigationState &
     translateX.value = 0;
     translateY.value = 0;
   };
+
+  /** Restores the non-fullscreen view after a fullscreen session ends. */
+  const restoreFullscreenView = () => {
+    if (!fullscreenViewState.value) {
+      return;
+    }
+
+    scale.value = fullscreenViewState.value.scale;
+    translateX.value = fullscreenViewState.value.translateX;
+    translateY.value = fullscreenViewState.value.translateY;
+    isPanning.value = false;
+    touchPanning.value = false;
+    initialTouchDistance.value = 0;
+    fullscreenViewState.value = null;
+  };
+
+  watch(
+    isFullscreen,
+    (active) => {
+      if (active) {
+        fullscreenViewState.value = {
+          scale: scale.value,
+          translateX: translateX.value,
+          translateY: translateY.value,
+        };
+        return;
+      }
+
+      restoreFullscreenView();
+    },
+    { flush: "sync" },
+  );
 
   /**
    * Toggles the diagram in and out of fullscreen.

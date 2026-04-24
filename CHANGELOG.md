@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.22
+
+- feat(navigation): implement fullscreen state restoration and add tests for fullscreen behavior
+- feat(toolbar): add VitePress locale-aware toolbar tooltips with per-locale fallback resolution and live updates for mounted diagrams
+- test(toolbar): cover localized tooltip resolution, renderer dispatch behavior, component updates, and multilingual selectors
+- docs(toolbar): document the new `i18n` toolbar option in the README and guide pages
+
 ## 1.1.20
 
 use terser for aggressive minification and create a release profile that combines build and release processes into a single command. Streamline the build process by eliminating the separate build:release command and ensuring that the build command directly applies release optimizations.

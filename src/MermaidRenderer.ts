@@ -179,11 +179,15 @@ export class MermaidRenderer {
    * If called without arguments, the toolbar reverts to the canonical
    * defaults defined in {@link DEFAULT_TOOLBAR_CONFIG}.
    *
-   * Already-mounted diagrams are **not** affected retroactively. To
-   * update them, dispatch a `vitepress-mermaid:toolbar-updated` custom
-   * event that `MermaidDiagram.vue` listens for.
+   * Already-mounted diagrams are updated as well: this method dispatches
+   * a `vitepress-mermaid:toolbar-updated` custom event whose `detail` is
+   * the freshly-resolved toolbar config. `MermaidDiagram.vue` listens
+   * for this event and re-applies the new config (including localized
+   * tooltip text) without remounting.
    *
    * @param toolbar - Optional consumer-provided toolbar overrides.
+   *
+   * @fires vitepress-mermaid:toolbar-updated
    *
    * @example
    * ```ts
@@ -191,11 +195,41 @@ export class MermaidRenderer {
    * renderer.setToolbar({
    *   downloadFormat: "png",
    *   desktop: { download: "enabled" },
+   *   i18n: {
+   *     localeIndex: "tr",
+   *     locales: { tr: { tooltips: { zoomIn: "Yakınlaştır" } } },
+   *   },
    * });
    * ```
    */
   public setToolbar(toolbar?: MermaidToolbarOptions): void {
     this.toolbarConfig = resolveToolbarConfig(toolbar);
+    this.dispatchToolbarUpdate();
+  }
+
+  /**
+   * Dispatches a `vitepress-mermaid:toolbar-updated` custom event on
+   * the document carrying the current resolved toolbar config as the
+   * event `detail`. Listeners in `MermaidDiagram.vue` use it to refresh
+   * already-mounted diagrams without remounting.
+   *
+   * Errors during dispatch are caught and logged so a single failure
+   * never breaks the rendering pipeline.
+   *
+   * @fires vitepress-mermaid:toolbar-updated
+   */
+  private dispatchToolbarUpdate(): void {
+    try {
+      if (typeof document === "undefined") return;
+      document.dispatchEvent(
+        new CustomEvent<ResolvedToolbarConfig>(
+          "vitepress-mermaid:toolbar-updated",
+          { detail: this.toolbarConfig },
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to dispatch Mermaid toolbar update:", error);
+    }
   }
 
   /**

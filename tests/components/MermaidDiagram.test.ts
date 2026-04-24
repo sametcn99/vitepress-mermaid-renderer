@@ -67,7 +67,7 @@ describe("MermaidDiagram", () => {
     await nextTick();
 
     await wrapper
-      .get('.desktop-controls [title="Toggle Fullscreen"]')
+      .get('.desktop-controls [data-mermaid-control="toggleFullscreen"]')
       .trigger("click");
     await nextTick();
 
@@ -119,8 +119,44 @@ describe("MermaidDiagram", () => {
     await flushDiagramRender();
 
     expect(
-      wrapper.find('.desktop-controls [title="Download Diagram"]').exists(),
+      wrapper
+        .find('.desktop-controls [data-mermaid-control="download"]')
+        .exists(),
     ).toBe(true);
+    wrapper.unmount();
+  });
+
+  it("updates tooltip text when receiving a localized toolbar-updated event", async () => {
+    const wrapper = mount(MermaidDiagram, {
+      attachTo: document.body,
+      props: {
+        code: "flowchart LR\nA-->B",
+        toolbar: resolveToolbarConfig(),
+      },
+    });
+    await flushDiagramRender();
+
+    const initial = wrapper
+      .get('.desktop-controls [data-mermaid-control="copyCode"]')
+      .attributes("title");
+    expect(initial).toBe("Copy Code");
+
+    document.dispatchEvent(
+      new CustomEvent("vitepress-mermaid:toolbar-updated", {
+        detail: resolveToolbarConfig({
+          i18n: {
+            localeIndex: "tr",
+            locales: { tr: { tooltips: { copyCode: "Kodu kopyala" } } },
+          },
+        }),
+      }),
+    );
+    await nextTick();
+
+    const updated = wrapper
+      .get('.desktop-controls [data-mermaid-control="copyCode"]')
+      .attributes("title");
+    expect(updated).toBe("Kodu kopyala");
     wrapper.unmount();
   });
 
@@ -158,7 +194,7 @@ describe("MermaidDiagram", () => {
     await flushDiagramRender();
 
     await wrapper
-      .get('.desktop-controls [title="Download Diagram"]')
+      .get('.desktop-controls [data-mermaid-control="download"]')
       .trigger("click");
     await nextTick();
 
@@ -187,7 +223,7 @@ describe("MermaidDiagram", () => {
     await flushDiagramRender();
 
     await wrapper
-      .get('.desktop-controls [title="Download Diagram"]')
+      .get('.desktop-controls [data-mermaid-control="download"]')
       .trigger("click");
     await nextTick();
 

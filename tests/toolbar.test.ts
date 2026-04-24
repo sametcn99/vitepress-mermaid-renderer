@@ -3,6 +3,7 @@ import {
   DEFAULT_TOOLBAR_CONFIG,
   isResolvedToolbarConfig,
   resolveToolbarConfig,
+  resolveToolbarI18n,
 } from "../src/toolbar";
 
 describe("resolveToolbarConfig", () => {
@@ -129,5 +130,82 @@ describe("isResolvedToolbarConfig", () => {
         desktop: { buttons: {}, positions: {}, zoomLevel: "enabled" },
       }),
     ).toBe(false);
+  });
+});
+
+describe("resolveToolbarI18n", () => {
+  it("returns the built-in English defaults when no overrides are provided", () => {
+    const i18n = resolveToolbarI18n();
+    expect(i18n.localeIndex).toBe("root");
+    expect(i18n.tooltips).toEqual({
+      zoomIn: "Zoom In",
+      zoomOut: "Zoom Out",
+      resetView: "Reset View",
+      copyCode: "Copy Code",
+      download: "Download Diagram",
+      toggleFullscreen: "Toggle Fullscreen",
+    });
+  });
+
+  it("applies global tooltip overrides on top of defaults", () => {
+    const i18n = resolveToolbarI18n({
+      tooltips: { copyCode: "Kopyala" },
+    });
+    expect(i18n.tooltips.copyCode).toBe("Kopyala");
+    expect(i18n.tooltips.zoomIn).toBe("Zoom In");
+  });
+
+  it("prefers locale-specific overrides over global ones", () => {
+    const i18n = resolveToolbarI18n({
+      localeIndex: "tr",
+      tooltips: { zoomIn: "Global ZI" },
+      locales: {
+        tr: { tooltips: { zoomIn: "Yakınlaştır" } },
+      },
+    });
+    expect(i18n.localeIndex).toBe("tr");
+    expect(i18n.tooltips.zoomIn).toBe("Yakınlaştır");
+  });
+
+  it("falls back to global override when locale entry omits the key", () => {
+    const i18n = resolveToolbarI18n({
+      localeIndex: "tr",
+      tooltips: { download: "Global DL" },
+      locales: { tr: { tooltips: { zoomIn: "Yakınlaştır" } } },
+    });
+    expect(i18n.tooltips.download).toBe("Global DL");
+    expect(i18n.tooltips.zoomIn).toBe("Yakınlaştır");
+    expect(i18n.tooltips.resetView).toBe("Reset View");
+  });
+
+  it("falls back to defaults when localeIndex has no matching locale entry", () => {
+    const i18n = resolveToolbarI18n({
+      localeIndex: "fr",
+      locales: { tr: { tooltips: { zoomIn: "Yakınlaştır" } } },
+    });
+    expect(i18n.localeIndex).toBe("fr");
+    expect(i18n.tooltips.zoomIn).toBe("Zoom In");
+  });
+
+  it("ignores empty-string overrides so a tooltip is never blanked out", () => {
+    const i18n = resolveToolbarI18n({
+      localeIndex: "tr",
+      tooltips: { zoomIn: "" },
+      locales: { tr: { tooltips: { zoomIn: "" } } },
+    });
+    expect(i18n.tooltips.zoomIn).toBe("Zoom In");
+  });
+
+  it("flows through resolveToolbarConfig and never mutates DEFAULT_TOOLBAR_CONFIG", () => {
+    const resolved = resolveToolbarConfig({
+      i18n: {
+        localeIndex: "tr",
+        locales: { tr: { tooltips: { copyCode: "Kodu kopyala" } } },
+      },
+    });
+    expect(resolved.i18n.localeIndex).toBe("tr");
+    expect(resolved.i18n.tooltips.copyCode).toBe("Kodu kopyala");
+    expect(DEFAULT_TOOLBAR_CONFIG.i18n.localeIndex).toBe("root");
+    expect(DEFAULT_TOOLBAR_CONFIG.i18n.tooltips.copyCode).toBe("Copy Code");
   });
 });

@@ -1,13 +1,24 @@
-import { h, nextTick, watchEffect, watch } from "vue";
+import { h, nextTick, watch } from "vue";
 import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import { useData } from "vitepress";
 import { createMermaidRenderer } from "vitepress-mermaid-renderer";
 
+const toolbarTooltipsByLocale = {
+  tr: {
+    zoomIn: "Yakınlaştır",
+    zoomOut: "Uzaklaştır",
+    resetView: "Görünümü sıfırla",
+    copyCode: "Kodu kopyala",
+    download: "Diyagramı indir",
+    toggleFullscreen: "Tam ekranı aç/kapa",
+  },
+} as const;
+
 export default {
   extends: DefaultTheme,
   Layout: () => {
-    const { isDark } = useData();
+    const { isDark, localeIndex } = useData();
 
     const initMermaid = () => {
       const mermaidRenderer = createMermaidRenderer({
@@ -33,15 +44,23 @@ export default {
           download: "enabled",
         },
         downloadFormat: "svg",
+        i18n: {
+          localeIndex: localeIndex.value,
+          locales: Object.fromEntries(
+            Object.entries(toolbarTooltipsByLocale).map(
+              ([locale, tooltips]) => [locale, { tooltips }],
+            ),
+          ),
+        },
       });
     };
 
     // initial mermaid setup
     nextTick(() => initMermaid());
 
-    // on theme change, re-render mermaid charts
+    // re-render mermaid charts when theme or active locale changes
     watch(
-      () => isDark.value,
+      () => [isDark.value, localeIndex.value] as const,
       () => {
         initMermaid();
       },

@@ -123,6 +123,125 @@ export type ToolbarButton =
   | "download";
 
 /**
+ * Canonical key set for tooltip strings shown on toolbar buttons.
+ *
+ * Mirrors {@link ToolbarButton} so every interactive button has exactly
+ * one tooltip key. Used as the index type of {@link ToolbarTooltipText}
+ * and the `data-mermaid-control` attribute applied to each rendered
+ * button in `MermaidControls.vue`.
+ *
+ * @example
+ * ```ts
+ * const key: ToolbarTooltipKey = "zoomIn";
+ * ```
+ */
+export type ToolbarTooltipKey = ToolbarButton;
+
+/**
+ * Fully-resolved tooltip text map for every toolbar button.
+ *
+ * Every key from {@link ToolbarTooltipKey} is required so consuming
+ * components can read tooltip strings without null/undefined checks.
+ *
+ * Built-in defaults are English and live in
+ * {@link DEFAULT_TOOLBAR_CONFIG}.`i18n.tooltips`.
+ *
+ * @example
+ * ```ts
+ * const tooltips: ToolbarTooltipText = {
+ *   zoomIn: "Yakınlaştır",
+ *   zoomOut: "Uzaklaştır",
+ *   resetView: "Görünümü sıfırla",
+ *   copyCode: "Kodu kopyala",
+ *   download: "Diyagramı indir",
+ *   toggleFullscreen: "Tam ekranı aç/kapa",
+ * };
+ * ```
+ */
+export type ToolbarTooltipText = Record<ToolbarTooltipKey, string>;
+
+/**
+ * Per-locale tooltip override accepted inside
+ * {@link ToolbarI18nOptions.locales}.
+ *
+ * Every key is optional; missing keys fall back to the global
+ * `i18n.tooltips` overrides and finally to the built-in English defaults.
+ */
+export interface ToolbarI18nLocaleOptions {
+  /**
+   * Partial overrides for the tooltip text map for this locale.
+   */
+  tooltips?: Partial<ToolbarTooltipText>;
+}
+
+/**
+ * Consumer-facing locale-aware tooltip configuration block.
+ *
+ * Designed to be aligned with the VitePress multilingual model:
+ * `localeIndex` matches the key VitePress exposes via `useData()` (for
+ * example `"root"`, `"en"`, `"tr"`). The library itself stays framework
+ * agnostic — consumers are responsible for forwarding the active locale
+ * index from VitePress to {@link MermaidRenderer.setToolbar}.
+ *
+ * Resolution precedence (high to low):
+ * 1. `locales[localeIndex].tooltips[key]`
+ * 2. `tooltips[key]`
+ * 3. Built-in English default in {@link DEFAULT_TOOLBAR_CONFIG}.
+ *
+ * @example
+ * ```ts
+ * const i18n: ToolbarI18nOptions = {
+ *   localeIndex: "tr",
+ *   tooltips: { copyCode: "Kodu kopyala" },
+ *   locales: {
+ *     tr: {
+ *       tooltips: {
+ *         zoomIn: "Yakınlaştır",
+ *         zoomOut: "Uzaklaştır",
+ *         resetView: "Görünümü sıfırla",
+ *         download: "Diyagramı indir",
+ *         toggleFullscreen: "Tam ekranı aç/kapa",
+ *       },
+ *     },
+ *   },
+ * };
+ * ```
+ */
+export interface ToolbarI18nOptions {
+  /**
+   * Active VitePress locale index. Defaults to `"root"` when omitted,
+   * matching the VitePress default locale key.
+   */
+  localeIndex?: string;
+  /**
+   * Optional global tooltip overrides applied when a locale-specific
+   * value is missing.
+   */
+  tooltips?: Partial<ToolbarTooltipText>;
+  /**
+   * Optional per-locale tooltip overrides keyed by VitePress locale index.
+   */
+  locales?: Record<string, ToolbarI18nLocaleOptions>;
+}
+
+/**
+ * Fully-resolved i18n block stored on {@link ResolvedToolbarConfig}.
+ *
+ * Both fields are guaranteed to be present so downstream components can
+ * read tooltip strings directly without null checks.
+ */
+export interface ResolvedToolbarI18n {
+  /**
+   * Active VitePress locale index that was used to resolve `tooltips`.
+   */
+  localeIndex: string;
+  /**
+   * Concrete tooltip text map applied to rendered buttons.
+   */
+  tooltips: ToolbarTooltipText;
+}
+
+/**
  * The set of buttons available in the **desktop** toolbar mode.
  *
  * Currently identical to {@link ToolbarButton} (all buttons are available),
@@ -330,6 +449,14 @@ export interface MermaidToolbarOptions {
    * Configuration options for the fullscreen toolbar.
    */
   fullscreen?: ToolbarModeOverrides<ToolbarButton>;
+  /**
+   * Optional locale-aware overrides for toolbar button tooltip text.
+   *
+   * Designed for VitePress multilingual sites: pass the active
+   * `localeIndex` returned by `useData()` and provide tooltip
+   * translations under `locales`. See {@link ToolbarI18nOptions}.
+   */
+  i18n?: ToolbarI18nOptions;
 }
 
 /**
@@ -409,6 +536,12 @@ export interface ResolvedToolbarConfig {
    * Resolved fullscreen display mode.
    */
   fullscreenMode: FullscreenMode;
+  /**
+   * Resolved locale-aware tooltip text used by `MermaidControls.vue`.
+   *
+   * Always present after resolution. See {@link ResolvedToolbarI18n}.
+   */
+  i18n: ResolvedToolbarI18n;
 }
 
 /**
@@ -453,7 +586,12 @@ export const isResolvedToolbarConfig = (
     "zoomLevel" in candidate.desktop &&
     typeof candidate.showLanguageLabel === "boolean" &&
     typeof candidate.downloadFormat === "string" &&
-    typeof candidate.fullscreenMode === "string",
+    typeof candidate.fullscreenMode === "string" &&
+    !!candidate.i18n &&
+    typeof candidate.i18n === "object" &&
+    typeof candidate.i18n.localeIndex === "string" &&
+    !!candidate.i18n.tooltips &&
+    typeof candidate.i18n.tooltips === "object",
   );
 };
 
@@ -528,6 +666,17 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
   showLanguageLabel: true,
   downloadFormat: "svg",
   fullscreenMode: "browser",
+  i18n: {
+    localeIndex: "root",
+    tooltips: {
+      zoomIn: "Zoom In",
+      zoomOut: "Zoom Out",
+      resetView: "Reset View",
+      copyCode: "Copy Code",
+      download: "Download Diagram",
+      toggleFullscreen: "Toggle Fullscreen",
+    },
+  },
 } as const;
 
 /**
@@ -676,6 +825,75 @@ const resolveToolbarMode = <ButtonType extends string>(
  * });
  * ```
  */
+/**
+ * Type guard ensuring an unknown value is a non-empty string.
+ *
+ * Used by {@link resolveToolbarI18n} so empty strings cannot accidentally
+ * blank out a tooltip when overriding it.
+ */
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value.length > 0;
+
+/**
+ * Picks the first non-empty string tooltip override from the supplied
+ * partial maps, falling back to `undefined` when none of them define a
+ * non-empty value for `key`.
+ */
+const pickTooltip = (
+  key: ToolbarTooltipKey,
+  ...sources: Array<Partial<ToolbarTooltipText> | undefined>
+): string | undefined => {
+  for (const source of sources) {
+    const candidate = source?.[key];
+    if (isNonEmptyString(candidate)) {
+      return candidate;
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Resolves the locale-aware tooltip block for {@link ResolvedToolbarConfig}.
+ *
+ * Precedence (high to low):
+ * 1. `i18n.locales[localeIndex].tooltips[key]`
+ * 2. `i18n.tooltips[key]`
+ * 3. Built-in default in `DEFAULT_TOOLBAR_CONFIG.i18n.tooltips[key]`.
+ *
+ * If `localeIndex` is omitted, the VitePress-default `"root"` key is used.
+ *
+ * @param i18n - Optional consumer-provided i18n options.
+ * @returns A fully-resolved {@link ResolvedToolbarI18n}.
+ */
+export const resolveToolbarI18n = (
+  i18n?: ToolbarI18nOptions,
+): ResolvedToolbarI18n => {
+  const localeIndex = isNonEmptyString(i18n?.localeIndex)
+    ? i18n!.localeIndex!
+    : DEFAULT_TOOLBAR_CONFIG.i18n.localeIndex;
+
+  const localeOverrides = i18n?.locales?.[localeIndex]?.tooltips;
+  const globalOverrides = i18n?.tooltips;
+  const defaults = DEFAULT_TOOLBAR_CONFIG.i18n.tooltips;
+
+  const keys: ToolbarTooltipKey[] = [
+    "zoomIn",
+    "zoomOut",
+    "resetView",
+    "copyCode",
+    "toggleFullscreen",
+    "download",
+  ];
+
+  const tooltips = keys.reduce((acc, key) => {
+    acc[key] =
+      pickTooltip(key, localeOverrides, globalOverrides) ?? defaults[key];
+    return acc;
+  }, {} as ToolbarTooltipText);
+
+  return { localeIndex, tooltips };
+};
+
 export const resolveToolbarConfig = (
   toolbar?: MermaidToolbarOptions,
 ): ResolvedToolbarConfig => {
@@ -701,5 +919,6 @@ export const resolveToolbarConfig = (
     showLanguageLabel,
     downloadFormat,
     fullscreenMode,
+    i18n: resolveToolbarI18n(toolbar?.i18n),
   };
 };
