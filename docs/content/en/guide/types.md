@@ -1,10 +1,12 @@
 # Configuration Types
 
-This page provides a detailed reference for the configuration options available in the **VitePress Mermaid Renderer**.
+This page provides a reference for the toolbar configuration options available
+in **VitePress Mermaid Renderer**.
 
 ## Top-Level Configuration
 
-These options are passed to the `createMermaidRenderer()` function or set via `mermaidRenderer.setConfig()`.
+These options are passed to the `createMermaidRenderer()` function or set via
+`mermaidRenderer.setConfig()`.
 
 | Option              | Type                      | Default     | Description                                                           |
 | :------------------ | :------------------------ | :---------- | :-------------------------------------------------------------------- |
@@ -14,13 +16,14 @@ These options are passed to the `createMermaidRenderer()` function or set via `m
 | `desktop`           | `object`                  | `{}`        | Toolbar configuration for desktop devices.                            |
 | `mobile`            | `object`                  | `{}`        | Toolbar configuration for mobile devices.                             |
 | `fullscreen`        | `object`                  | `{}`        | Toolbar configuration when in fullscreen mode.                        |
-| `i18n`              | `object`                  | `{}`        | Toolbar text localization, keyed by VitePress `localeIndex`.          |
+| `i18n`              | `object`                  | English     | Toolbar text localization, keyed by VitePress `localeIndex`.          |
 
 ---
 
 ## Toolbar Configuration
 
-The `desktop`, `mobile`, and `fullscreen` objects share the same structure to control toolbar behavior.
+The `desktop`, `mobile`, and `fullscreen` objects share the same structure to
+control toolbar behavior.
 
 | Key            | Type                      | Description                                                      |
 | :------------- | :------------------------ | :--------------------------------------------------------------- |
@@ -43,7 +46,8 @@ Below are the default visibility states for each button across different modes:
 
 ### Position Configuration
 
-The `positions` object allows you to anchor the toolbar to different corners of the diagram container.
+The `positions` object allows you to anchor the toolbar to different corners of
+the diagram container.
 
 | Key          | Values              | Default  | Description                 |
 | :----------- | :------------------ | :------- | :-------------------------- |
@@ -54,7 +58,9 @@ The `positions` object allows you to anchor the toolbar to different corners of 
 
 ## Toolbar Text Localization (`i18n`)
 
-The `i18n` option lets the toolbar mirror the active VitePress locale. It localizes button tooltips and transient toolbar status text. It accepts the following shape:
+The `i18n` option lets the toolbar mirror the active VitePress locale. It
+localizes button tooltips and transient toolbar status text. It accepts the
+following shape:
 
 | Key           | Type                                                  | Description                                                     |
 | :------------ | :---------------------------------------------------- | :-------------------------------------------------------------- |
@@ -74,7 +80,40 @@ The `i18n` option lets the toolbar mirror the active VitePress locale. It locali
 | `download`         | `Download Diagram`  |
 | `toggleFullscreen` | `Toggle Fullscreen` |
 
-Resolution order per key: `locales[localeIndex].tooltips[key]` → `tooltips[key]` → built-in default. Empty strings are ignored at every level.
+Resolution order per key: `locales[localeIndex].tooltips[key]` → `tooltips[key]`
+→ built-in default. Empty strings are ignored at every level.
+
+### Example localized map
+
+```typescript
+const i18n = {
+  localeIndex: localeIndex.value,
+  locales: {
+    tr: {
+      tooltips: {
+        zoomIn: 'Yakınlaştır',
+        zoomOut: 'Uzaklaştır',
+        resetView: 'Görünümü sıfırla',
+        copyCode: 'Kodu kopyala',
+        copyCodeCopied: 'Kopyalandı',
+        download: 'Diyagramı indir',
+        toggleFullscreen: 'Tam ekranı aç/kapa',
+      },
+    },
+    zh: {
+      tooltips: {
+        zoomIn: '放大',
+        zoomOut: '缩小',
+        resetView: '重置视图',
+        copyCode: '复制代码',
+        copyCodeCopied: '已复制',
+        download: '下载图表',
+        toggleFullscreen: '切换全屏',
+      },
+    },
+  },
+};
+```
 
 ---
 
@@ -82,12 +121,18 @@ Resolution order per key: `locales[localeIndex].tooltips[key]` → `tooltips[key
 
 ```typescript
 const mermaidRenderer = createMermaidRenderer({
-  downloadFormat: "png",
+  theme: 'forest',
+});
+
+mermaidRenderer.setToolbar({
+  downloadFormat: 'png',
   desktop: {
-    zoomIn: "enabled",
-    positions: { vertical: "top", horizontal: "right" },
+    download: 'enabled',
+    positions: { vertical: 'top', horizontal: 'right' },
   },
 });
 ```
 
-For more details on how to apply these configurations, see the [Configuration Guide](./configuration.md) and [Toolbar Customization](./toolbar.md).
+For more details on how to apply these configurations, see the
+[Configuration Guide](./configuration.md) and
+[Toolbar Customization](./toolbar.md).

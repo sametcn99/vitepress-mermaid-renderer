@@ -1,6 +1,7 @@
 # Advanced Mermaid Examples
 
-This page demonstrates more advanced Mermaid diagrams with advanced features and real-world use cases.
+This page demonstrates more advanced Mermaid diagrams with advanced features and
+real-world use cases.
 
 ## Advanced Flowchart with Subgraphs
 
