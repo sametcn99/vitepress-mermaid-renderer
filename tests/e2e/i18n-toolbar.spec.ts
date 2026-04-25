@@ -53,6 +53,28 @@ test("all six toolbar tooltips are translated under /tr/", async ({ page }) => {
 });
 
 /**
+ * The transient copy success message is toolbar text too, so it must use the
+ * same locale-aware map as the button titles and accessible labels.
+ */
+test("copy success text is translated under /tr/", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/tr/examples/basic");
+
+  const diagram = page.locator(".mermaid-container").first();
+  await expect(diagram.locator(".mermaid > svg")).toBeVisible();
+
+  await diagram
+    .locator('.desktop-controls [data-mermaid-control="copyCode"]')
+    .click();
+
+  const notification = diagram.locator(".copied-notification").first();
+  await expect(notification).toHaveText("Kopyalandı");
+});
+
+/**
  * Navigating from the Turkish locale back to the English root must restore
  * the default English tooltips (round-trip via the live update channel).
  */

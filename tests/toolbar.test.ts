@@ -142,6 +142,7 @@ describe("resolveToolbarI18n", () => {
       zoomOut: "Zoom Out",
       resetView: "Reset View",
       copyCode: "Copy Code",
+      copyCodeCopied: "Copied",
       download: "Download Diagram",
       toggleFullscreen: "Toggle Fullscreen",
     });
@@ -149,10 +150,22 @@ describe("resolveToolbarI18n", () => {
 
   it("applies global tooltip overrides on top of defaults", () => {
     const i18n = resolveToolbarI18n({
-      tooltips: { copyCode: "Kopyala" },
+      tooltips: { copyCode: "Kopyala", copyCodeCopied: "Kopyalandı" },
     });
     expect(i18n.tooltips.copyCode).toBe("Kopyala");
+    expect(i18n.tooltips.copyCodeCopied).toBe("Kopyalandı");
     expect(i18n.tooltips.zoomIn).toBe("Zoom In");
+  });
+
+  it("prefers locale-specific copy success text over global override", () => {
+    const i18n = resolveToolbarI18n({
+      localeIndex: "tr",
+      tooltips: { copyCodeCopied: "Global copied" },
+      locales: {
+        tr: { tooltips: { copyCodeCopied: "Kopyalandı" } },
+      },
+    });
+    expect(i18n.tooltips.copyCodeCopied).toBe("Kopyalandı");
   });
 
   it("prefers locale-specific overrides over global ones", () => {
@@ -207,5 +220,6 @@ describe("resolveToolbarI18n", () => {
     expect(resolved.i18n.tooltips.copyCode).toBe("Kodu kopyala");
     expect(DEFAULT_TOOLBAR_CONFIG.i18n.localeIndex).toBe("root");
     expect(DEFAULT_TOOLBAR_CONFIG.i18n.tooltips.copyCode).toBe("Copy Code");
+    expect(DEFAULT_TOOLBAR_CONFIG.i18n.tooltips.copyCodeCopied).toBe("Copied");
   });
 });

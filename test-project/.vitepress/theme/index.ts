@@ -10,6 +10,7 @@ const toolbarTooltipsByLocale = {
     zoomOut: "Uzaklaştır",
     resetView: "Görünümü sıfırla",
     copyCode: "Kodu kopyala",
+    copyCodeCopied: "Kopyalandı",
     download: "Diyagramı indir",
     toggleFullscreen: "Tam ekranı aç/kapa",
   },

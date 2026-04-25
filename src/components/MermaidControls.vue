@@ -115,7 +115,9 @@
             d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
           ></path>
         </svg>
-        <span v-if="showCopied" class="copied-notification">Copied</span>
+        <span v-if="showCopied" class="copied-notification">
+          {{ copiedNotificationText }}
+        </span>
       </button>
       <button
         v-if="isDesktopEnabled('download')"
@@ -253,7 +255,9 @@
               d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
             ></path>
           </svg>
-          <span v-if="showCopied" class="copied-notification">Copied</span>
+          <span v-if="showCopied" class="copied-notification">
+            {{ copiedNotificationText }}
+          </span>
         </button>
         <button
           v-if="isMobileEnabled('download')"
@@ -377,6 +381,11 @@ const isMobileEnabled = (button: MobileToolbarButton) => {
 const tooltipText = (key: ToolbarTooltipKey): string =>
   props.toolbar.i18n.tooltips[key];
 
+/** Localized text shown after the Mermaid source is copied successfully. */
+const copiedNotificationText = computed(
+  () => props.toolbar.i18n.tooltips.copyCodeCopied ?? "Copied",
+);
+
 // Define emits
 const emit = defineEmits<{
   (event: "zoomIn"): void;
@@ -461,7 +470,7 @@ const shouldRenderMobileContainer = computed(() => {
 
 /**
  * Copies the raw Mermaid source code (`props.code`) to the system
- * clipboard using the Clipboard API. Shows a brief "Copied"
+ * clipboard using the Clipboard API. Shows a brief localized success
  * notification for 1 second on success.
  *
  * Falls back to an `alert()` message if the Clipboard API is

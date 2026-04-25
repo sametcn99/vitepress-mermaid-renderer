@@ -65,6 +65,7 @@ mermaidRenderer.setToolbar({
           zoomOut: "Uzaklaştır",
           resetView: "Görünümü sıfırla",
           copyCode: "Kodu kopyala",
+          copyCodeCopied: "Kopyalandı",
           download: "Diyagramı indir",
           toggleFullscreen: "Tam ekranı aç/kapa",
         },
@@ -79,13 +80,13 @@ mermaidRenderer.setToolbar({
 // and apply without re-rendering the SVG.
 ```
 
-The resolution order for each tooltip key is:
+The resolution order for each localized toolbar text key is:
 
 1. `i18n.locales[localeIndex].tooltips[key]`
 2. `i18n.tooltips[key]` (global override)
 3. The built-in English default
 
-Empty strings are ignored at every layer so a tooltip can never be blanked out by accident.
+Empty strings are ignored at every layer so toolbar text can never be blanked out by accident. Use `copyCodeCopied` to translate the short success message shown after the copy button writes to the clipboard.
 
 ## Accessibility considerations
 

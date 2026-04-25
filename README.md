@@ -138,6 +138,7 @@ const applyToolbar = () => {
             zoomOut: "Uzaklaştır",
             resetView: "Görünümü sıfırla",
             copyCode: "Kodu kopyala",
+            copyCodeCopied: "Kopyalandı",
             download: "Diyagramı indir",
             toggleFullscreen: "Tam ekranı aç/kapa",
           },
@@ -151,7 +152,7 @@ applyToolbar();
 watch(localeIndex, applyToolbar);
 ```
 
-Resolution order per tooltip key: `i18n.locales[localeIndex].tooltips[key]` → `i18n.tooltips[key]` → built-in English default. Empty strings are ignored at every level.
+Resolution order per localized toolbar text key: `i18n.locales[localeIndex].tooltips[key]` → `i18n.tooltips[key]` → built-in English default. Empty strings are ignored at every level. Use `copyCodeCopied` to translate the short success message shown after the copy button writes to the clipboard.
 
 ## Contributing
 

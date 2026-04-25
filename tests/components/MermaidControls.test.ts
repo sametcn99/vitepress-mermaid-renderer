@@ -84,6 +84,45 @@ describe("MermaidControls", () => {
     expect(wrapper.text()).not.toContain("Copied");
   });
 
+  it("renders localized copied notification text", async () => {
+    vi.useFakeTimers();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+
+    const wrapper = mount(MermaidControls, {
+      props: {
+        scale: 1,
+        code: "graph TD; A-->B",
+        isFullscreen: false,
+        toolbar: resolveToolbarConfig({
+          i18n: {
+            localeIndex: "tr",
+            locales: {
+              tr: {
+                tooltips: {
+                  copyCode: "Kodu kopyala",
+                  copyCodeCopied: "Kopyalandı",
+                },
+              },
+            },
+          },
+        }),
+      },
+    });
+
+    await wrapper
+      .get('.desktop-controls [data-mermaid-control="copyCode"]')
+      .trigger("click");
+    await Promise.resolve();
+
+    expect(writeText).toHaveBeenCalledWith("graph TD; A-->B");
+    expect(wrapper.text()).toContain("Kopyalandı");
+    expect(wrapper.text()).not.toContain("Copied");
+  });
+
   it("emits the resolved download format when download is clicked", async () => {
     const wrapper = mount(MermaidControls, {
       props: {
@@ -115,6 +154,7 @@ describe("MermaidControls", () => {
             tooltips: {
               zoomIn: "Yakınlaştır",
               copyCode: "Kodu kopyala",
+              copyCodeCopied: "Kopyalandı",
               download: "Diyagramı indir",
               resetView: "Görünümü sıfırla",
               toggleFullscreen: "Tam ekran",

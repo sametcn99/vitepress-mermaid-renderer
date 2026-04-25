@@ -138,6 +138,23 @@ export type ToolbarButton =
 export type ToolbarTooltipKey = ToolbarButton;
 
 /**
+ * Canonical key set for non-button status text shown by the toolbar.
+ *
+ * These strings are rendered near controls but are not themselves
+ * toolbar buttons. They share the same i18n resolution path as button
+ * tooltips so consumers can localize all toolbar text from one place.
+ */
+export type ToolbarStatusTextKey = "copyCodeCopied";
+
+/**
+ * Canonical key set for every localized toolbar string.
+ *
+ * Includes button tooltip strings and transient status strings such as
+ * the copy-to-clipboard success message.
+ */
+export type ToolbarTextKey = ToolbarTooltipKey | ToolbarStatusTextKey;
+
+/**
  * Fully-resolved tooltip text map for every toolbar button.
  *
  * Every key from {@link ToolbarTooltipKey} is required so consuming
@@ -161,6 +178,16 @@ export type ToolbarTooltipKey = ToolbarButton;
 export type ToolbarTooltipText = Record<ToolbarTooltipKey, string>;
 
 /**
+ * Fully-resolved localized text map for every toolbar string.
+ */
+export type ToolbarText = Record<ToolbarTextKey, string>;
+
+/**
+ * Partial localized text override accepted from consumers.
+ */
+export type ToolbarTextOverrides = Partial<ToolbarText>;
+
+/**
  * Per-locale tooltip override accepted inside
  * {@link ToolbarI18nOptions.locales}.
  *
@@ -171,7 +198,7 @@ export interface ToolbarI18nLocaleOptions {
   /**
    * Partial overrides for the tooltip text map for this locale.
    */
-  tooltips?: Partial<ToolbarTooltipText>;
+  tooltips?: ToolbarTextOverrides;
 }
 
 /**
@@ -199,6 +226,7 @@ export interface ToolbarI18nLocaleOptions {
  *         zoomIn: "Yakınlaştır",
  *         zoomOut: "Uzaklaştır",
  *         resetView: "Görünümü sıfırla",
+ *         copyCodeCopied: "Kopyalandı",
  *         download: "Diyagramı indir",
  *         toggleFullscreen: "Tam ekranı aç/kapa",
  *       },
@@ -217,7 +245,7 @@ export interface ToolbarI18nOptions {
    * Optional global tooltip overrides applied when a locale-specific
    * value is missing.
    */
-  tooltips?: Partial<ToolbarTooltipText>;
+  tooltips?: ToolbarTextOverrides;
   /**
    * Optional per-locale tooltip overrides keyed by VitePress locale index.
    */
@@ -228,7 +256,7 @@ export interface ToolbarI18nOptions {
  * Fully-resolved i18n block stored on {@link ResolvedToolbarConfig}.
  *
  * Both fields are guaranteed to be present so downstream components can
- * read tooltip strings directly without null checks.
+ * read localized toolbar strings directly without null checks.
  */
 export interface ResolvedToolbarI18n {
   /**
@@ -236,9 +264,9 @@ export interface ResolvedToolbarI18n {
    */
   localeIndex: string;
   /**
-   * Concrete tooltip text map applied to rendered buttons.
+   * Concrete localized text map applied to rendered toolbar controls.
    */
-  tooltips: ToolbarTooltipText;
+  tooltips: ToolbarText;
 }
 
 /**
@@ -673,6 +701,7 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
       zoomOut: "Zoom Out",
       resetView: "Reset View",
       copyCode: "Copy Code",
+      copyCodeCopied: "Copied",
       download: "Download Diagram",
       toggleFullscreen: "Toggle Fullscreen",
     },
@@ -840,8 +869,8 @@ const isNonEmptyString = (value: unknown): value is string =>
  * non-empty value for `key`.
  */
 const pickTooltip = (
-  key: ToolbarTooltipKey,
-  ...sources: Array<Partial<ToolbarTooltipText> | undefined>
+  key: ToolbarTextKey,
+  ...sources: Array<ToolbarTextOverrides | undefined>
 ): string | undefined => {
   for (const source of sources) {
     const candidate = source?.[key];
@@ -876,11 +905,12 @@ export const resolveToolbarI18n = (
   const globalOverrides = i18n?.tooltips;
   const defaults = DEFAULT_TOOLBAR_CONFIG.i18n.tooltips;
 
-  const keys: ToolbarTooltipKey[] = [
+  const keys: ToolbarTextKey[] = [
     "zoomIn",
     "zoomOut",
     "resetView",
     "copyCode",
+    "copyCodeCopied",
     "toggleFullscreen",
     "download",
   ];
@@ -889,7 +919,7 @@ export const resolveToolbarI18n = (
     acc[key] =
       pickTooltip(key, localeOverrides, globalOverrides) ?? defaults[key];
     return acc;
-  }, {} as ToolbarTooltipText);
+  }, {} as ToolbarText);
 
   return { localeIndex, tooltips };
 };

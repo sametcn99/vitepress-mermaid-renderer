@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.23
+
+- feat(i18n): add localized success message for copy action in toolbar
+
 ## 1.1.22
 
 - feat(navigation): implement fullscreen state restoration and add tests for fullscreen behavior
