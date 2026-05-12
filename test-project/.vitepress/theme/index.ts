@@ -1,18 +1,18 @@
-import { h, nextTick, watch } from "vue";
-import type { Theme } from "vitepress";
-import DefaultTheme from "vitepress/theme";
-import { useData } from "vitepress";
-import { createMermaidRenderer } from "vitepress-mermaid-renderer";
+import { h, nextTick, watch } from 'vue';
+import type { Theme } from 'vitepress';
+import DefaultTheme from 'vitepress/theme';
+import { useData } from 'vitepress';
+import { createMermaidRenderer } from 'vitepress-mermaid-renderer';
 
 const toolbarTooltipsByLocale = {
   tr: {
-    zoomIn: "Yakınlaştır",
-    zoomOut: "Uzaklaştır",
-    resetView: "Görünümü sıfırla",
-    copyCode: "Kodu kopyala",
-    copyCodeCopied: "Kopyalandı",
-    download: "Diyagramı indir",
-    toggleFullscreen: "Tam ekranı aç/kapa",
+    zoomIn: 'Yakınlaştır',
+    zoomOut: 'Uzaklaştır',
+    resetView: 'Görünümü sıfırla',
+    copyCode: 'Kodu kopyala',
+    copyCodeCopied: 'Kopyalandı',
+    download: 'Diyagramı indir',
+    toggleFullscreen: 'Tam ekranı aç/kapa',
   },
 } as const;
 
@@ -23,28 +23,28 @@ export default {
 
     const initMermaid = () => {
       const mermaidRenderer = createMermaidRenderer({
-        theme: isDark.value ? "dark" : "forest",
+        theme: isDark.value ? 'dark' : 'forest',
       });
       mermaidRenderer.setToolbar({
         showLanguageLabel: false,
-        fullscreenMode: "browser",
+        fullscreenMode: 'browser',
         desktop: {
-          copyCode: "enabled",
-          toggleFullscreen: "enabled",
-          resetView: "enabled",
-          zoomOut: "enabled",
-          zoomIn: "enabled",
-          zoomLevel: "enabled",
-          download: "enabled",
+          copyCode: 'enabled',
+          toggleFullscreen: 'enabled',
+          resetView: 'enabled',
+          zoomOut: 'enabled',
+          zoomIn: 'enabled',
+          zoomLevel: 'enabled',
+          download: 'enabled',
         },
         fullscreen: {
-          copyCode: "disabled",
-          toggleFullscreen: "enabled",
-          resetView: "disabled",
-          zoomLevel: "disabled",
-          download: "enabled",
+          copyCode: 'disabled',
+          toggleFullscreen: 'enabled',
+          resetView: 'disabled',
+          zoomLevel: 'disabled',
+          download: 'enabled',
         },
-        downloadFormat: "svg",
+        downloadFormat: 'svg',
         i18n: {
           localeIndex: localeIndex.value,
           locales: Object.fromEntries(

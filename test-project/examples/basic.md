@@ -1,6 +1,7 @@
 # Basic Examples
 
-This page demonstrates various types of Mermaid diagrams with interactive controls. Each diagram can be:
+This page demonstrates various types of Mermaid diagrams with interactive
+controls. Each diagram can be:
 
 - 🔍 Zoomed in/out
 - 🖱️ Panned by dragging

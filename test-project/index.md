@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: "VitePress Mermaid Renderer"
+  name: 'VitePress Mermaid Renderer'
   tagline: Add interactive controls to your Mermaid diagrams in VitePress
   actions:
     - theme: brand
@@ -14,7 +14,8 @@ hero:
 
 features:
   - title: 🔍 Interactive Controls
-    details: Zoom, pan, and control your Mermaid diagrams with an intuitive interface
+    details:
+      Zoom, pan, and control your Mermaid diagrams with an intuitive interface
   - title: 🎨 Theme Compatible
     details: Seamlessly integrates with VitePress themes and color schemes
   - title: 📋 Easy to Use

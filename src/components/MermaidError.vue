@@ -29,7 +29,7 @@
       </svg>
       <span>Failed to render diagram</span>
       <button @click="toggleErrorDetails" class="error-toggle-button">
-        {{ showErrorDetails ? "Hide Details" : "Show Details" }}
+        {{ showErrorDetails ? 'Hide Details' : 'Show Details' }}
       </button>
     </div>
     <pre v-if="showErrorDetails" class="error-details">{{
@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref } from 'vue';
 
 /**
  * Component props.
@@ -113,7 +113,7 @@ const toggleErrorDetails = () => {
   background-color: #f7fafc;
   border: 1px solid #e2e8f0;
   border-radius: 4px;
-  font-family: "Courier New", monospace;
+  font-family: 'Courier New', monospace;
   font-size: 12px;
   color: #2d3748;
   white-space: pre-wrap;

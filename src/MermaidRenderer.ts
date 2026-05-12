@@ -29,14 +29,14 @@
  * renderer.setToolbar({ desktop: { download: "enabled" } });
  * ```
  */
-import { createApp, h } from "vue";
-import MermaidDiagram from "./MermaidDiagram.vue";
-import { MermaidConfig } from "mermaid";
+import { createApp, h } from 'vue';
+import MermaidDiagram from './MermaidDiagram.vue';
+import { MermaidConfig } from 'mermaid';
 import {
   resolveToolbarConfig,
   type MermaidToolbarOptions,
   type ResolvedToolbarConfig,
-} from "./toolbar";
+} from './toolbar';
 
 /**
  * Central orchestrator that discovers Mermaid code blocks inside VitePress pages,
@@ -220,15 +220,15 @@ export class MermaidRenderer {
    */
   private dispatchToolbarUpdate(): void {
     try {
-      if (typeof document === "undefined") return;
+      if (typeof document === 'undefined') return;
       document.dispatchEvent(
         new CustomEvent<ResolvedToolbarConfig>(
-          "vitepress-mermaid:toolbar-updated",
+          'vitepress-mermaid:toolbar-updated',
           { detail: this.toolbarConfig },
         ),
       );
     } catch (error) {
-      console.error("Failed to dispatch Mermaid toolbar update:", error);
+      console.error('Failed to dispatch Mermaid toolbar update:', error);
     }
   }
 
@@ -249,12 +249,12 @@ export class MermaidRenderer {
   private dispatchConfigUpdate(): void {
     try {
       document.dispatchEvent(
-        new CustomEvent<MermaidConfig>("vitepress-mermaid:config-updated", {
+        new CustomEvent<MermaidConfig>('vitepress-mermaid:config-updated', {
           detail: { ...this.config },
         }),
       );
     } catch (error) {
-      console.error("Failed to dispatch Mermaid config update:", error);
+      console.error('Failed to dispatch Mermaid config update:', error);
     }
   }
 
@@ -273,26 +273,28 @@ export class MermaidRenderer {
    *   original fenced code block.
    */
   private cleanupMermaidWrapper(wrapper: Element): void {
-    const button = wrapper.getElementsByClassName("copy");
+    const button = wrapper.getElementsByClassName('copy');
     Array.from(button).forEach((element) => element.remove());
 
     if (!this.toolbarConfig.showLanguageLabel) {
-      const languageLabels = wrapper.getElementsByClassName("lang");
+      const languageLabels = wrapper.getElementsByClassName('lang');
       Array.from(languageLabels).forEach((element) => element.remove());
     }
 
-    const lineNumbersWrapper = wrapper.getElementsByClassName("line-numbers-wrapper");
+    const lineNumbersWrapper = wrapper.getElementsByClassName(
+      'line-numbers-wrapper',
+    );
     Array.from(lineNumbersWrapper).forEach((element) => element.remove());
 
-    const lineNumbers = wrapper.getElementsByClassName("line-number");
+    const lineNumbers = wrapper.getElementsByClassName('line-number');
     Array.from(lineNumbers).forEach((element) => element.remove());
 
-    wrapper.classList.remove("line-numbers-mode");
-    wrapper.classList.remove("has-line-numbers");
+    wrapper.classList.remove('line-numbers-mode');
+    wrapper.classList.remove('has-line-numbers');
 
-    const lineNumbersMode = wrapper.getElementsByClassName("line-numbers-mode");
+    const lineNumbersMode = wrapper.getElementsByClassName('line-numbers-mode');
     Array.from(lineNumbersMode).forEach((element) => {
-      element.classList.remove("line-numbers-mode");
+      element.classList.remove('line-numbers-mode');
     });
   }
 
@@ -313,9 +315,9 @@ export class MermaidRenderer {
    */
   private createMermaidComponent(code: string) {
     try {
-      const wrapper = document.createElement("div");
+      const wrapper = document.createElement('div');
       wrapper.id = `mermaid-wrapper-${Math.random().toString(36).slice(2)}`;
-      wrapper.className = "mermaid-wrapper";
+      wrapper.className = 'mermaid-wrapper';
       return {
         wrapper,
         component: h(MermaidDiagram, {
@@ -325,7 +327,7 @@ export class MermaidRenderer {
         }),
       };
     } catch (error) {
-      console.error("Failed to create mermaid component:", error);
+      console.error('Failed to create mermaid component:', error);
       return null;
     }
   }
@@ -356,7 +358,7 @@ export class MermaidRenderer {
       try {
         await this.renderMermaidDiagram(element);
       } catch (error) {
-        console.error("Failed to render diagram:", error);
+        console.error('Failed to render diagram:', error);
       }
     }
 
@@ -392,7 +394,7 @@ export class MermaidRenderer {
   private async renderMermaidDiagram(element: HTMLPreElement): Promise<void> {
     try {
       if (!element || !element.parentNode) return;
-      const code = element.textContent?.trim() || "";
+      const code = element.textContent?.trim() || '';
       const result = this.createMermaidComponent(code);
       if (!result) return;
       const { wrapper, component } = result;
@@ -410,7 +412,7 @@ export class MermaidRenderer {
         setTimeout(resolve, 200);
       });
     } catch (error) {
-      console.error("Failed to render mermaid diagram:", error);
+      console.error('Failed to render mermaid diagram:', error);
     }
   }
 
@@ -438,7 +440,7 @@ export class MermaidRenderer {
       const initOnReady = (): void => {
         if (!document || !document.body) {
           console.warn(
-            "MermaidRenderer initialization failed: document or body not available",
+            'MermaidRenderer initialization failed: document or body not available',
           );
           return;
         }
@@ -452,8 +454,8 @@ export class MermaidRenderer {
               this.initializeRenderer();
             } catch (error) {
               console.error(
-                "Failed to initialize MermaidRenderer:",
-                error instanceof Error ? error.message : "Unknown error",
+                'Failed to initialize MermaidRenderer:',
+                error instanceof Error ? error.message : 'Unknown error',
               );
             }
           });
@@ -462,13 +464,13 @@ export class MermaidRenderer {
 
       // Handle different document ready states
       switch (document.readyState) {
-        case "loading":
-          document.addEventListener("DOMContentLoaded", initOnReady, {
+        case 'loading':
+          document.addEventListener('DOMContentLoaded', initOnReady, {
             once: true,
           });
           break;
-        case "interactive":
-        case "complete":
+        case 'interactive':
+        case 'complete':
           initOnReady();
           break;
         default:
@@ -484,21 +486,21 @@ export class MermaidRenderer {
           this.handleRouteChange();
         } catch (error) {
           console.error(
-            "Error handling route change:",
-            error instanceof Error ? error.message : "Unknown error",
+            'Error handling route change:',
+            error instanceof Error ? error.message : 'Unknown error',
           );
         }
       };
 
-      window.addEventListener("popstate", handleRouteChangeWithErrorBoundary);
+      window.addEventListener('popstate', handleRouteChangeWithErrorBoundary);
       document.addEventListener(
-        "vitepress:routeChanged",
+        'vitepress:routeChanged',
         handleRouteChangeWithErrorBoundary,
       );
 
       // Listen for VitePress theme ready event
       document.addEventListener(
-        "vitepress:ready",
+        'vitepress:ready',
         () => {
           this.renderWithRetry();
         },
@@ -506,7 +508,7 @@ export class MermaidRenderer {
       );
 
       // Special handling for deployment
-      if (typeof window !== "undefined") {
+      if (typeof window !== 'undefined') {
         setTimeout(() => {
           this.renderWithRetry();
         }, 500);
@@ -515,8 +517,8 @@ export class MermaidRenderer {
       this.initialized = true;
     } catch (error) {
       console.error(
-        "Critical error during MermaidRenderer initialization:",
-        error instanceof Error ? error.message : "Unknown error",
+        'Critical error during MermaidRenderer initialization:',
+        error instanceof Error ? error.message : 'Unknown error',
       );
       // Avoid setting initialized flag if initialization fails
       throw error; // Re-throw to allow upstream error handling
@@ -540,16 +542,16 @@ export class MermaidRenderer {
    */
   private setupDomMutationObserver(): void {
     if (
-      typeof window === "undefined" ||
-      typeof MutationObserver === "undefined" ||
-      typeof document === "undefined"
+      typeof window === 'undefined' ||
+      typeof MutationObserver === 'undefined' ||
+      typeof document === 'undefined'
     ) {
       return;
     }
 
     const target =
-      document.getElementById("app") ||
-      document.querySelector(".Layout") ||
+      document.getElementById('app') ||
+      document.querySelector('.Layout') ||
       document.body;
 
     if (!target) return;
@@ -581,7 +583,7 @@ export class MermaidRenderer {
         subtree: true,
       });
     } catch (error) {
-      console.error("Failed to observe DOM mutations for Mermaid:", error);
+      console.error('Failed to observe DOM mutations for Mermaid:', error);
     }
   }
 
@@ -628,20 +630,20 @@ export class MermaidRenderer {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const element = node as Element;
 
-      if (element.closest(".mermaid-wrapper")) {
+      if (element.closest('.mermaid-wrapper')) {
         return false;
       }
 
       if (
-        element.classList.contains("language-mermaid") ||
-        element.matches?.("code.mermaid")
+        element.classList.contains('language-mermaid') ||
+        element.matches?.('code.mermaid')
       ) {
         return true;
       }
 
       if (
         element.querySelector(
-          ".language-mermaid, pre.language-mermaid, code.language-mermaid, code.mermaid",
+          '.language-mermaid, pre.language-mermaid, code.language-mermaid, code.mermaid',
         )
       ) {
         return true;
@@ -741,18 +743,18 @@ export class MermaidRenderer {
   private renderMermaidDiagrams(): boolean {
     try {
       // First try to find diagrams using the standard class
-      let mermaidWrappers = document.getElementsByClassName("language-mermaid");
+      let mermaidWrappers = document.getElementsByClassName('language-mermaid');
 
       // If no diagrams found, try an alternative selector that might work in SSR context
       if (mermaidWrappers.length === 0) {
-        const preElements = document.querySelectorAll("pre");
+        const preElements = document.querySelectorAll('pre');
         const filteredElements = Array.from(preElements).filter((el) => {
           // Check if this pre element contains mermaid code
-          const codeElement = el.querySelector("code");
+          const codeElement = el.querySelector('code');
           if (
             codeElement &&
-            (codeElement.className.includes("mermaid") ||
-              codeElement.className.includes("language-mermaid"))
+            (codeElement.className.includes('mermaid') ||
+              codeElement.className.includes('language-mermaid'))
           ) {
             return true;
           }
@@ -797,10 +799,10 @@ export class MermaidRenderer {
       const mermaidElements = Array.from(mermaidWrappers)
         .map((wrapper) => {
           // Try to find pre element directly
-          let preElement = wrapper.querySelector("pre");
+          let preElement = wrapper.querySelector('pre');
 
           // If not found and the wrapper itself is a pre element, use it
-          if (!preElement && wrapper.tagName.toLowerCase() === "pre") {
+          if (!preElement && wrapper.tagName.toLowerCase() === 'pre') {
             preElement = wrapper as HTMLPreElement;
           }
 
@@ -823,7 +825,7 @@ export class MermaidRenderer {
 
       return mermaidElements.length > 0;
     } catch (error) {
-      console.error("Error rendering Mermaid diagrams:", error);
+      console.error('Error rendering Mermaid diagrams:', error);
       return false;
     }
   }

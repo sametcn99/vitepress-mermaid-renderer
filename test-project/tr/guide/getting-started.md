@@ -26,14 +26,15 @@ bun add vitepress-mermaid-renderer
 
 ## Kurulum Sonrası Yapılandırma
 
-`.vitepress/theme/index.ts` içinde renderer'ı başlatıp Mermaid diyagramlarını sayfa yaşam döngüsüne bağlayın:
+`.vitepress/theme/index.ts` içinde renderer'ı başlatıp Mermaid diyagramlarını
+sayfa yaşam döngüsüne bağlayın:
 
 ```typescript
-import { h, nextTick, watch } from "vue";
-import type { Theme } from "vitepress";
-import DefaultTheme from "vitepress/theme";
-import { useData } from "vitepress";
-import { createMermaidRenderer } from "vitepress-mermaid-renderer";
+import { h, nextTick, watch } from 'vue';
+import type { Theme } from 'vitepress';
+import DefaultTheme from 'vitepress/theme';
+import { useData } from 'vitepress';
+import { createMermaidRenderer } from 'vitepress-mermaid-renderer';
 
 export default {
   extends: DefaultTheme,
@@ -42,7 +43,7 @@ export default {
 
     const initMermaid = () => {
       const mermaidRenderer = createMermaidRenderer({
-        theme: isDark.value ? "dark" : "forest",
+        theme: isDark.value ? 'dark' : 'forest',
       });
 
       mermaidRenderer.setToolbar({
@@ -51,13 +52,13 @@ export default {
           locales: {
             tr: {
               tooltips: {
-                zoomIn: "Yakınlaştır",
-                zoomOut: "Uzaklaştır",
-                resetView: "Görünümü sıfırla",
-                copyCode: "Kodu kopyala",
-                copyCodeCopied: "Kopyalandı",
-                download: "Diyagramı indir",
-                toggleFullscreen: "Tam ekranı aç/kapa",
+                zoomIn: 'Yakınlaştır',
+                zoomOut: 'Uzaklaştır',
+                resetView: 'Görünümü sıfırla',
+                copyCode: 'Kodu kopyala',
+                copyCodeCopied: 'Kopyalandı',
+                download: 'Diyagramı indir',
+                toggleFullscreen: 'Tam ekranı aç/kapa',
               },
             },
           },

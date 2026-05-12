@@ -45,7 +45,7 @@
  * const state: ToolbarButtonState = "enabled";
  * ```
  */
-export type ToolbarButtonState = "enabled" | "disabled";
+export type ToolbarButtonState = 'enabled' | 'disabled';
 
 /**
  * Supported image formats for downloading a rendered diagram.
@@ -64,7 +64,7 @@ export type ToolbarButtonState = "enabled" | "disabled";
  * const format: DownloadFormat = "png";
  * ```
  */
-export type DownloadFormat = "svg" | "png" | "jpg";
+export type DownloadFormat = 'svg' | 'png' | 'jpg';
 
 /**
  * Determines how fullscreen mode is presented to users when the
@@ -89,7 +89,7 @@ export type DownloadFormat = "svg" | "png" | "jpg";
  * const mode: FullscreenMode = "dialog";
  * ```
  */
-export type FullscreenMode = "browser" | "dialog";
+export type FullscreenMode = 'browser' | 'dialog';
 
 /**
  * Union of every button identifier that can appear inside the toolbar,
@@ -115,12 +115,12 @@ export type FullscreenMode = "browser" | "dialog";
  * ```
  */
 export type ToolbarButton =
-  | "zoomIn"
-  | "zoomOut"
-  | "resetView"
-  | "copyCode"
-  | "toggleFullscreen"
-  | "download";
+  | 'zoomIn'
+  | 'zoomOut'
+  | 'resetView'
+  | 'copyCode'
+  | 'toggleFullscreen'
+  | 'download';
 
 /**
  * Canonical key set for tooltip strings shown on toolbar buttons.
@@ -144,7 +144,7 @@ export type ToolbarTooltipKey = ToolbarButton;
  * toolbar buttons. They share the same i18n resolution path as button
  * tooltips so consumers can localize all toolbar text from one place.
  */
-export type ToolbarStatusTextKey = "copyCodeCopied";
+export type ToolbarStatusTextKey = 'copyCodeCopied';
 
 /**
  * Canonical key set for every localized toolbar string.
@@ -295,12 +295,12 @@ export type DesktopToolbarButton = ToolbarButton;
  * @see ToolbarButton
  */
 export type MobileToolbarButton =
-  | "resetView"
-  | "copyCode"
-  | "toggleFullscreen"
-  | "zoomIn"
-  | "zoomOut"
-  | "download";
+  | 'resetView'
+  | 'copyCode'
+  | 'toggleFullscreen'
+  | 'zoomIn'
+  | 'zoomOut'
+  | 'download';
 
 /**
  * Valid vertical anchors for the toolbar container inside the diagram.
@@ -312,7 +312,7 @@ export type MobileToolbarButton =
  * const v: ToolbarVerticalPosition = "top";
  * ```
  */
-export type ToolbarVerticalPosition = "top" | "bottom";
+export type ToolbarVerticalPosition = 'top' | 'bottom';
 
 /**
  * Valid horizontal anchors for the toolbar container inside the diagram.
@@ -324,7 +324,7 @@ export type ToolbarVerticalPosition = "top" | "bottom";
  * const h: ToolbarHorizontalPosition = "left";
  * ```
  */
-export type ToolbarHorizontalPosition = "left" | "right";
+export type ToolbarHorizontalPosition = 'left' | 'right';
 
 /**
  * Describes the anchor corner for the toolbar container within the
@@ -608,18 +608,18 @@ export const isResolvedToolbarConfig = (
   return Boolean(
     candidate &&
     candidate.desktop &&
-    typeof candidate.desktop === "object" &&
-    "buttons" in candidate.desktop &&
-    "positions" in candidate.desktop &&
-    "zoomLevel" in candidate.desktop &&
-    typeof candidate.showLanguageLabel === "boolean" &&
-    typeof candidate.downloadFormat === "string" &&
-    typeof candidate.fullscreenMode === "string" &&
+    typeof candidate.desktop === 'object' &&
+    'buttons' in candidate.desktop &&
+    'positions' in candidate.desktop &&
+    'zoomLevel' in candidate.desktop &&
+    typeof candidate.showLanguageLabel === 'boolean' &&
+    typeof candidate.downloadFormat === 'string' &&
+    typeof candidate.fullscreenMode === 'string' &&
     !!candidate.i18n &&
-    typeof candidate.i18n === "object" &&
-    typeof candidate.i18n.localeIndex === "string" &&
+    typeof candidate.i18n === 'object' &&
+    typeof candidate.i18n.localeIndex === 'string' &&
     !!candidate.i18n.tooltips &&
-    typeof candidate.i18n.tooltips === "object",
+    typeof candidate.i18n.tooltips === 'object',
   );
 };
 
@@ -648,62 +648,62 @@ export const isResolvedToolbarConfig = (
 export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
   desktop: {
     buttons: {
-      zoomIn: "enabled",
-      zoomOut: "enabled",
-      resetView: "enabled",
-      copyCode: "enabled",
-      toggleFullscreen: "enabled",
-      download: "disabled",
+      zoomIn: 'enabled',
+      zoomOut: 'enabled',
+      resetView: 'enabled',
+      copyCode: 'enabled',
+      toggleFullscreen: 'enabled',
+      download: 'disabled',
     },
     positions: {
-      vertical: "bottom",
-      horizontal: "right",
+      vertical: 'bottom',
+      horizontal: 'right',
     },
-    zoomLevel: "enabled",
+    zoomLevel: 'enabled',
   },
   mobile: {
     buttons: {
-      zoomIn: "disabled",
-      zoomOut: "disabled",
-      resetView: "enabled",
-      copyCode: "enabled",
-      toggleFullscreen: "enabled",
-      download: "disabled",
+      zoomIn: 'disabled',
+      zoomOut: 'disabled',
+      resetView: 'enabled',
+      copyCode: 'enabled',
+      toggleFullscreen: 'enabled',
+      download: 'disabled',
     },
     positions: {
-      vertical: "bottom",
-      horizontal: "right",
+      vertical: 'bottom',
+      horizontal: 'right',
     },
-    zoomLevel: "enabled",
+    zoomLevel: 'enabled',
   },
   fullscreen: {
     buttons: {
-      zoomIn: "disabled",
-      zoomOut: "disabled",
-      resetView: "disabled",
-      copyCode: "disabled",
-      toggleFullscreen: "enabled",
-      download: "disabled",
+      zoomIn: 'disabled',
+      zoomOut: 'disabled',
+      resetView: 'disabled',
+      copyCode: 'disabled',
+      toggleFullscreen: 'enabled',
+      download: 'disabled',
     },
     positions: {
-      vertical: "bottom",
-      horizontal: "right",
+      vertical: 'bottom',
+      horizontal: 'right',
     },
-    zoomLevel: "enabled",
+    zoomLevel: 'enabled',
   },
   showLanguageLabel: true,
-  downloadFormat: "svg",
-  fullscreenMode: "browser",
+  downloadFormat: 'svg',
+  fullscreenMode: 'browser',
   i18n: {
-    localeIndex: "root",
+    localeIndex: 'root',
     tooltips: {
-      zoomIn: "Zoom In",
-      zoomOut: "Zoom Out",
-      resetView: "Reset View",
-      copyCode: "Copy Code",
-      copyCodeCopied: "Copied",
-      download: "Download Diagram",
-      toggleFullscreen: "Toggle Fullscreen",
+      zoomIn: 'Zoom In',
+      zoomOut: 'Zoom Out',
+      resetView: 'Reset View',
+      copyCode: 'Copy Code',
+      copyCodeCopied: 'Copied',
+      download: 'Download Diagram',
+      toggleFullscreen: 'Toggle Fullscreen',
     },
   },
 } as const;
@@ -746,7 +746,7 @@ const mergePosition = (
  * @returns `true` if `value` is `"enabled"` or `"disabled"`.
  */
 const isToolbarButtonState = (value: unknown): value is ToolbarButtonState =>
-  value === "enabled" || value === "disabled";
+  value === 'enabled' || value === 'disabled';
 
 /**
  * Merges per-button state overrides with defaults while safely ignoring
@@ -782,7 +782,7 @@ const mergeToolbarButtons = <ButtonType extends string>(
 
   const merged = { ...defaults };
   (Object.keys(overrides) as Array<keyof typeof overrides>).forEach((key) => {
-    if (key === "positions" || key === "zoomLevel") {
+    if (key === 'positions' || key === 'zoomLevel') {
       return;
     }
     const buttonKey = key as ButtonType;
@@ -861,7 +861,7 @@ const resolveToolbarMode = <ButtonType extends string>(
  * blank out a tooltip when overriding it.
  */
 const isNonEmptyString = (value: unknown): value is string =>
-  typeof value === "string" && value.length > 0;
+  typeof value === 'string' && value.length > 0;
 
 /**
  * Picks the first non-empty string tooltip override from the supplied
@@ -906,13 +906,13 @@ export const resolveToolbarI18n = (
   const defaults = DEFAULT_TOOLBAR_CONFIG.i18n.tooltips;
 
   const keys: ToolbarTextKey[] = [
-    "zoomIn",
-    "zoomOut",
-    "resetView",
-    "copyCode",
-    "copyCodeCopied",
-    "toggleFullscreen",
-    "download",
+    'zoomIn',
+    'zoomOut',
+    'resetView',
+    'copyCode',
+    'copyCodeCopied',
+    'toggleFullscreen',
+    'download',
   ];
 
   const tooltips = keys.reduce((acc, key) => {

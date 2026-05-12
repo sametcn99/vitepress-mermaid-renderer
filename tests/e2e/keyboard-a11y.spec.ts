@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from '@playwright/test';
 
 /**
  * Accessibility-focused edge cases for the toolbar:
@@ -7,42 +7,42 @@ import { expect, test } from "@playwright/test";
  * - Activating a focused control with Enter must apply the same effect as a
  *   pointer click (zoom in changes the inner transform).
  */
-test.describe("toolbar accessibility", () => {
+test.describe('toolbar accessibility', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/examples/basic");
-    await expect(page.locator(".mermaid-container").first()).toBeVisible();
+    await page.goto('/examples/basic');
+    await expect(page.locator('.mermaid-container').first()).toBeVisible();
     await expect(
-      page.locator(".mermaid-container").first().locator(".mermaid > svg"),
+      page.locator('.mermaid-container').first().locator('.mermaid > svg'),
     ).toBeVisible();
   });
 
-  test("every desktop control exposes matching title and aria-label", async ({
+  test('every desktop control exposes matching title and aria-label', async ({
     page,
   }) => {
-    const diagram = page.locator(".mermaid-container").first();
+    const diagram = page.locator('.mermaid-container').first();
     const keys = [
-      "zoomIn",
-      "zoomOut",
-      "resetView",
-      "copyCode",
-      "download",
-      "toggleFullscreen",
+      'zoomIn',
+      'zoomOut',
+      'resetView',
+      'copyCode',
+      'download',
+      'toggleFullscreen',
     ];
     for (const key of keys) {
       const button = diagram
         .locator(`.desktop-controls [data-mermaid-control="${key}"]`)
         .first();
       await expect(button).toBeVisible();
-      const title = await button.getAttribute("title");
-      const aria = await button.getAttribute("aria-label");
+      const title = await button.getAttribute('title');
+      const aria = await button.getAttribute('aria-label');
       expect(title, `title for ${key}`).toBeTruthy();
       expect(aria, `aria-label for ${key}`).toEqual(title);
     }
   });
 
-  test("zoom in is operable via keyboard activation", async ({ page }) => {
-    const diagram = page.locator(".mermaid-container").first();
-    const inner = diagram.locator(".mermaid").first();
+  test('zoom in is operable via keyboard activation', async ({ page }) => {
+    const diagram = page.locator('.mermaid-container').first();
+    const inner = diagram.locator('.mermaid').first();
     const zoomIn = diagram
       .locator('.desktop-controls [data-mermaid-control="zoomIn"]')
       .first();
@@ -53,8 +53,8 @@ test.describe("toolbar accessibility", () => {
 
     await zoomIn.focus();
     await expect(zoomIn).toBeFocused();
-    await page.keyboard.press("Enter");
-    await page.keyboard.press("Enter");
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
 
     await expect
       .poll(async () =>

@@ -20,12 +20,12 @@ class Logger {
   };
 
   constructor(private readonly isTTY = Boolean(process.stdout.isTTY)) {
-    const apply = (code: string) => (this.isTTY ? code : "");
+    const apply = (code: string) => (this.isTTY ? code : '');
     this.colors = {
-      green: apply("\u001B[32m"),
-      gray: apply("\u001B[90m"),
-      red: apply("\u001B[31m"),
-      reset: apply("\u001B[0m"),
+      green: apply('\u001B[32m'),
+      gray: apply('\u001B[90m'),
+      red: apply('\u001B[31m'),
+      reset: apply('\u001B[0m'),
     };
   }
 
@@ -50,15 +50,15 @@ class CommandRunner {
     const [cmd, ...args] = command;
     const proc = Bun.spawn([cmd, ...args], {
       cwd: options.cwd,
-      stdout: "inherit",
-      stderr: "inherit",
-      stdin: "inherit",
+      stdout: 'inherit',
+      stderr: 'inherit',
+      stdin: 'inherit',
     });
 
     const exitCode = await proc.exited;
     if (exitCode !== 0 && !options.allowFailure) {
       throw new Error(
-        `Command "${command.join(" ")}" failed with exit code ${exitCode}`,
+        `Command "${command.join(' ')}" failed with exit code ${exitCode}`,
       );
     }
 
@@ -100,14 +100,14 @@ class FileManager {
     }
 
     const command =
-      process.platform === "win32"
-        ? ["cmd", "/c", "rmdir", "/s", "/q", path]
-        : ["rm", "-rf", path];
+      process.platform === 'win32'
+        ? ['cmd', '/c', 'rmdir', '/s', '/q', path]
+        : ['rm', '-rf', path];
 
     const proc = Bun.spawn(command, {
-      stdout: "inherit",
-      stderr: "inherit",
-      stdin: "inherit",
+      stdout: 'inherit',
+      stderr: 'inherit',
+      stdin: 'inherit',
     });
     const exitCode = await proc.exited;
 
@@ -130,37 +130,37 @@ class PackageManager {
   private constructor(private readonly runner: CommandRunner) {}
 
   static async create(runner: CommandRunner) {
-    const bunPath = await Bun.which("bun");
+    const bunPath = await Bun.which('bun');
     if (!bunPath) {
-      throw new Error("Bun is not available on PATH. Install Bun to continue.");
+      throw new Error('Bun is not available on PATH. Install Bun to continue.');
     }
 
     return new PackageManager(runner);
   }
 
   async runScript(script: string, scriptArgs: string[] = []) {
-    await this.runner.run(["bun", "run", script, ...scriptArgs]);
+    await this.runner.run(['bun', 'run', script, ...scriptArgs]);
   }
 
   async installDependencies() {
-    await this.runner.run(["bun", "install"]);
+    await this.runner.run(['bun', 'install']);
   }
 
   async removePackage(pkg: string) {
-    await this.runner.run(["bun", "remove", pkg], { allowFailure: true });
+    await this.runner.run(['bun', 'remove', pkg], { allowFailure: true });
   }
 
   async installLocalPackage(packagePath: string, save = true) {
-    const command = ["bun", "add"];
+    const command = ['bun', 'add'];
     if (!save) {
-      command.push("--no-save");
+      command.push('--no-save');
     }
     command.push(packagePath);
     await this.runner.run(command);
   }
 
   async createPackageArchive() {
-    await this.runner.run(["bun", "pm", "pack"]);
+    await this.runner.run(['bun', 'pm', 'pack']);
   }
 }
 
@@ -182,77 +182,77 @@ class TestWorkflow {
   }
 
   private async cleanArtifacts() {
-    this.logger.step("Cleaning previous build artifacts");
+    this.logger.step('Cleaning previous build artifacts');
 
-    const archives = await this.fileManager.listMatching("*.tgz", this.rootDir);
+    const archives = await this.fileManager.listMatching('*.tgz', this.rootDir);
     for (const archive of archives) {
       this.logger.subStep(`Removing package: ${archive}`);
       await this.fileManager.remove(archive);
     }
 
-    await this.fileManager.removeSafeItem("dist", "Removing dist directory");
+    await this.fileManager.removeSafeItem('dist', 'Removing dist directory');
   }
 
   private async buildAndPack() {
-    this.logger.step("Building the package");
-    await this.packageManager.runScript("build");
+    this.logger.step('Building the package');
+    await this.packageManager.runScript('build');
 
-    this.logger.step("Creating package archive");
+    this.logger.step('Creating package archive');
     await this.packageManager.createPackageArchive();
   }
 
   private async setupTestProject() {
     this.logger.step(
-      "Setting up test environment",
-      "Switching to test-project directory",
+      'Setting up test environment',
+      'Switching to test-project directory',
     );
 
     await this.withDirectory(
-      this.resolvePath(this.rootDir, "test-project"),
+      this.resolvePath(this.rootDir, 'test-project'),
       async () => {
         await this.fileManager.removeSafeItem(
-          ".vitepress/cache",
-          "Cleaning VitePress cache",
+          '.vitepress/cache',
+          'Cleaning VitePress cache',
         );
         await this.fileManager.removeSafeItem(
-          "dist",
-          "Cleaning dist directory",
+          'dist',
+          'Cleaning dist directory',
         );
         await this.fileManager.removeSafeItem(
-          "node_modules",
-          "Cleaning node_modules",
+          'node_modules',
+          'Cleaning node_modules',
         );
 
-        this.logger.step("Installing dependencies");
+        this.logger.step('Installing dependencies');
         await this.packageManager.installDependencies();
 
-        this.logger.subStep("Installing local package");
+        this.logger.subStep('Installing local package');
         const packageFile = await this.findPackageArchive();
         if (!packageFile) {
-          throw new Error("No package archive found in parent directory.");
+          throw new Error('No package archive found in parent directory.');
         }
         await this.packageManager.installLocalPackage(packageFile, false);
 
-        this.logger.step("Building documentation");
-        await this.packageManager.runScript("docs:build");
+        this.logger.step('Building documentation');
+        await this.packageManager.runScript('docs:build');
 
         if (!this.options.preview) {
           this.logger.step(
-            "Prepared test project",
-            "Smoke-test assets are ready.",
+            'Prepared test project',
+            'Smoke-test assets are ready.',
           );
           return;
         }
 
         this.logger.step(
-          "Previewing production build",
-          "Press Ctrl+C to stop the preview when ready. Use your PC LAN IP from mobile.",
+          'Previewing production build',
+          'Press Ctrl+C to stop the preview when ready. Use your PC LAN IP from mobile.',
         );
-        await this.packageManager.runScript("docs:preview", [
-          "--",
-          "--host",
+        await this.packageManager.runScript('docs:preview', [
+          '--',
+          '--host',
           this.options.host,
-          "--port",
+          '--port',
           this.options.port,
         ]);
       },
@@ -260,7 +260,7 @@ class TestWorkflow {
   }
 
   private async findPackageArchive() {
-    const archives = await this.fileManager.listMatching("*.tgz", this.rootDir);
+    const archives = await this.fileManager.listMatching('*.tgz', this.rootDir);
     const archive = archives[0];
     return archive ? `../${archive}` : null;
   }
@@ -279,12 +279,12 @@ class TestWorkflow {
   }
 
   private resolvePath(base: string, child: string) {
-    if (child.startsWith("/") || /^[A-Za-z]:/.test(child)) {
+    if (child.startsWith('/') || /^[A-Za-z]:/.test(child)) {
       return child;
     }
-    const trimmedBase = base.replace(/[\\/]+$/, "");
-    const trimmedChild = child.replace(/^[\\/]+/, "");
-    const separator = process.platform === "win32" ? "\\" : "/";
+    const trimmedBase = base.replace(/[\\/]+$/, '');
+    const trimmedChild = child.replace(/^[\\/]+/, '');
+    const separator = process.platform === 'win32' ? '\\' : '/';
     return `${trimmedBase}${separator}${trimmedChild}`;
   }
 }
@@ -306,31 +306,31 @@ const parseWorkflowOptions = (argv: string[]): WorkflowOptions => {
   const args = [...argv];
   const options: WorkflowOptions = {
     preview: true,
-    host: "0.0.0.0",
-    port: "4173",
+    host: '0.0.0.0',
+    port: '4173',
   };
 
   while (args.length > 0) {
     const arg = args.shift();
 
-    if (arg === "--prepare-only") {
+    if (arg === '--prepare-only') {
       options.preview = false;
       continue;
     }
 
-    if (arg === "--host") {
+    if (arg === '--host') {
       const host = args.shift();
       if (!host) {
-        throw new Error("Missing value for --host");
+        throw new Error('Missing value for --host');
       }
       options.host = host;
       continue;
     }
 
-    if (arg === "--port") {
+    if (arg === '--port') {
       const port = args.shift();
       if (!port) {
-        throw new Error("Missing value for --port");
+        throw new Error('Missing value for --port');
       }
       options.port = port;
       continue;

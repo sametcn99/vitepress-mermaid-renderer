@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useMermaidNavigation } from "../../src/composables/useMermaidNavigation";
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useMermaidNavigation } from '../../src/composables/useMermaidNavigation';
 
 const wheelEvent = (overrides: Partial<WheelEventInit> = {}): WheelEvent =>
   ({
@@ -18,9 +18,9 @@ const touchEvent = (touches: Touch[]): TouchEvent =>
     preventDefault: vi.fn(),
   }) as unknown as TouchEvent;
 
-describe("useMermaidNavigation", () => {
+describe('useMermaidNavigation', () => {
   beforeEach(() => {
-    Object.defineProperty(document, "fullscreenElement", {
+    Object.defineProperty(document, 'fullscreenElement', {
       configurable: true,
       value: null,
     });
@@ -30,8 +30,8 @@ describe("useMermaidNavigation", () => {
     vi.restoreAllMocks();
   });
 
-  describe("zoom and reset", () => {
-    it("zooms in by ×1.2 per call", () => {
+  describe('zoom and reset', () => {
+    it('zooms in by ×1.2 per call', () => {
       const nav = useMermaidNavigation();
       nav.zoomIn();
       expect(nav.scale.value).toBeCloseTo(1.2);
@@ -39,7 +39,7 @@ describe("useMermaidNavigation", () => {
       expect(nav.scale.value).toBeCloseTo(1.44);
     });
 
-    it("zooms out by ÷1.2 monotonically", () => {
+    it('zooms out by ÷1.2 monotonically', () => {
       const nav = useMermaidNavigation();
       const before = nav.scale.value;
       nav.zoomOut();
@@ -48,7 +48,7 @@ describe("useMermaidNavigation", () => {
       expect(nav.scale.value).toBeCloseTo(before / 1.2 / 1.2);
     });
 
-    it("resets translate and scale to defaults", () => {
+    it('resets translate and scale to defaults', () => {
       const nav = useMermaidNavigation();
       nav.zoomIn();
       nav.startPan({ clientX: 0, clientY: 0 } as MouseEvent);
@@ -62,15 +62,15 @@ describe("useMermaidNavigation", () => {
     });
   });
 
-  describe("mouse pan", () => {
-    it("only updates translation when isPanning is true", () => {
+  describe('mouse pan', () => {
+    it('only updates translation when isPanning is true', () => {
       const nav = useMermaidNavigation();
       nav.pan({ clientX: 100, clientY: 100 } as MouseEvent);
       expect(nav.translateX.value).toBe(0);
       expect(nav.translateY.value).toBe(0);
     });
 
-    it("applies delta divided by scale during panning", () => {
+    it('applies delta divided by scale during panning', () => {
       const nav = useMermaidNavigation();
       nav.zoomIn();
       nav.zoomIn();
@@ -84,8 +84,8 @@ describe("useMermaidNavigation", () => {
     });
   });
 
-  describe("directional pan", () => {
-    it("pans up/down/left/right by PAN_STEP / scale", () => {
+  describe('directional pan', () => {
+    it('pans up/down/left/right by PAN_STEP / scale', () => {
       const nav = useMermaidNavigation();
       nav.panUp();
       expect(nav.translateY.value).toBe(-50);
@@ -98,8 +98,8 @@ describe("useMermaidNavigation", () => {
     });
   });
 
-  describe("wheel zoom", () => {
-    it("ignores wheel events without Ctrl outside fullscreen", () => {
+  describe('wheel zoom', () => {
+    it('ignores wheel events without Ctrl outside fullscreen', () => {
       const nav = useMermaidNavigation();
       const ev = wheelEvent({ deltaY: -120 });
       nav.handleWheel(ev);
@@ -107,7 +107,7 @@ describe("useMermaidNavigation", () => {
       expect(ev.preventDefault).not.toHaveBeenCalled();
     });
 
-    it("zooms in 10% with ctrl held", () => {
+    it('zooms in 10% with ctrl held', () => {
       const nav = useMermaidNavigation();
       const ev = wheelEvent({ ctrlKey: true, deltaY: -120 });
       nav.handleWheel(ev);
@@ -115,17 +115,17 @@ describe("useMermaidNavigation", () => {
       expect(ev.preventDefault).toHaveBeenCalledTimes(1);
     });
 
-    it("zooms in fullscreen even without ctrl", () => {
+    it('zooms in fullscreen even without ctrl', () => {
       const nav = useMermaidNavigation();
-      nav.toggleFullscreen(null, "dialog");
+      nav.toggleFullscreen(null, 'dialog');
       const ev = wheelEvent({ deltaY: 120 });
       nav.handleWheel(ev);
       expect(nav.scale.value).toBeLessThan(1);
     });
 
-    it("clamps zoom inside [0.2, 10]", () => {
+    it('clamps zoom inside [0.2, 10]', () => {
       const nav = useMermaidNavigation();
-      nav.toggleFullscreen(null, "dialog");
+      nav.toggleFullscreen(null, 'dialog');
       for (let i = 0; i < 100; i++) {
         nav.handleWheel(wheelEvent({ deltaY: -120 }));
       }
@@ -137,9 +137,9 @@ describe("useMermaidNavigation", () => {
     });
   });
 
-  describe("touch interactions (desktop / fullscreen)", () => {
+  describe('touch interactions (desktop / fullscreen)', () => {
     beforeEach(() => {
-      vi.spyOn(window, "matchMedia").mockImplementation(
+      vi.spyOn(window, 'matchMedia').mockImplementation(
         (query: string) =>
           ({
             matches: false,
@@ -150,7 +150,7 @@ describe("useMermaidNavigation", () => {
       );
     });
 
-    it("starts and continues a single-finger pan", () => {
+    it('starts and continues a single-finger pan', () => {
       const nav = useMermaidNavigation();
       nav.handleTouchStart(touchEvent([touch(10, 10)]));
       nav.handleTouchMove(touchEvent([touch(40, 30)]));
@@ -159,7 +159,7 @@ describe("useMermaidNavigation", () => {
       nav.handleTouchEnd();
     });
 
-    it("performs pinch-zoom with two-finger gesture and dampening", () => {
+    it('performs pinch-zoom with two-finger gesture and dampening', () => {
       const nav = useMermaidNavigation();
       nav.handleTouchStart(touchEvent([touch(0, 0), touch(100, 0)]));
       nav.handleTouchMove(touchEvent([touch(0, 0), touch(200, 0)]));
@@ -169,12 +169,12 @@ describe("useMermaidNavigation", () => {
     });
   });
 
-  describe("touch interactions (mobile non-fullscreen)", () => {
+  describe('touch interactions (mobile non-fullscreen)', () => {
     beforeEach(() => {
-      vi.spyOn(window, "matchMedia").mockImplementation(
+      vi.spyOn(window, 'matchMedia').mockImplementation(
         (query: string) =>
           ({
-            matches: query.includes("768"),
+            matches: query.includes('768'),
             media: query,
             addEventListener: () => {},
             removeEventListener: () => {},
@@ -182,7 +182,7 @@ describe("useMermaidNavigation", () => {
       );
     });
 
-    it("ignores single-finger touch so the page can scroll", () => {
+    it('ignores single-finger touch so the page can scroll', () => {
       const nav = useMermaidNavigation();
       nav.handleTouchStart(touchEvent([touch(10, 10)]));
       nav.handleTouchMove(touchEvent([touch(50, 50)]));
@@ -190,7 +190,7 @@ describe("useMermaidNavigation", () => {
       expect(nav.translateY.value).toBe(0);
     });
 
-    it("handles two-finger pinch + pan on mobile", () => {
+    it('handles two-finger pinch + pan on mobile', () => {
       const nav = useMermaidNavigation();
       nav.handleTouchStart(touchEvent([touch(0, 0), touch(100, 0)]));
       nav.handleTouchMove(touchEvent([touch(10, 10), touch(210, 10)]));
@@ -199,17 +199,17 @@ describe("useMermaidNavigation", () => {
     });
   });
 
-  describe("fullscreen", () => {
-    it("dialog mode toggles isFullscreen without invoking the API", () => {
+  describe('fullscreen', () => {
+    it('dialog mode toggles isFullscreen without invoking the API', () => {
       const nav = useMermaidNavigation();
-      const wrapper = document.createElement("div");
-      nav.toggleFullscreen(wrapper, "dialog");
+      const wrapper = document.createElement('div');
+      nav.toggleFullscreen(wrapper, 'dialog');
       expect(nav.isFullscreen.value).toBe(true);
-      nav.toggleFullscreen(wrapper, "dialog");
+      nav.toggleFullscreen(wrapper, 'dialog');
       expect(nav.isFullscreen.value).toBe(false);
     });
 
-    it("restores the previous view after exiting dialog fullscreen", () => {
+    it('restores the previous view after exiting dialog fullscreen', () => {
       const nav = useMermaidNavigation();
 
       nav.zoomIn();
@@ -220,7 +220,7 @@ describe("useMermaidNavigation", () => {
       const previousTranslateX = nav.translateX.value;
       const previousTranslateY = nav.translateY.value;
 
-      nav.toggleFullscreen(null, "dialog");
+      nav.toggleFullscreen(null, 'dialog');
       nav.zoomIn();
       nav.panLeft();
       nav.panUp();
@@ -229,83 +229,83 @@ describe("useMermaidNavigation", () => {
       expect(nav.translateX.value).not.toBeCloseTo(previousTranslateX);
       expect(nav.translateY.value).not.toBeCloseTo(previousTranslateY);
 
-      nav.toggleFullscreen(null, "dialog");
+      nav.toggleFullscreen(null, 'dialog');
 
       expect(nav.scale.value).toBeCloseTo(previousScale);
       expect(nav.translateX.value).toBeCloseTo(previousTranslateX);
       expect(nav.translateY.value).toBeCloseTo(previousTranslateY);
     });
 
-    it("alerts when no fullscreen API is available in browser mode", () => {
+    it('alerts when no fullscreen API is available in browser mode', () => {
       const alertFn = vi.fn();
-      vi.stubGlobal("alert", alertFn);
-      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.stubGlobal('alert', alertFn);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const nav = useMermaidNavigation();
-      const wrapper = document.createElement("div");
-      Object.defineProperty(document, "fullscreenElement", {
+      const wrapper = document.createElement('div');
+      Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
         value: null,
       });
-      nav.toggleFullscreen(wrapper, "browser");
+      nav.toggleFullscreen(wrapper, 'browser');
       expect(alertFn).toHaveBeenCalled();
       expect(errorSpy).toHaveBeenCalled();
       vi.unstubAllGlobals();
     });
 
-    it("calls webkit/moz/ms request fallbacks when standard API is missing", () => {
+    it('calls webkit/moz/ms request fallbacks when standard API is missing', () => {
       const nav = useMermaidNavigation();
-      const wrapper = document.createElement("div");
+      const wrapper = document.createElement('div');
       const webkitRequest = vi.fn();
-      Object.defineProperty(wrapper, "webkitRequestFullscreen", {
+      Object.defineProperty(wrapper, 'webkitRequestFullscreen', {
         configurable: true,
         value: webkitRequest,
       });
-      Object.defineProperty(document, "fullscreenElement", {
+      Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
         value: null,
       });
-      nav.toggleFullscreen(wrapper, "browser");
+      nav.toggleFullscreen(wrapper, 'browser');
       expect(webkitRequest).toHaveBeenCalled();
       expect(nav.isFullscreen.value).toBe(true);
     });
 
-    it("invokes requestFullscreen and exitFullscreen across a full cycle", () => {
+    it('invokes requestFullscreen and exitFullscreen across a full cycle', () => {
       const nav = useMermaidNavigation();
-      const wrapper = document.createElement("div");
+      const wrapper = document.createElement('div');
       const requestFullscreen = vi.fn();
       const exitFullscreen = vi.fn();
-      Object.defineProperty(wrapper, "requestFullscreen", {
+      Object.defineProperty(wrapper, 'requestFullscreen', {
         configurable: true,
         value: requestFullscreen,
       });
-      Object.defineProperty(document, "exitFullscreen", {
+      Object.defineProperty(document, 'exitFullscreen', {
         configurable: true,
         value: exitFullscreen,
       });
-      Object.defineProperty(document, "fullscreenElement", {
+      Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
         value: null,
       });
 
-      nav.toggleFullscreen(wrapper, "browser");
+      nav.toggleFullscreen(wrapper, 'browser');
       expect(requestFullscreen).toHaveBeenCalledTimes(1);
       expect(nav.isFullscreen.value).toBe(true);
 
-      Object.defineProperty(document, "fullscreenElement", {
+      Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
         value: wrapper,
       });
-      nav.toggleFullscreen(wrapper, "browser");
+      nav.toggleFullscreen(wrapper, 'browser');
       expect(exitFullscreen).toHaveBeenCalledTimes(1);
       expect(nav.isFullscreen.value).toBe(false);
     });
 
-    it("restores the previous view when browser fullscreen exits via fullscreenchange", () => {
+    it('restores the previous view when browser fullscreen exits via fullscreenchange', () => {
       const nav = useMermaidNavigation();
-      const wrapper = document.createElement("div");
+      const wrapper = document.createElement('div');
       const requestFullscreen = vi.fn();
 
-      Object.defineProperty(wrapper, "requestFullscreen", {
+      Object.defineProperty(wrapper, 'requestFullscreen', {
         configurable: true,
         value: requestFullscreen,
       });
@@ -318,14 +318,14 @@ describe("useMermaidNavigation", () => {
       const previousTranslateX = nav.translateX.value;
       const previousTranslateY = nav.translateY.value;
 
-      Object.defineProperty(document, "fullscreenElement", {
+      Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
         value: null,
       });
 
-      nav.toggleFullscreen(wrapper, "browser");
+      nav.toggleFullscreen(wrapper, 'browser');
 
-      Object.defineProperty(document, "fullscreenElement", {
+      Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
         value: wrapper,
       });
@@ -339,7 +339,7 @@ describe("useMermaidNavigation", () => {
       expect(nav.translateX.value).not.toBeCloseTo(previousTranslateX);
       expect(nav.translateY.value).not.toBeCloseTo(previousTranslateY);
 
-      Object.defineProperty(document, "fullscreenElement", {
+      Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
         value: null,
       });
@@ -352,26 +352,26 @@ describe("useMermaidNavigation", () => {
       expect(nav.translateY.value).toBeCloseTo(previousTranslateY);
     });
 
-    it("updateFullscreenControls toggles the force-show class", () => {
+    it('updateFullscreenControls toggles the force-show class', () => {
       const nav = useMermaidNavigation();
-      const controls = document.createElement("div");
-      const mobileControls = document.createElement("div");
+      const controls = document.createElement('div');
+      const mobileControls = document.createElement('div');
 
-      Object.defineProperty(document, "fullscreenElement", {
+      Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
         value: controls,
       });
       nav.updateFullscreenControls({ controls, mobileControls });
-      expect(controls.classList.contains("force-show")).toBe(true);
-      expect(mobileControls.classList.contains("force-show")).toBe(true);
+      expect(controls.classList.contains('force-show')).toBe(true);
+      expect(mobileControls.classList.contains('force-show')).toBe(true);
 
-      Object.defineProperty(document, "fullscreenElement", {
+      Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
         value: null,
       });
       nav.updateFullscreenControls({ controls, mobileControls });
-      expect(controls.classList.contains("force-show")).toBe(false);
-      expect(mobileControls.classList.contains("force-show")).toBe(false);
+      expect(controls.classList.contains('force-show')).toBe(false);
+      expect(mobileControls.classList.contains('force-show')).toBe(false);
     });
   });
 });

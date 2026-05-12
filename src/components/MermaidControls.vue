@@ -305,7 +305,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref } from 'vue';
 import type {
   DesktopToolbarButton,
   MobileToolbarButton,
@@ -314,7 +314,7 @@ import type {
   ToolbarButtonState,
   ToolbarTooltipKey,
   DownloadFormat,
-} from "../toolbar";
+} from '../toolbar';
 
 const props = defineProps<{
   scale: number;
@@ -352,7 +352,7 @@ const getMobileSource = () =>
  *   desktop toolbar source.
  */
 const isDesktopEnabled = (button: DesktopToolbarButton) => {
-  return getDesktopSource().buttons[button] === "enabled";
+  return getDesktopSource().buttons[button] === 'enabled';
 };
 
 /**
@@ -364,7 +364,7 @@ const isDesktopEnabled = (button: DesktopToolbarButton) => {
  */
 const isMobileEnabled = (button: MobileToolbarButton) => {
   const source = getMobileSource();
-  return source.buttons[button] === "enabled";
+  return source.buttons[button] === 'enabled';
 };
 
 /**
@@ -383,20 +383,20 @@ const tooltipText = (key: ToolbarTooltipKey): string =>
 
 /** Localized text shown after the Mermaid source is copied successfully. */
 const copiedNotificationText = computed(
-  () => props.toolbar.i18n.tooltips.copyCodeCopied ?? "Copied",
+  () => props.toolbar.i18n.tooltips.copyCodeCopied ?? 'Copied',
 );
 
 // Define emits
 const emit = defineEmits<{
-  (event: "zoomIn"): void;
-  (event: "zoomOut"): void;
-  (event: "resetView"): void;
-  (event: "toggleFullscreen"): void;
-  (event: "panUp"): void;
-  (event: "panDown"): void;
-  (event: "panLeft"): void;
-  (event: "panRight"): void;
-  (event: "download", format: DownloadFormat): void;
+  (event: 'zoomIn'): void;
+  (event: 'zoomOut'): void;
+  (event: 'resetView'): void;
+  (event: 'toggleFullscreen'): void;
+  (event: 'panUp'): void;
+  (event: 'panDown'): void;
+  (event: 'panLeft'): void;
+  (event: 'panRight'): void;
+  (event: 'download', format: DownloadFormat): void;
 }>();
 
 /** Template ref for the desktop controls container. */
@@ -444,16 +444,16 @@ const mobilePositionClasses = computed(() => {
  */
 const hasEnabledButtons = <T extends string>(
   buttons: Record<T, ToolbarButtonState>,
-) => Object.values(buttons).some((state) => state === "enabled");
+) => Object.values(buttons).some((state) => state === 'enabled');
 
 /** `true` when the desktop zoom-level badge (e.g. "150 %") should be visible. */
 const shouldShowDesktopZoomLevel = computed(() => {
-  return getDesktopSource().zoomLevel === "enabled";
+  return getDesktopSource().zoomLevel === 'enabled';
 });
 
 /** `true` when the mobile zoom-level badge should be visible. */
 const shouldShowMobileZoomLevel = computed(() => {
-  return getMobileSource().zoomLevel === "enabled";
+  return getMobileSource().zoomLevel === 'enabled';
 });
 
 /** `true` when the desktop container has at least one enabled button or zoom-level display. */
@@ -479,7 +479,7 @@ const shouldRenderMobileContainer = computed(() => {
 const copyDiagramCode = async () => {
   try {
     if (!navigator.clipboard) {
-      throw new Error("Clipboard API not available in this browser.");
+      throw new Error('Clipboard API not available in this browser.');
     }
     await navigator.clipboard.writeText(props.code);
     showCopied.value = true;
@@ -487,9 +487,9 @@ const copyDiagramCode = async () => {
       showCopied.value = false;
     }, 1000);
   } catch (err) {
-    console.error("Failed to copy diagram code:", err);
+    console.error('Failed to copy diagram code:', err);
     alert(
-      "Failed to copy to clipboard. Your browser might not support this feature.",
+      'Failed to copy to clipboard. Your browser might not support this feature.',
     );
   }
 };
@@ -499,7 +499,7 @@ const copyDiagramCode = async () => {
  * resolved toolbar config (e.g. `"svg"`, `"png"`, `"jpeg"`).
  */
 const emitDownload = () => {
-  emit("download", props.toolbar.downloadFormat);
+  emit('download', props.toolbar.downloadFormat);
 };
 
 /**
@@ -514,34 +514,34 @@ const updateFullscreenControls = () => {
   try {
     if (props.isFullscreen) {
       if (controls.value) {
-        controls.value.classList.add("force-show");
+        controls.value.classList.add('force-show');
       }
       if (mobileControls.value) {
-        mobileControls.value.classList.add("force-show");
+        mobileControls.value.classList.add('force-show');
       }
     } else {
       if (controls.value) {
-        controls.value.classList.remove("force-show");
+        controls.value.classList.remove('force-show');
       }
       if (mobileControls.value) {
-        mobileControls.value.classList.remove("force-show");
+        mobileControls.value.classList.remove('force-show');
       }
     }
   } catch (err) {
-    console.error("Error updating fullscreen controls:", err);
+    console.error('Error updating fullscreen controls:', err);
   }
 };
 
 onMounted(() => {
   // Set controls visible immediately
   if (controls.value) {
-    controls.value.style.opacity = "1";
-    controls.value.style.visibility = "visible";
+    controls.value.style.opacity = '1';
+    controls.value.style.visibility = 'visible';
   }
 
   if (mobileControls.value) {
-    mobileControls.value.style.opacity = "1";
-    mobileControls.value.style.visibility = "visible";
+    mobileControls.value.style.opacity = '1';
+    mobileControls.value.style.visibility = 'visible';
   }
 });
 

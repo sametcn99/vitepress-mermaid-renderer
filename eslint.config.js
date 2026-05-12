@@ -1,23 +1,23 @@
-import js from "@eslint/js";
-import eslintConfigPrettier from "eslint-config-prettier";
-import globals from "globals";
-import vue from "eslint-plugin-vue";
-import vueParser from "vue-eslint-parser";
-import tseslint from "typescript-eslint";
+import js from '@eslint/js';
+import eslintConfigPrettier from 'eslint-config-prettier';
+import globals from 'globals';
+import vue from 'eslint-plugin-vue';
+import vueParser from 'vue-eslint-parser';
+import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
     // Use flat-config `ignores` and match nested dist folders.
     ignores: [
-      "**/dist/**",
-      "node_modules/**",
-      "test-project/**",
-      "**/cache/**",
-      "coverage/**",
+      '**/dist/**',
+      'node_modules/**',
+      'test-project/**',
+      '**/cache/**',
+      'coverage/**',
     ],
   },
   {
-    files: ["**/*.{js,cjs,mjs,ts,tsx,vue}"],
+    files: ['**/*.{js,cjs,mjs,ts,tsx,vue}'],
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -26,42 +26,42 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/*.{js,cjs,mjs}"],
+    files: ['**/*.{js,cjs,mjs}'],
     extends: [js.configs.recommended],
   },
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
+        ecmaVersion: 'latest',
+        sourceType: 'module',
       },
     },
     extends: [...tseslint.configs.recommended],
   },
   {
-    files: ["**/*.vue"],
+    files: ['**/*.vue'],
     languageOptions: {
       parser: vueParser,
       parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
+        ecmaVersion: 'latest',
+        sourceType: 'module',
         parser: tseslint.parser,
       },
     },
-    extends: [...vue.configs["flat/recommended"]],
+    extends: [...vue.configs['flat/recommended']],
     rules: {
-      "vue/multi-word-component-names": "off",
+      'vue/multi-word-component-names': 'off',
     },
   },
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-expressions": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "prefer-const": "off",
-      "vue/attributes-order": "off",
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'prefer-const': 'off',
+      'vue/attributes-order': 'off',
     },
   },
   eslintConfigPrettier,

@@ -1,21 +1,21 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { resolveToolbarConfig } from "../src/toolbar";
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { resolveToolbarConfig } from '../src/toolbar';
 
-vi.mock("../src/MermaidDiagram.vue", () => ({
-  default: { name: "MermaidDiagramMock", render: () => null },
+vi.mock('../src/MermaidDiagram.vue', () => ({
+  default: { name: 'MermaidDiagramMock', render: () => null },
 }));
 
 const flush = (ms = 0) => new Promise((r) => setTimeout(r, ms));
 
 const importFresh = async () => {
   vi.resetModules();
-  return await import("../src/MermaidRenderer");
+  return await import('../src/MermaidRenderer');
 };
 
-describe("MermaidRenderer", () => {
+describe('MermaidRenderer', () => {
   beforeEach(() => {
-    document.body.innerHTML = "";
-    document.head.innerHTML = "";
+    document.body.innerHTML = '';
+    document.head.innerHTML = '';
   });
 
   afterEach(() => {
@@ -23,30 +23,30 @@ describe("MermaidRenderer", () => {
     vi.useRealTimers();
   });
 
-  describe("getInstance", () => {
-    it("returns the same singleton across calls", async () => {
+  describe('getInstance', () => {
+    it('returns the same singleton across calls', async () => {
       const mod = await importFresh();
       const a = mod.MermaidRenderer.getInstance();
       const b = mod.MermaidRenderer.getInstance();
       expect(a).toBe(b);
     });
 
-    it("dispatches a config-updated event on subsequent getInstance calls with config", async () => {
+    it('dispatches a config-updated event on subsequent getInstance calls with config', async () => {
       const mod = await importFresh();
-      mod.MermaidRenderer.getInstance({ theme: "default" });
+      mod.MermaidRenderer.getInstance({ theme: 'default' });
       const spy = vi.fn();
-      document.addEventListener("vitepress-mermaid:config-updated", spy);
+      document.addEventListener('vitepress-mermaid:config-updated', spy);
 
-      mod.MermaidRenderer.getInstance({ theme: "forest" });
+      mod.MermaidRenderer.getInstance({ theme: 'forest' });
 
       expect(spy).toHaveBeenCalledTimes(1);
       const detail = (spy.mock.calls[0]![0] as CustomEvent).detail;
-      expect(detail).toMatchObject({ theme: "forest" });
+      expect(detail).toMatchObject({ theme: 'forest' });
     });
   });
 
-  describe("setToolbar", () => {
-    it("stores a freshly resolved toolbar config (default)", async () => {
+  describe('setToolbar', () => {
+    it('stores a freshly resolved toolbar config (default)', async () => {
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
       renderer.setToolbar();
@@ -54,51 +54,51 @@ describe("MermaidRenderer", () => {
       expect(() => renderer.setToolbar()).not.toThrow();
     });
 
-    it("accepts custom toolbar overrides", async () => {
+    it('accepts custom toolbar overrides', async () => {
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
       const expected = resolveToolbarConfig({
-        downloadFormat: "png",
-        desktop: { download: "enabled" },
+        downloadFormat: 'png',
+        desktop: { download: 'enabled' },
       });
       renderer.setToolbar({
-        downloadFormat: "png",
-        desktop: { download: "enabled" },
+        downloadFormat: 'png',
+        desktop: { download: 'enabled' },
       });
       // The toolbarConfig is private; verify by ensuring a follow-up call
       // with the same options resolves to a deeply equal object.
       const sameAgain = resolveToolbarConfig({
-        downloadFormat: "png",
-        desktop: { download: "enabled" },
+        downloadFormat: 'png',
+        desktop: { download: 'enabled' },
       });
       expect(expected).toEqual(sameAgain);
     });
 
-    it("dispatches vitepress-mermaid:toolbar-updated with resolved tooltip text", async () => {
+    it('dispatches vitepress-mermaid:toolbar-updated with resolved tooltip text', async () => {
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
       const spy = vi.fn();
-      document.addEventListener("vitepress-mermaid:toolbar-updated", spy);
+      document.addEventListener('vitepress-mermaid:toolbar-updated', spy);
 
       renderer.setToolbar({
         i18n: {
-          localeIndex: "tr",
+          localeIndex: 'tr',
           locales: {
-            tr: { tooltips: { copyCode: "Kodu kopyala" } },
+            tr: { tooltips: { copyCode: 'Kodu kopyala' } },
           },
         },
       });
 
       expect(spy).toHaveBeenCalledTimes(1);
       const detail = (spy.mock.calls[0]![0] as CustomEvent).detail;
-      expect(detail.i18n.localeIndex).toBe("tr");
-      expect(detail.i18n.tooltips.copyCode).toBe("Kodu kopyala");
-      expect(detail.i18n.tooltips.zoomIn).toBe("Zoom In");
+      expect(detail.i18n.localeIndex).toBe('tr');
+      expect(detail.i18n.tooltips.copyCode).toBe('Kodu kopyala');
+      expect(detail.i18n.tooltips.zoomIn).toBe('Zoom In');
     });
   });
 
-  describe("DOM discovery and queueing", () => {
-    it("discovers .language-mermaid blocks and replaces them with wrappers", async () => {
+  describe('DOM discovery and queueing', () => {
+    it('discovers .language-mermaid blocks and replaces them with wrappers', async () => {
       // Pre-create DOM before getInstance to allow synchronous discovery later
       document.body.innerHTML = `
         <div class="language-mermaid">
@@ -117,12 +117,12 @@ describe("MermaidRenderer", () => {
       expect(found).toBe(true);
       // Wait long enough for the 200ms mount delay.
       await flush(250);
-      expect(document.querySelector(".mermaid-wrapper")).not.toBeNull();
+      expect(document.querySelector('.mermaid-wrapper')).not.toBeNull();
       // Copy button removed
-      expect(document.querySelector(".copy")).toBeNull();
+      expect(document.querySelector('.copy')).toBeNull();
     });
 
-    it("returns false when no diagrams are present", async () => {
+    it('returns false when no diagrams are present', async () => {
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
       const result = (
@@ -142,10 +142,10 @@ describe("MermaidRenderer", () => {
       ).renderMermaidDiagrams();
       expect(result).toBe(true);
       await flush(250);
-      expect(document.querySelector(".mermaid-wrapper")).not.toBeNull();
+      expect(document.querySelector('.mermaid-wrapper')).not.toBeNull();
     });
 
-    it("preserves the language label when showLanguageLabel is true", async () => {
+    it('preserves the language label when showLanguageLabel is true', async () => {
       document.body.innerHTML = `
         <div class="language-mermaid">
           <button class="copy"></button>
@@ -157,17 +157,17 @@ describe("MermaidRenderer", () => {
       const renderer = mod.MermaidRenderer.getInstance();
       renderer.setToolbar({ showLanguageLabel: true });
       // Internal cleanup call
-      const wrappers = document.getElementsByClassName("language-mermaid");
+      const wrappers = document.getElementsByClassName('language-mermaid');
       (
         renderer as unknown as {
           cleanupMermaidWrapper: (el: Element) => void;
         }
       ).cleanupMermaidWrapper(wrappers[0]!);
-      expect(document.querySelector(".lang")).not.toBeNull();
-      expect(document.querySelector(".copy")).toBeNull();
+      expect(document.querySelector('.lang')).not.toBeNull();
+      expect(document.querySelector('.copy')).toBeNull();
     });
 
-    it("removes language label when showLanguageLabel is false", async () => {
+    it('removes language label when showLanguageLabel is false', async () => {
       document.body.innerHTML = `
         <div class="language-mermaid">
           <span class="lang">mermaid</span>
@@ -177,16 +177,16 @@ describe("MermaidRenderer", () => {
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
       renderer.setToolbar({ showLanguageLabel: false });
-      const wrappers = document.getElementsByClassName("language-mermaid");
+      const wrappers = document.getElementsByClassName('language-mermaid');
       (
         renderer as unknown as {
           cleanupMermaidWrapper: (el: Element) => void;
         }
       ).cleanupMermaidWrapper(wrappers[0]!);
-      expect(document.querySelector(".lang")).toBeNull();
+      expect(document.querySelector('.lang')).toBeNull();
     });
 
-    it("removes line numbers from mermaid wrapper using VitePress DOM structure", async () => {
+    it('removes line numbers from mermaid wrapper using VitePress DOM structure', async () => {
       document.body.innerHTML = `
         <div class="language-mermaid line-numbers-mode">
           <div class="line-numbers-wrapper" aria-hidden="true">
@@ -198,69 +198,72 @@ describe("MermaidRenderer", () => {
       `;
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
-      const wrappers = document.getElementsByClassName("language-mermaid");
+      const wrappers = document.getElementsByClassName('language-mermaid');
       (
         renderer as unknown as {
           cleanupMermaidWrapper: (el: Element) => void;
         }
       ).cleanupMermaidWrapper(wrappers[0]!);
-      expect(document.querySelector(".line-numbers-wrapper")).toBeNull();
-      expect(document.querySelector(".line-number")).toBeNull();
+      expect(document.querySelector('.line-numbers-wrapper')).toBeNull();
+      expect(document.querySelector('.line-number')).toBeNull();
       expect(
-        document.querySelector(".language-mermaid")!.classList.contains("line-numbers-mode"),
+        document
+          .querySelector('.language-mermaid')!
+          .classList.contains('line-numbers-mode'),
       ).toBe(false);
     });
 
-    it("preserves mermaid code textContent regardless of lineNumbers state", async () => {
+    it('preserves mermaid code textContent regardless of lineNumbers state', async () => {
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
 
-      const mermaidCode = "flowchart LR\nA-->B";
+      const mermaidCode = 'flowchart LR\nA-->B';
 
       const createWrapper = (withLineNumbers: boolean) => {
-        const wrapper = document.createElement("div");
-        wrapper.className = "language-mermaid";
+        const wrapper = document.createElement('div');
+        wrapper.className = 'language-mermaid';
         if (withLineNumbers) {
-          wrapper.classList.add("line-numbers-mode");
-          const lineWrapper = document.createElement("div");
-          lineWrapper.className = "line-numbers-wrapper";
-          lineWrapper.setAttribute("aria-hidden", "true");
-          const ln1 = document.createElement("span");
-          ln1.className = "line-number";
-          ln1.textContent = "1";
-          const br1 = document.createElement("br");
-          const ln2 = document.createElement("span");
-          ln2.className = "line-number";
-          ln2.textContent = "2";
-          const br2 = document.createElement("br");
+          wrapper.classList.add('line-numbers-mode');
+          const lineWrapper = document.createElement('div');
+          lineWrapper.className = 'line-numbers-wrapper';
+          lineWrapper.setAttribute('aria-hidden', 'true');
+          const ln1 = document.createElement('span');
+          ln1.className = 'line-number';
+          ln1.textContent = '1';
+          const br1 = document.createElement('br');
+          const ln2 = document.createElement('span');
+          ln2.className = 'line-number';
+          ln2.textContent = '2';
+          const br2 = document.createElement('br');
           lineWrapper.appendChild(ln1);
           lineWrapper.appendChild(br1);
           lineWrapper.appendChild(ln2);
           lineWrapper.appendChild(br2);
           wrapper.appendChild(lineWrapper);
         }
-        const pre = document.createElement("pre");
+        const pre = document.createElement('pre');
         pre.textContent = mermaidCode;
         wrapper.appendChild(pre);
         return wrapper;
       };
 
       const wrapperWith = createWrapper(true);
-      document.body.innerHTML = "";
+      document.body.innerHTML = '';
       document.body.appendChild(wrapperWith);
-      expect(document.querySelector(".line-numbers-wrapper")).not.toBeNull();
+      expect(document.querySelector('.line-numbers-wrapper')).not.toBeNull();
 
-      const preWith = document.querySelector(".language-mermaid pre")!;
-      const codeWith = preWith.textContent ?? "";
+      const preWith = document.querySelector('.language-mermaid pre')!;
+      const codeWith = preWith.textContent ?? '';
       expect(codeWith.trim()).toBe(mermaidCode);
 
-      (renderer as unknown as { cleanupMermaidWrapper: (el: Element) => void })
-        .cleanupMermaidWrapper(wrapperWith);
-      expect(document.querySelector(".line-numbers-wrapper")).toBeNull();
-      expect(wrapperWith.classList.contains("line-numbers-mode")).toBe(false);
+      (
+        renderer as unknown as { cleanupMermaidWrapper: (el: Element) => void }
+      ).cleanupMermaidWrapper(wrapperWith);
+      expect(document.querySelector('.line-numbers-wrapper')).toBeNull();
+      expect(wrapperWith.classList.contains('line-numbers-mode')).toBe(false);
     });
 
-    it("removes line-numbers-mode class from mermaid wrapper", async () => {
+    it('removes line-numbers-mode class from mermaid wrapper', async () => {
       document.body.innerHTML = `
         <div class="language-mermaid line-numbers-mode">
           <div class="line-numbers-wrapper">
@@ -271,24 +274,26 @@ describe("MermaidRenderer", () => {
       `;
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
-      const wrappers = document.getElementsByClassName("language-mermaid");
+      const wrappers = document.getElementsByClassName('language-mermaid');
       (
         renderer as unknown as {
           cleanupMermaidWrapper: (el: Element) => void;
         }
       ).cleanupMermaidWrapper(wrappers[0]!);
       expect(
-        document.querySelector(".language-mermaid")!.classList.contains("line-numbers-mode"),
+        document
+          .querySelector('.language-mermaid')!
+          .classList.contains('line-numbers-mode'),
       ).toBe(false);
     });
   });
 
-  describe("nodeContainsMermaidCode", () => {
-    it("returns true for elements with .language-mermaid class", async () => {
+  describe('nodeContainsMermaidCode', () => {
+    it('returns true for elements with .language-mermaid class', async () => {
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
-      const div = document.createElement("div");
-      div.className = "language-mermaid";
+      const div = document.createElement('div');
+      div.className = 'language-mermaid';
       expect(
         (
           renderer as unknown as {
@@ -298,13 +303,13 @@ describe("MermaidRenderer", () => {
       ).toBe(true);
     });
 
-    it("returns false for elements inside .mermaid-wrapper", async () => {
+    it('returns false for elements inside .mermaid-wrapper', async () => {
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
-      const root = document.createElement("div");
-      root.className = "mermaid-wrapper";
-      const inner = document.createElement("div");
-      inner.className = "language-mermaid";
+      const root = document.createElement('div');
+      root.className = 'mermaid-wrapper';
+      const inner = document.createElement('div');
+      inner.className = 'language-mermaid';
       root.appendChild(inner);
       document.body.appendChild(root);
       expect(
@@ -316,7 +321,7 @@ describe("MermaidRenderer", () => {
       ).toBe(false);
     });
 
-    it("returns false for null nodes and unrelated elements", async () => {
+    it('returns false for null nodes and unrelated elements', async () => {
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
       const node = (
@@ -325,16 +330,16 @@ describe("MermaidRenderer", () => {
         }
       ).nodeContainsMermaidCode;
       expect(node(null)).toBe(false);
-      expect(node(document.createElement("p"))).toBe(false);
+      expect(node(document.createElement('p'))).toBe(false);
     });
   });
 
-  describe("retry/backoff", () => {
-    it("applies exponential backoff Math.min(300 * 1.4^n, 10000)", async () => {
+  describe('retry/backoff', () => {
+    it('applies exponential backoff Math.min(300 * 1.4^n, 10000)', async () => {
       vi.useFakeTimers();
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();
-      const setSpy = vi.spyOn(globalThis, "setTimeout");
+      const setSpy = vi.spyOn(globalThis, 'setTimeout');
       // No diagrams in DOM → renderWithRetry must schedule next attempt.
       (
         renderer as unknown as {
@@ -347,11 +352,11 @@ describe("MermaidRenderer", () => {
       ).renderWithRetry();
       const delays = setSpy.mock.calls
         .map((c) => c[1])
-        .filter((d): d is number => typeof d === "number");
+        .filter((d): d is number => typeof d === 'number');
       expect(delays.some((d) => d === 300)).toBe(true);
     });
 
-    it("handleRouteChange clears the retry timer and restarts", async () => {
+    it('handleRouteChange clears the retry timer and restarts', async () => {
       vi.useFakeTimers();
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance();

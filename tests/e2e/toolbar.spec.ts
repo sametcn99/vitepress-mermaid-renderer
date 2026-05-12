@@ -1,20 +1,20 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from '@playwright/test';
 
 /**
  * Exercises toolbar controls (zoom, reset, copy) on rendered diagrams.
  */
-test.describe("toolbar interactions", () => {
+test.describe('toolbar interactions', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/examples/basic");
-    await expect(page.locator(".mermaid-container").first()).toBeVisible();
+    await page.goto('/examples/basic');
+    await expect(page.locator('.mermaid-container').first()).toBeVisible();
     await expect(
-      page.locator(".mermaid-container").first().locator(".mermaid > svg"),
+      page.locator('.mermaid-container').first().locator('.mermaid > svg'),
     ).toBeVisible();
   });
 
-  test("zoom in increases the SVG transform scale", async ({ page }) => {
-    const diagram = page.locator(".mermaid-container").first();
-    const inner = diagram.locator(".mermaid").first();
+  test('zoom in increases the SVG transform scale', async ({ page }) => {
+    const diagram = page.locator('.mermaid-container').first();
+    const inner = diagram.locator('.mermaid').first();
 
     const initialTransform = await inner.evaluate(
       (el) => (el as HTMLElement).style.transform,
@@ -39,9 +39,9 @@ test.describe("toolbar interactions", () => {
     expect(finalTransform).toMatch(/scale\(/);
   });
 
-  test("reset view restores the original transform", async ({ page }) => {
-    const diagram = page.locator(".mermaid-container").first();
-    const inner = diagram.locator(".mermaid").first();
+  test('reset view restores the original transform', async ({ page }) => {
+    const diagram = page.locator('.mermaid-container').first();
+    const inner = diagram.locator('.mermaid').first();
 
     await diagram
       .locator('.desktop-controls [data-mermaid-control="zoomIn"]')
@@ -60,13 +60,13 @@ test.describe("toolbar interactions", () => {
       .toMatch(/scale\(1\)/);
   });
 
-  test("copy button writes mermaid source to the clipboard", async ({
+  test('copy button writes mermaid source to the clipboard', async ({
     page,
     context,
   }) => {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
-    const diagram = page.locator(".mermaid-container").first();
+    const diagram = page.locator('.mermaid-container').first();
     await diagram
       .locator('.desktop-controls [data-mermaid-control="copyCode"]')
       .click();
@@ -76,9 +76,9 @@ test.describe("toolbar interactions", () => {
     expect(clipboard).toMatch(/flowchart|graph|sequenceDiagram/i);
   });
 
-  test("zoom out reverses prior zoom in changes", async ({ page }) => {
-    const diagram = page.locator(".mermaid-container").first();
-    const inner = diagram.locator(".mermaid").first();
+  test('zoom out reverses prior zoom in changes', async ({ page }) => {
+    const diagram = page.locator('.mermaid-container').first();
+    const inner = diagram.locator('.mermaid').first();
     const zoomIn = diagram.locator(
       '.desktop-controls [data-mermaid-control="zoomIn"]',
     );
@@ -110,11 +110,11 @@ test.describe("toolbar interactions", () => {
       .not.toEqual(zoomedTransform);
   });
 
-  test("zoom level indicator updates as the diagram is zoomed", async ({
+  test('zoom level indicator updates as the diagram is zoomed', async ({
     page,
   }) => {
-    const diagram = page.locator(".mermaid-container").first();
-    const indicator = diagram.locator(".zoom-level").first();
+    const diagram = page.locator('.mermaid-container').first();
+    const indicator = diagram.locator('.zoom-level').first();
     const zoomIn = diagram.locator(
       '.desktop-controls [data-mermaid-control="zoomIn"]',
     );
@@ -136,12 +136,12 @@ test.describe("toolbar interactions", () => {
     );
   });
 
-  test("copy button can be invoked multiple times and stays consistent", async ({
+  test('copy button can be invoked multiple times and stays consistent', async ({
     page,
     context,
   }) => {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    const diagram = page.locator(".mermaid-container").first();
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    const diagram = page.locator('.mermaid-container').first();
     const copy = diagram.locator(
       '.desktop-controls [data-mermaid-control="copyCode"]',
     );
@@ -149,7 +149,7 @@ test.describe("toolbar interactions", () => {
     await copy.click();
     const first = await page.evaluate(() => navigator.clipboard.readText());
 
-    await page.evaluate(() => navigator.clipboard.writeText(""));
+    await page.evaluate(() => navigator.clipboard.writeText(''));
     await copy.click();
     const second = await page.evaluate(() => navigator.clipboard.readText());
 
@@ -157,11 +157,11 @@ test.describe("toolbar interactions", () => {
     expect(second).toEqual(first);
   });
 
-  test("reset view restores transform after zoom and drag", async ({
+  test('reset view restores transform after zoom and drag', async ({
     page,
   }) => {
-    const diagram = page.locator(".mermaid-container").first();
-    const inner = diagram.locator(".mermaid").first();
+    const diagram = page.locator('.mermaid-container').first();
+    const inner = diagram.locator('.mermaid').first();
     const zoomIn = diagram.locator(
       '.desktop-controls [data-mermaid-control="zoomIn"]',
     );
@@ -173,7 +173,7 @@ test.describe("toolbar interactions", () => {
     await zoomIn.click();
 
     const box = await diagram.boundingBox();
-    if (!box) throw new Error("diagram bounding box unavailable");
+    if (!box) throw new Error('diagram bounding box unavailable');
     const startX = box.x + box.width / 2;
     const startY = box.y + box.height / 2;
 

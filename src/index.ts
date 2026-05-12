@@ -32,9 +32,9 @@
  * @see {@link MermaidRenderer} for the singleton orchestrator.
  * @see {@link ensureStylesInjected} for the CSS injection logic.
  */
-import { MermaidRenderer } from "./MermaidRenderer";
-import { ensureStylesInjected } from "./styleManager";
-import type { MermaidConfig } from "mermaid";
+import { MermaidRenderer } from './MermaidRenderer';
+import { ensureStylesInjected } from './styleManager';
+import type { MermaidConfig } from 'mermaid';
 
 /**
  * `true` when the code is running in a browser context with access to
@@ -43,7 +43,7 @@ import type { MermaidConfig } from "mermaid";
  * should be returned.
  */
 const isClientEnvironment =
-  typeof window !== "undefined" && typeof document !== "undefined";
+  typeof window !== 'undefined' && typeof document !== 'undefined';
 
 /**
  * Lightweight stand-in for {@link MermaidRenderer} used when the library

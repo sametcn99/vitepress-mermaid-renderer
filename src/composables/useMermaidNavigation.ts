@@ -26,7 +26,7 @@
  * @see {@link MermaidDiagram} for the component that uses this composable.
  * @see {@link useMermaidRenderer} for the rendering counterpart.
  */
-import { ref, watch, type Ref } from "vue";
+import { ref, watch, type Ref } from 'vue';
 
 /**
  * Determines how the diagram enters fullscreen mode.
@@ -48,7 +48,7 @@ import { ref, watch, type Ref } from "vue";
  * toggleFullscreen(wrapperEl, behavior);
  * ```
  */
-export type FullscreenBehavior = "browser" | "dialog";
+export type FullscreenBehavior = 'browser' | 'dialog';
 
 /**
  * Reactive state exposed by the {@link useMermaidNavigation} composable.
@@ -198,9 +198,9 @@ export function useMermaidNavigation(): MermaidNavigationState &
    * @returns Whether the device is mobile-sized and not fullscreen.
    */
   const isMobileNonFullscreen = (): boolean => {
-    if (typeof window === "undefined") return false;
+    if (typeof window === 'undefined') return false;
     return (
-      window.matchMedia("(max-width: 768px)").matches && !isFullscreen.value
+      window.matchMedia('(max-width: 768px)').matches && !isFullscreen.value
     );
   };
 
@@ -265,7 +265,7 @@ export function useMermaidNavigation(): MermaidNavigationState &
 
       restoreFullscreenView();
     },
-    { flush: "sync" },
+    { flush: 'sync' },
   );
 
   /**
@@ -284,10 +284,10 @@ export function useMermaidNavigation(): MermaidNavigationState &
    */
   const toggleFullscreen = (
     diagramWrapper: HTMLElement | null,
-    behavior: FullscreenBehavior = "browser",
+    behavior: FullscreenBehavior = 'browser',
   ) => {
     try {
-      if (behavior === "dialog") {
+      if (behavior === 'dialog') {
         isFullscreen.value = !isFullscreen.value;
         return;
       }
@@ -302,7 +302,7 @@ export function useMermaidNavigation(): MermaidNavigationState &
         } else if ((diagramWrapper as any)?.msRequestFullscreen) {
           (diagramWrapper as any).msRequestFullscreen();
         } else {
-          throw new Error("Fullscreen API not available");
+          throw new Error('Fullscreen API not available');
         }
         isFullscreen.value = true;
       } else {
@@ -318,8 +318,8 @@ export function useMermaidNavigation(): MermaidNavigationState &
         isFullscreen.value = false;
       }
     } catch (err) {
-      console.error("Fullscreen error:", err);
-      alert("Fullscreen mode is not supported in this browser.");
+      console.error('Fullscreen error:', err);
+      alert('Fullscreen mode is not supported in this browser.');
     }
   };
 
@@ -582,22 +582,22 @@ export function useMermaidNavigation(): MermaidNavigationState &
       if (document.fullscreenElement) {
         isFullscreen.value = true;
         if (controlsRefs.controls) {
-          controlsRefs.controls.classList.add("force-show");
+          controlsRefs.controls.classList.add('force-show');
         }
         if (controlsRefs.mobileControls) {
-          controlsRefs.mobileControls.classList.add("force-show");
+          controlsRefs.mobileControls.classList.add('force-show');
         }
       } else {
         isFullscreen.value = false;
         if (controlsRefs.controls) {
-          controlsRefs.controls.classList.remove("force-show");
+          controlsRefs.controls.classList.remove('force-show');
         }
         if (controlsRefs.mobileControls) {
-          controlsRefs.mobileControls.classList.remove("force-show");
+          controlsRefs.mobileControls.classList.remove('force-show');
         }
       }
     } catch (err) {
-      console.error("Error updating fullscreen controls:", err);
+      console.error('Error updating fullscreen controls:', err);
     }
   };
 

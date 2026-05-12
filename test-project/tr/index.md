@@ -2,7 +2,8 @@
 layout: home
 hero:
   name: VitePress Mermaid Renderer
-  tagline: VitePress içinde Mermaid diyagramlarına etkileşimli araç çubuğu ekleyin
+  tagline:
+    VitePress içinde Mermaid diyagramlarına etkileşimli araç çubuğu ekleyin
   actions:
     - theme: brand
       text: Hızlı Başlangıç
@@ -13,11 +14,18 @@ hero:
 
 features:
   - title: Etkileşimli Kontroller
-    details: Diyagramları yakınlaştırın, sürükleyin, sıfırlayın ve tam ekranda görüntüleyin.
+    details:
+      Diyagramları yakınlaştırın, sürükleyin, sıfırlayın ve tam ekranda
+      görüntüleyin.
   - title: Locale Uyumlu Toolbar
-    details: Araç çubuğu ipuçları aktif VitePress locale değerine göre anında değişir.
+    details:
+      Araç çubuğu ipuçları aktif VitePress locale değerine göre anında değişir.
   - title: Tema Desteği
-    details: Açık ve koyu tema değişimlerinde Mermaid görünümü otomatik olarak uyum sağlar.
+    details:
+      Açık ve koyu tema değişimlerinde Mermaid görünümü otomatik olarak uyum
+      sağlar.
   - title: Hazır Örnekler
-    details: Temel ve gelişmiş diyagram örnekleriyle davranışı hızlıca doğrulayabilirsiniz.
+    details:
+      Temel ve gelişmiş diyagram örnekleriyle davranışı hızlıca
+      doğrulayabilirsiniz.
 ---

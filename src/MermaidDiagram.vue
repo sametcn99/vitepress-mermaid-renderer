@@ -93,24 +93,24 @@ import {
   onUnmounted,
   ref,
   watch,
-} from "vue";
-import type { MermaidConfig } from "mermaid";
-import "./style.css";
-import MermaidControls from "./components/MermaidControls.vue";
-import MermaidError from "./components/MermaidError.vue";
-import { useMermaidNavigation } from "./composables/useMermaidNavigation";
-import { useMermaidRenderer } from "./composables/useMermaidRenderer";
+} from 'vue';
+import type { MermaidConfig } from 'mermaid';
+import './style.css';
+import MermaidControls from './components/MermaidControls.vue';
+import MermaidError from './components/MermaidError.vue';
+import { useMermaidNavigation } from './composables/useMermaidNavigation';
+import { useMermaidRenderer } from './composables/useMermaidRenderer';
 import {
   isResolvedToolbarConfig,
   resolveToolbarConfig,
   type DownloadFormat,
   type MermaidToolbarOptions,
   type ResolvedToolbarConfig,
-} from "./toolbar";
+} from './toolbar';
 
 const emit = defineEmits<{
   (
-    event: "renderComplete",
+    event: 'renderComplete',
     payload: { id: string; success: boolean; error?: unknown },
   ): void;
 }>();
@@ -154,7 +154,7 @@ const resolvedToolbar = ref<ResolvedToolbarConfig>(
 const navigation = useMermaidNavigation();
 const renderer = useMermaidRenderer({
   config: props.config,
-  onRenderComplete: (payload) => emit("renderComplete", payload),
+  onRenderComplete: (payload) => emit('renderComplete', payload),
 });
 
 const {
@@ -220,7 +220,7 @@ const fullscreenBehavior = computed(() => resolvedToolbar.value.fullscreenMode);
  * visibility.
  */
 const isDialogFullscreenActive = computed(
-  () => isFullscreen.value && fullscreenBehavior.value === "dialog",
+  () => isFullscreen.value && fullscreenBehavior.value === 'dialog',
 );
 
 /**
@@ -259,26 +259,26 @@ const handleToggleFullscreen = () => {
  */
 const handleDownload = async (format: DownloadFormat) => {
   const container = document.getElementById(diagramId);
-  const svgElement = container?.querySelector("svg");
+  const svgElement = container?.querySelector('svg');
 
   if (!svgElement) {
-    console.error("SVG element not found for download");
+    console.error('SVG element not found for download');
     return;
   }
 
   const svgClone = svgElement.cloneNode(true) as SVGElement;
-  if (format !== "svg") {
-    svgClone.style.backgroundColor = "white";
+  if (format !== 'svg') {
+    svgClone.style.backgroundColor = 'white';
   }
 
   const svgData = new XMLSerializer().serializeToString(svgClone);
-  const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
 
-  const downloadLink = document.createElement("a");
+  const downloadLink = document.createElement('a');
   downloadLink.download = `diagram.${format}`;
 
-  if (format === "svg") {
+  if (format === 'svg') {
     downloadLink.href = url;
     document.body.appendChild(downloadLink);
     downloadLink.click();
@@ -289,7 +289,7 @@ const handleDownload = async (format: DownloadFormat) => {
 
   const img = new Image();
   img.onload = () => {
-    const canvas = document.createElement("canvas");
+    const canvas = document.createElement('canvas');
     const bbox = svgElement.viewBox.baseVal;
     let width = bbox?.width;
     let height = bbox?.height;
@@ -302,13 +302,13 @@ const handleDownload = async (format: DownloadFormat) => {
 
     canvas.width = width;
     canvas.height = height;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     if (ctx) {
-      ctx.fillStyle = "white";
+      ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, width, height);
       ctx.drawImage(img, 0, 0);
 
-      const imageType = format === "png" ? "image/png" : "image/jpeg";
+      const imageType = format === 'png' ? 'image/png' : 'image/jpeg';
       const dataUrl = canvas.toDataURL(imageType);
       downloadLink.href = dataUrl;
       document.body.appendChild(downloadLink);
@@ -320,7 +320,7 @@ const handleDownload = async (format: DownloadFormat) => {
   };
 
   img.onerror = (error) => {
-    console.error("Failed to load SVG for conversion", error);
+    console.error('Failed to load SVG for conversion', error);
     URL.revokeObjectURL(url);
   };
 
@@ -356,39 +356,39 @@ onMounted(async () => {
     await nextTick();
     await renderMermaidDiagram(diagramId, props.code);
 
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
-    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
-    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
     document.addEventListener(
-      "vitepress-mermaid:toolbar-updated",
+      'vitepress-mermaid:toolbar-updated',
       handleToolbarUpdated,
     );
   } catch (error) {
-    console.error("Error in component initialization:", error);
+    console.error('Error in component initialization:', error);
   }
 });
 
 watch(isDialogFullscreenActive, (active) => {
-  if (typeof document === "undefined") {
+  if (typeof document === 'undefined') {
     return;
   }
-  document.body.classList.toggle("mermaid-dialog-open", active);
+  document.body.classList.toggle('mermaid-dialog-open', active);
 });
 
 onUnmounted(() => {
-  if (typeof document !== "undefined") {
-    document.body.classList.remove("mermaid-dialog-open");
+  if (typeof document !== 'undefined') {
+    document.body.classList.remove('mermaid-dialog-open');
   }
-  document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  document.removeEventListener('fullscreenchange', handleFullscreenChange);
   document.removeEventListener(
-    "webkitfullscreenchange",
+    'webkitfullscreenchange',
     handleFullscreenChange,
   );
-  document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
-  document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
+  document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+  document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
   document.removeEventListener(
-    "vitepress-mermaid:toolbar-updated",
+    'vitepress-mermaid:toolbar-updated',
     handleToolbarUpdated,
   );
 });

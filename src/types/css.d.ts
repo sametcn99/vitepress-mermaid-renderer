@@ -11,7 +11,7 @@
  * import "./style.css"; // side-effect import
  * ```
  */
-declare module "*.css";
+declare module '*.css';
 
 /**
  * Ambient module declaration for Vite's `?inline` CSS import suffix.
@@ -29,7 +29,7 @@ declare module "*.css";
  * console.log(typeof styles); // "string"
  * ```
  */
-declare module "*.css?inline" {
+declare module '*.css?inline' {
   /** The full CSS text content of the imported stylesheet. */
   const content: string;
   export default content;

@@ -5,9 +5,12 @@
 [![Release](https://github.com/sametcn99/vitepress-mermaid-renderer/actions/workflows/release.yml/badge.svg)](https://github.com/sametcn99/vitepress-mermaid-renderer/actions/workflows/release.yml)
 [![npm provenance](https://img.shields.io/badge/npm-provenance%20enabled-2ea44f)](https://www.npmjs.com/package/vitepress-mermaid-renderer?activeTab=versions)
 
-Transform your static Mermaid diagrams into interactive, dynamic visualizations in VitePress. This powerful plugin brings life to your documentation by enabling interactive features like zooming, panning, and fullscreen viewing.
+Transform your static Mermaid diagrams into interactive, dynamic visualizations
+in VitePress. This powerful plugin brings life to your documentation by enabling
+interactive features like zooming, panning, and fullscreen viewing.
 
-_Stay up to date with new releases in the [CHANGELOG](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/CHANGELOG.md)._
+_Stay up to date with new releases in the
+[CHANGELOG](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/CHANGELOG.md)._
 
 ## Key Features
 
@@ -22,7 +25,9 @@ _Stay up to date with new releases in the [CHANGELOG](https://github.com/sametcn
 
 ## How It Works
 
-Your Mermaid diagrams spring to life automatically. The plugin detects Mermaid code blocks (marked with `mermaid` language) and transforms them into interactive diagrams equipped with a powerful toolbar.
+Your Mermaid diagrams spring to life automatically. The plugin detects Mermaid
+code blocks (marked with `mermaid` language) and transforms them into
+interactive diagrams equipped with a powerful toolbar.
 
 ## Quick Start
 
@@ -39,11 +44,11 @@ npm install vitepress-mermaid-renderer
 Update your `.vitepress/theme/index.ts` file to initialize the renderer:
 
 ```typescript
-import { h, nextTick, watch } from "vue";
-import type { Theme } from "vitepress";
-import DefaultTheme from "vitepress/theme";
-import { useData } from "vitepress";
-import { createMermaidRenderer } from "vitepress-mermaid-renderer";
+import { h, nextTick, watch } from 'vue';
+import type { Theme } from 'vitepress';
+import DefaultTheme from 'vitepress/theme';
+import { useData } from 'vitepress';
+import { createMermaidRenderer } from 'vitepress-mermaid-renderer';
 
 export default {
   extends: DefaultTheme,
@@ -52,7 +57,7 @@ export default {
 
     const initMermaid = () => {
       const mermaidRenderer = createMermaidRenderer({
-        theme: isDark.value ? "dark" : "forest",
+        theme: isDark.value ? 'dark' : 'forest',
       });
     };
 
@@ -74,11 +79,12 @@ export default {
 
 ## Configuration
 
-Customize the Mermaid renderer by passing configuration options to `createMermaidRenderer()`.
+Customize the Mermaid renderer by passing configuration options to
+`createMermaidRenderer()`.
 
 ```typescript
 const mermaidRenderer = createMermaidRenderer({
-  theme: "dark",
+  theme: 'dark',
   startOnLoad: false,
   flowchart: {
     useMaxWidth: true,
@@ -91,39 +97,44 @@ const mermaidRenderer = createMermaidRenderer({
 });
 ```
 
-For a complete list of available configuration options, refer to the [Mermaid Configuration Documentation](https://mermaid.js.org/config/schema-docs/config.html).
+For a complete list of available configuration options, refer to the
+[Mermaid Configuration Documentation](https://mermaid.js.org/config/schema-docs/config.html).
 
 ### Toolbar Configuration
 
-You can fully customize the toolbar for desktop, mobile, and fullscreen modes using `setToolbar()`.
+You can fully customize the toolbar for desktop, mobile, and fullscreen modes
+using `setToolbar()`.
 
 ```typescript
 mermaidRenderer.setToolbar({
   showLanguageLabel: true,
-  fullscreenMode: "browser", // "browser" (default) | "dialog"
+  fullscreenMode: 'browser', // "browser" (default) | "dialog"
   desktop: {
-    zoomIn: "disabled",
-    zoomLevel: "enabled",
-    positions: { vertical: "top", horizontal: "left" },
+    zoomIn: 'disabled',
+    zoomLevel: 'enabled',
+    positions: { vertical: 'top', horizontal: 'left' },
   },
   mobile: {
-    zoomLevel: "disabled",
-    positions: { vertical: "bottom", horizontal: "left" },
+    zoomLevel: 'disabled',
+    positions: { vertical: 'bottom', horizontal: 'left' },
   },
   fullscreen: {
-    zoomLevel: "enabled",
-    positions: { vertical: "top", horizontal: "right" },
+    zoomLevel: 'enabled',
+    positions: { vertical: 'top', horizontal: 'right' },
   },
 });
 ```
 
 #### Localized tooltip text (VitePress i18n)
 
-Pair `setToolbar` with `useData().localeIndex` to translate the built-in tooltip strings per VitePress locale. Each call dispatches a `vitepress-mermaid:toolbar-updated` event so already-mounted diagrams pick up the new tooltips without re-rendering.
+Pair `setToolbar` with `useData().localeIndex` to translate the built-in tooltip
+strings per VitePress locale. Each call dispatches a
+`vitepress-mermaid:toolbar-updated` event so already-mounted diagrams pick up
+the new tooltips without re-rendering.
 
 ```typescript
-import { watch } from "vue";
-import { useData } from "vitepress";
+import { watch } from 'vue';
+import { useData } from 'vitepress';
 
 const { localeIndex } = useData();
 
@@ -134,13 +145,13 @@ const applyToolbar = () => {
       locales: {
         tr: {
           tooltips: {
-            zoomIn: "Yakınlaştır",
-            zoomOut: "Uzaklaştır",
-            resetView: "Görünümü sıfırla",
-            copyCode: "Kodu kopyala",
-            copyCodeCopied: "Kopyalandı",
-            download: "Diyagramı indir",
-            toggleFullscreen: "Tam ekranı aç/kapa",
+            zoomIn: 'Yakınlaştır',
+            zoomOut: 'Uzaklaştır',
+            resetView: 'Görünümü sıfırla',
+            copyCode: 'Kodu kopyala',
+            copyCodeCopied: 'Kopyalandı',
+            download: 'Diyagramı indir',
+            toggleFullscreen: 'Tam ekranı aç/kapa',
           },
         },
       },
@@ -152,11 +163,17 @@ applyToolbar();
 watch(localeIndex, applyToolbar);
 ```
 
-Resolution order per localized toolbar text key: `i18n.locales[localeIndex].tooltips[key]` → `i18n.tooltips[key]` → built-in English default. Empty strings are ignored at every level. Use `copyCodeCopied` to translate the short success message shown after the copy button writes to the clipboard.
+Resolution order per localized toolbar text key:
+`i18n.locales[localeIndex].tooltips[key]` → `i18n.tooltips[key]` → built-in
+English default. Empty strings are ignored at every level. Use `copyCodeCopied`
+to translate the short success message shown after the copy button writes to the
+clipboard.
 
 ## Contributing
 
-We welcome contributions! Whether it's submitting pull requests, reporting issues, or suggesting improvements, your input helps make this plugin better for everyone.
+We welcome contributions! Whether it's submitting pull requests, reporting
+issues, or suggesting improvements, your input helps make this plugin better for
+everyone.
 
 ## Local Development
 
@@ -178,11 +195,14 @@ For the packaged VitePress smoke test:
 bun run test:e2e
 ```
 
-To preview the packaged plugin inside the bundled example VitePress site, you can use one of the following methods:
+To preview the packaged plugin inside the bundled example VitePress site, you
+can use one of the following methods:
 
 ### Local Preview Helper
 
-Run the `test.ts` helper to walk through the full local-preview flow in one step. This script cleans artifacts, rebuilds, packs, installs, and launches the dev server.
+Run the `test.ts` helper to walk through the full local-preview flow in one
+step. This script cleans artifacts, rebuilds, packs, installs, and launches the
+dev server.
 
 ```bash
 bun test.ts
@@ -221,4 +241,5 @@ Use `bun run build` to generate the smallest distributable bundle.
 
 ---
 
-**If you found this project helpful, please consider giving it a star on GitHub!**
+**If you found this project helpful, please consider giving it a star on
+GitHub!**
