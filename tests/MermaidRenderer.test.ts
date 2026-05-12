@@ -185,6 +185,102 @@ describe("MermaidRenderer", () => {
       ).cleanupMermaidWrapper(wrappers[0]!);
       expect(document.querySelector(".lang")).toBeNull();
     });
+
+    it("removes line numbers from mermaid wrapper using VitePress DOM structure", async () => {
+      document.body.innerHTML = `
+        <div class="language-mermaid line-numbers-mode">
+          <div class="line-numbers-wrapper" aria-hidden="true">
+            <span class="line-number">1</span><br>
+            <span class="line-number">2</span><br>
+          </div>
+          <pre>flowchart LR\nA-->B</pre>
+        </div>
+      `;
+      const mod = await importFresh();
+      const renderer = mod.MermaidRenderer.getInstance();
+      const wrappers = document.getElementsByClassName("language-mermaid");
+      (
+        renderer as unknown as {
+          cleanupMermaidWrapper: (el: Element) => void;
+        }
+      ).cleanupMermaidWrapper(wrappers[0]!);
+      expect(document.querySelector(".line-numbers-wrapper")).toBeNull();
+      expect(document.querySelector(".line-number")).toBeNull();
+      expect(
+        document.querySelector(".language-mermaid")!.classList.contains("line-numbers-mode"),
+      ).toBe(false);
+    });
+
+    it("preserves mermaid code textContent regardless of lineNumbers state", async () => {
+      const mod = await importFresh();
+      const renderer = mod.MermaidRenderer.getInstance();
+
+      const mermaidCode = "flowchart LR\nA-->B";
+
+      const createWrapper = (withLineNumbers: boolean) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "language-mermaid";
+        if (withLineNumbers) {
+          wrapper.classList.add("line-numbers-mode");
+          const lineWrapper = document.createElement("div");
+          lineWrapper.className = "line-numbers-wrapper";
+          lineWrapper.setAttribute("aria-hidden", "true");
+          const ln1 = document.createElement("span");
+          ln1.className = "line-number";
+          ln1.textContent = "1";
+          const br1 = document.createElement("br");
+          const ln2 = document.createElement("span");
+          ln2.className = "line-number";
+          ln2.textContent = "2";
+          const br2 = document.createElement("br");
+          lineWrapper.appendChild(ln1);
+          lineWrapper.appendChild(br1);
+          lineWrapper.appendChild(ln2);
+          lineWrapper.appendChild(br2);
+          wrapper.appendChild(lineWrapper);
+        }
+        const pre = document.createElement("pre");
+        pre.textContent = mermaidCode;
+        wrapper.appendChild(pre);
+        return wrapper;
+      };
+
+      const wrapperWith = createWrapper(true);
+      document.body.innerHTML = "";
+      document.body.appendChild(wrapperWith);
+      expect(document.querySelector(".line-numbers-wrapper")).not.toBeNull();
+
+      const preWith = document.querySelector(".language-mermaid pre")!;
+      const codeWith = preWith.textContent ?? "";
+      expect(codeWith.trim()).toBe(mermaidCode);
+
+      (renderer as unknown as { cleanupMermaidWrapper: (el: Element) => void })
+        .cleanupMermaidWrapper(wrapperWith);
+      expect(document.querySelector(".line-numbers-wrapper")).toBeNull();
+      expect(wrapperWith.classList.contains("line-numbers-mode")).toBe(false);
+    });
+
+    it("removes line-numbers-mode class from mermaid wrapper", async () => {
+      document.body.innerHTML = `
+        <div class="language-mermaid line-numbers-mode">
+          <div class="line-numbers-wrapper">
+            <span class="line-number">1</span>
+          </div>
+          <pre>flowchart LR\nA-->B</pre>
+        </div>
+      `;
+      const mod = await importFresh();
+      const renderer = mod.MermaidRenderer.getInstance();
+      const wrappers = document.getElementsByClassName("language-mermaid");
+      (
+        renderer as unknown as {
+          cleanupMermaidWrapper: (el: Element) => void;
+        }
+      ).cleanupMermaidWrapper(wrappers[0]!);
+      expect(
+        document.querySelector(".language-mermaid")!.classList.contains("line-numbers-mode"),
+      ).toBe(false);
+    });
   });
 
   describe("nodeContainsMermaidCode", () => {

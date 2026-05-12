@@ -421,3 +421,10 @@ body.mermaid-dialog-open {
   max-height: 200px;
   overflow-y: auto;
 }
+
+.language-mermaid .line-numbers-wrapper,
+.language-mermaid .line-number,
+.language-mermaid.line-numbers-mode .line-numbers-wrapper,
+.language-mermaid.line-numbers-mode > pre {
+  display: none !important;
+}

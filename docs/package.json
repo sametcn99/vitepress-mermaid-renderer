@@ -33,7 +33,7 @@
     "start": "vitepress build && vitepress serve --port ${PORT:-80} --host 0.0.0.0"
   },
   "dependencies": {
-    "mermaid": "^11.14.0",
+    "mermaid": "^11.15.0",
     "vitepress": "^1.6.4",
     "vitepress-mermaid-renderer": "1.1.23"
   }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.24
+
+- fix: remove line numbers from Mermaid code blocks when VitePress `markdown.lineNumbers` is enabled
+
 ## 1.1.23
 
 - feat(i18n): add localized success message for copy action in toolbar

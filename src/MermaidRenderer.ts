@@ -280,6 +280,20 @@ export class MermaidRenderer {
       const languageLabels = wrapper.getElementsByClassName("lang");
       Array.from(languageLabels).forEach((element) => element.remove());
     }
+
+    const lineNumbersWrapper = wrapper.getElementsByClassName("line-numbers-wrapper");
+    Array.from(lineNumbersWrapper).forEach((element) => element.remove());
+
+    const lineNumbers = wrapper.getElementsByClassName("line-number");
+    Array.from(lineNumbers).forEach((element) => element.remove());
+
+    wrapper.classList.remove("line-numbers-mode");
+    wrapper.classList.remove("has-line-numbers");
+
+    const lineNumbersMode = wrapper.getElementsByClassName("line-numbers-mode");
+    Array.from(lineNumbersMode).forEach((element) => {
+      element.classList.remove("line-numbers-mode");
+    });
   }
 
   /**
