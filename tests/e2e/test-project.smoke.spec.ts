@@ -21,6 +21,9 @@ test('renders Mermaid diagrams and toolbar controls in the VitePress smoke site'
     diagrams.first().locator('[data-mermaid-control="zoomIn"]'),
   ).toBeVisible();
 
+  // Scroll the page to trigger IntersectionObserver for offscreen diagrams.
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
   await expect
     .poll(async () => diagrams.count(), { timeout: 15000 })
     .toBeGreaterThanOrEqual(2);

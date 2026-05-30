@@ -11,6 +11,19 @@ test.describe('examples pages', () => {
     const diagrams = page.locator('.mermaid-container');
     await expect(diagrams.first()).toBeVisible();
 
+    // Scroll the page incrementally to trigger IntersectionObserver for
+    // offscreen diagrams. Rendering is lazy — diagrams below the fold are
+    // only rendered once they scroll near the viewport.
+    await page.evaluate(async () => {
+      const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+      const step = 500;
+      for (let y = 0; y < document.body.scrollHeight; y += step) {
+        window.scrollTo(0, y);
+        await delay(200);
+      }
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+
     await expect
       .poll(async () => diagrams.count(), { timeout: 15_000 })
       .toBeGreaterThanOrEqual(5);
@@ -36,6 +49,10 @@ test.describe('examples pages', () => {
     await page.goto('/examples/basic');
     const diagrams = page.locator('.mermaid-container');
     await expect(diagrams.first()).toBeVisible();
+
+    // Scroll the page to trigger IntersectionObserver for offscreen diagrams.
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
     await expect
       .poll(async () => diagrams.count(), { timeout: 15_000 })
       .toBeGreaterThanOrEqual(2);
