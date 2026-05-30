@@ -13,21 +13,24 @@ export default defineConfig(({ mode }) => {
         exclude: ['test.ts', 'docs/**', 'test-project/**', 'tests/**'],
         insertTypesEntry: true,
         rollupTypes: true,
+        compilerOptions: {
+          removeComments: true,
+        },
       }),
     ],
     build: {
       lib: {
         entry: resolve(__dirname, 'src/index.ts'),
         name: 'VitepressMermaidRenderer',
-        fileName: (format) => {
-          if (format === 'es') return 'vitepress-mermaid-renderer.js';
-          if (format === 'umd') return 'vitepress-mermaid-renderer.umd.cjs';
-          return `vitepress-mermaid-renderer.${format}`;
-        },
-        formats: ['es', 'umd'],
+        fileName: () => 'vitepress-mermaid-renderer.js',
+        formats: ['es'],
       },
       rollupOptions: {
-        treeshake: true,
+        treeshake: {
+          moduleSideEffects: false,
+          propertyReadSideEffects: false,
+          unknownGlobalSideEffects: false,
+        },
         external: ['vue', 'mermaid'],
         output: {
           globals: {
@@ -37,7 +40,6 @@ export default defineConfig(({ mode }) => {
         },
       },
       sourcemap: false,
-      // Ensure the code only runs in the client
       target: 'esnext',
       minify: 'terser',
       terserOptions: {
@@ -48,9 +50,23 @@ export default defineConfig(({ mode }) => {
           hoist_funs: true,
           drop_debugger: true,
           drop_console: isReleaseBuild,
+          sequences: false,
+          conditionals: true,
+          evaluate: true,
+          booleans: true,
+          loops: true,
+          unused: true,
+          warnings: false,
+          comparisons: true,
+          inline: 2,
+          join_vars: true,
         },
         mangle: {
           toplevel: true,
+          properties: {
+            regex: /^_/,
+            reserved: [],
+          },
         },
         format: {
           comments: false,
@@ -58,7 +74,7 @@ export default defineConfig(({ mode }) => {
         },
       },
       cssMinify: true,
-      cssCodeSplit: false,
+      cssCodeSplit: true,
       outDir: 'dist',
       emptyOutDir: true,
     },

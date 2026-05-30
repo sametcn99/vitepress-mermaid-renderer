@@ -3,45 +3,45 @@
 [![npm version](https://img.shields.io/npm/v/vitepress-mermaid-renderer)](https://www.npmjs.com/package/vitepress-mermaid-renderer)
 [![npm monthly downloads](https://img.shields.io/npm/dm/vitepress-mermaid-renderer)](https://www.npmjs.com/package/vitepress-mermaid-renderer)
 [![Release](https://github.com/sametcn99/vitepress-mermaid-renderer/actions/workflows/release.yml/badge.svg)](https://github.com/sametcn99/vitepress-mermaid-renderer/actions/workflows/release.yml)
-[![npm provenance](https://img.shields.io/badge/npm-provenance%20enabled-2ea44f)](https://www.npmjs.com/package/vitepress-mermaid-renderer?activeTab=versions)
 
-Transform your static Mermaid diagrams into interactive, dynamic visualizations
-in VitePress. This powerful plugin brings life to your documentation by enabling
-interactive features like zooming, panning, and fullscreen viewing.
+Transform static Mermaid diagrams into interactive visualizations in VitePress.
+Enable smooth zooming, panning, fullscreen dialogs, and dynamic theme
+adaptations.
 
 _Stay up to date with new releases in the
 [CHANGELOG](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/CHANGELOG.md)._
 
 ## Key Features
 
-- **Smooth Zooming**: Capable of zooming in and out for better readability.
-- **Intuitive Navigation**: Easy panning allows for exploring complex diagrams.
-- **Code Copy**: Extract the Mermaid source code with a single click.
-- **View Reset**: Instantly restore the diagram to its default view.
-- **Fullscreen Mode**: View diagrams in a distraction-free fullscreen mode.
-- **Theme Integration**: Automatically adapts to Light and Dark modes.
-- **Download Options**: Export diagrams as SVG, PNG, or JPG.
-- **i18n Support**: Localize toolbar tooltips based on VitePress locale.
+- **Smooth Zooming:** Incrementally zoom in/out with reactive percentage
+  readouts.
+- **Intuitive Panning:** Drag to navigate and explore complex, multi-layered
+  diagrams.
+- **Single-Click Code Copy:** Extract raw Mermaid source code instantly.
+- **Instant View Reset:** Restore zoom, pan, and transform coordinates to
+  default in one click.
+- **Flexible Fullscreen Modes:** Choose between native browser Fullscreen API or
+  custom inline modal overlays.
+- **Vibrant Adaptive Themes:** Smoothly matches Light/Dark mode transitions.
+- **High-Quality Downloads:** Export and download diagrams as SVG, PNG, or JPG.
+- **Complete Customization:** Selectively toggle toolbar buttons per display
+  mode (desktop, mobile, fullscreen).
+- **i18n Support:** Easily localize all tooltips and states dynamically using
+  VitePress locale data.
 
-## How It Works
-
-Your Mermaid diagrams spring to life automatically. The plugin detects Mermaid
-code blocks (marked with `mermaid` language) and transforms them into
-interactive diagrams equipped with a powerful toolbar.
+---
 
 ## Quick Start
 
-### Installation
-
-Install the package using your preferred package manager:
+### 1. Installation
 
 ```bash
 npm install vitepress-mermaid-renderer
 ```
 
-### VitePress Configuration
+### 2. Integration
 
-Update your `.vitepress/theme/index.ts` file to initialize the renderer:
+Update your `.vitepress/theme/index.ts` file:
 
 ```typescript
 import { h, nextTick, watch } from 'vue';
@@ -56,20 +56,15 @@ export default {
     const { isDark } = useData();
 
     const initMermaid = () => {
-      const mermaidRenderer = createMermaidRenderer({
-        theme: isDark.value ? 'dark' : 'forest',
+      createMermaidRenderer({
+        theme: isDark.value ? 'dark' : 'default',
       });
     };
 
-    // initial mermaid setup
     nextTick(() => initMermaid());
-
-    // on theme change, re-render mermaid charts
     watch(
       () => isDark.value,
-      () => {
-        initMermaid();
-      },
+      () => initMermaid(),
     );
 
     return h(DefaultTheme.Layout);
@@ -77,192 +72,28 @@ export default {
 } satisfies Theme;
 ```
 
-## Configuration
-
-Customize the Mermaid renderer by passing configuration options to
-`createMermaidRenderer()`.
-
-```typescript
-const mermaidRenderer = createMermaidRenderer({
-  theme: 'dark',
-  startOnLoad: false,
-  flowchart: {
-    useMaxWidth: true,
-    htmlLabels: true,
-  },
-  sequence: {
-    diagramMarginX: 50,
-    diagramMarginY: 10,
-  },
-});
-```
-
-For a complete list of available configuration options, refer to the
-[Mermaid Configuration Documentation](https://mermaid.js.org/config/schema-docs/config.html).
-
-### Security
-
-By default, the renderer uses `securityLevel: 'strict'`, which **disables inline
-HTML** inside Mermaid diagrams. This is the safest default because Mermaid
-diagrams are often sourced from user-written Markdown files, and inline HTML in
-that context can introduce XSS vulnerabilities.
-
-If you need advanced Mermaid features that require inline HTML (for example,
-clickable links or formatted labels inside flowchart nodes), you can explicitly
-opt into the `loose` security level — but **only** when you fully trust all
-diagram sources:
-
-```typescript
-// ⚠️ Only use 'loose' when you trust every Mermaid code block on the site.
-const mermaidRenderer = createMermaidRenderer({
-  securityLevel: 'loose',
-});
-```
-
-| `securityLevel` | Inline HTML | Recommended when                                      |
-| --------------- | ----------- | ----------------------------------------------------- |
-| `strict`        | Disabled    | Diagrams come from user input or external Markdown.   |
-| `loose`         | Allowed     | All diagram sources are trusted (e.g. internal docs). |
-
-### Toolbar Configuration
-
-You can fully customize the toolbar for desktop, mobile, and fullscreen modes
-using `setToolbar()`.
-
-```typescript
-mermaidRenderer.setToolbar({
-  showLanguageLabel: true,
-  fullscreenMode: 'browser', // "browser" (default) | "dialog"
-  desktop: {
-    zoomIn: 'disabled',
-    zoomLevel: 'enabled',
-    positions: { vertical: 'top', horizontal: 'left' },
-  },
-  mobile: {
-    zoomLevel: 'disabled',
-    positions: { vertical: 'bottom', horizontal: 'left' },
-  },
-  fullscreen: {
-    zoomLevel: 'enabled',
-    positions: { vertical: 'top', horizontal: 'right' },
-  },
-});
-```
-
-#### Localized tooltip text (VitePress i18n)
-
-Pair `setToolbar` with `useData().localeIndex` to translate the built-in tooltip
-strings per VitePress locale. Each call dispatches a
-`vitepress-mermaid:toolbar-updated` event so already-mounted diagrams pick up
-the new tooltips without re-rendering.
-
-```typescript
-import { watch } from 'vue';
-import { useData } from 'vitepress';
-
-const { localeIndex } = useData();
-
-const applyToolbar = () => {
-  mermaidRenderer.setToolbar({
-    i18n: {
-      localeIndex: localeIndex.value,
-      locales: {
-        tr: {
-          tooltips: {
-            zoomIn: 'Yakınlaştır',
-            zoomOut: 'Uzaklaştır',
-            resetView: 'Görünümü sıfırla',
-            copyCode: 'Kodu kopyala',
-            copyCodeCopied: 'Kopyalandı',
-            download: 'Diyagramı indir',
-            toggleFullscreen: 'Tam ekranı aç/kapa',
-          },
-        },
-      },
-    },
-  });
-};
-
-applyToolbar();
-watch(localeIndex, applyToolbar);
-```
-
-Resolution order per localized toolbar text key:
-`i18n.locales[localeIndex].tooltips[key]` → `i18n.tooltips[key]` → built-in
-English default. Empty strings are ignored at every level. Use `copyCodeCopied`
-to translate the short success message shown after the copy button writes to the
-clipboard.
-
-## Contributing
-
-We welcome contributions! Whether it's submitting pull requests, reporting
-issues, or suggesting improvements, your input helps make this plugin better for
-everyone.
-
-## Local Development
-
-For automated verification, run the test suite before building or publishing:
-
-```bash
-bun run test
-```
-
-For coverage output:
-
-```bash
-bun run test:coverage
-```
-
-For the packaged VitePress smoke test:
-
-```bash
-bun run test:e2e
-```
-
-To preview the packaged plugin inside the bundled example VitePress site, you
-can use one of the following methods:
-
-### Local Preview Helper
-
-Run the `test.ts` helper to walk through the full local-preview flow in one
-step. This script cleans artifacts, rebuilds, packs, installs, and launches the
-dev server.
-
-```bash
-bun test.ts
-```
-
-### Manual Linking
-
-```bash
-# In the package directory
-bun run build
-npm link
-
-# In your test project
-npm link vitepress-mermaid-renderer
-```
-
-### Manual Packing
-
-```bash
-# In the package directory
-bun run build
-bun pm pack
-
-# In your test project
-npm install /path/to/vitepress-mermaid-renderer-1.0.0.tgz
-```
-
-Use `bun run build` to generate the smallest distributable bundle.
-
-## Links
-
-- [NPM Package](https://www.npmjs.com/package/vitepress-mermaid-renderer)
-- [npmx Package Link](https://npmx.dev/package/vitepress-mermaid-renderer)
-- [GitHub Repository](https://github.com/sametcn99/vitepress-mermaid-renderer)
-- [Live Examples](https://vitepress-mermaid-renderer.vercel.app)
+That's it! Any fenced `mermaid ` code blocks in your markdown will automatically
+be rendered with interactive controls.
 
 ---
 
-_If you found this project helpful, please consider giving it a star on GitHub!_
+## Documentation & Examples
+
+For full configuration guidelines, advanced security options, custom toolbar
+settings, multilinguality (i18n) setups, and live sandbox demonstrations, please
+visit official website:
+
+**[vitepress-mermaid-renderer.vercel.app](https://vitepress-mermaid-renderer.vercel.app)**
+
+---
+
+## Contributing & Development
+
+Please refer to
+[CONTRIBUTING.md](https://github.com/sametcn99/vitepress-mermaid-renderer/blob/main/CONTRIBUTING.md)
+for more details.
+
+---
+
+_If you found this project helpful, please consider giving it a star on
+[GitHub](https://github.com/sametcn99/vitepress-mermaid-renderer)!_

@@ -111,7 +111,6 @@ import {
   watch,
 } from 'vue';
 import type { MermaidConfig } from 'mermaid';
-import './style.css';
 import MermaidControls from './components/MermaidControls.vue';
 import MermaidError from './components/MermaidError.vue';
 import { useMermaidNavigation } from './composables/useMermaidNavigation';

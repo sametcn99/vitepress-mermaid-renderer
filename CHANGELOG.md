@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.26
+
+- Install size minifaction
+
 ## 1.1.25
 
 ### Changed
