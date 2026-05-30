@@ -72,7 +72,7 @@ export default {
 } satisfies Theme;
 ```
 
-That's it! Any fenced `mermaid ` code blocks in your markdown will automatically
+That's it! Any fenced `mermaid` code blocks in your markdown will automatically
 be rendered with interactive controls.
 
 ---
