@@ -2,7 +2,7 @@
 
 ## 1.1.26
 
-- Install size minifaction
+- Install size minification
 
 ## 1.1.25
 
