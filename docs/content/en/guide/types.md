@@ -70,15 +70,18 @@ following shape:
 
 ### `ToolbarText`
 
-| Key                | Default English     |
-| :----------------- | :------------------ |
-| `zoomIn`           | `Zoom In`           |
-| `zoomOut`          | `Zoom Out`          |
-| `resetView`        | `Reset View`        |
-| `copyCode`         | `Copy Code`         |
-| `copyCodeCopied`   | `Copied`            |
-| `download`         | `Download Diagram`  |
-| `toggleFullscreen` | `Toggle Fullscreen` |
+| Key                          | Default English            |
+| :--------------------------- | :------------------------- |
+| `zoomIn`                     | `Zoom In`                  |
+| `zoomOut`                    | `Zoom Out`                 |
+| `resetView`                  | `Reset View`               |
+| `copyCode`                   | `Copy Code`                |
+| `copyCodeCopied`             | `Copied`                   |
+| `download`                   | `Download Diagram`         |
+| `toggleFullscreen`           | `Toggle Fullscreen`        |
+| `renderErrorText`            | `Failed to render diagram` |
+| `toggleErrorDetailsText`     | `Show Details`             |
+| `toggleErrorDetailsHideText` | `Hide Details`             |
 
 Resolution order per key: `locales[localeIndex].tooltips[key]` → `tooltips[key]`
 → built-in default. Empty strings are ignored at every level.
@@ -98,6 +101,9 @@ const i18n = {
         copyCodeCopied: 'Kopyalandı',
         download: 'Diyagramı indir',
         toggleFullscreen: 'Tam ekranı aç/kapa',
+        renderErrorText: 'Diyagram render edilemedi',
+        toggleErrorDetailsText: 'Detayları göster',
+        toggleErrorDetailsHideText: 'Detayları gizle',
       },
     },
     zh: {
@@ -109,6 +115,9 @@ const i18n = {
         copyCodeCopied: '已复制',
         download: '下载图表',
         toggleFullscreen: '切换全屏',
+        renderErrorText: '图表渲染失败',
+        toggleErrorDetailsText: '显示详情',
+        toggleErrorDetailsHideText: '隐藏详情',
       },
     },
   },

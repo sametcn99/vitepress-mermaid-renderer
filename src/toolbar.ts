@@ -144,7 +144,11 @@ export type ToolbarTooltipKey = ToolbarButton;
  * toolbar buttons. They share the same i18n resolution path as button
  * tooltips so consumers can localize all toolbar text from one place.
  */
-export type ToolbarStatusTextKey = 'copyCodeCopied';
+export type ToolbarStatusTextKey =
+  | 'copyCodeCopied'
+  | 'renderErrorText'
+  | 'toggleErrorDetailsText'
+  | 'toggleErrorDetailsHideText';
 
 /**
  * Canonical key set for every localized toolbar string.
@@ -704,6 +708,9 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
       copyCodeCopied: 'Copied',
       download: 'Download Diagram',
       toggleFullscreen: 'Toggle Fullscreen',
+      renderErrorText: 'Failed to render diagram',
+      toggleErrorDetailsText: 'Show Details',
+      toggleErrorDetailsHideText: 'Hide Details',
     },
   },
 } as const;
@@ -913,6 +920,9 @@ export const resolveToolbarI18n = (
     'copyCodeCopied',
     'toggleFullscreen',
     'download',
+    'renderErrorText',
+    'toggleErrorDetailsText',
+    'toggleErrorDetailsHideText',
   ];
 
   const tooltips = keys.reduce((acc, key) => {

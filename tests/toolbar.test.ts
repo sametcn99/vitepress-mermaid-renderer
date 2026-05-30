@@ -145,6 +145,9 @@ describe('resolveToolbarI18n', () => {
       copyCodeCopied: 'Copied',
       download: 'Download Diagram',
       toggleFullscreen: 'Toggle Fullscreen',
+      renderErrorText: 'Failed to render diagram',
+      toggleErrorDetailsText: 'Show Details',
+      toggleErrorDetailsHideText: 'Hide Details',
     });
   });
 

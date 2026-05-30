@@ -1,5 +1,139 @@
 # Changelog
 
+## 1.1.25
+
+### Changed
+
+- **Security: `securityLevel` default changed from `'loose'` to `'strict'`**.
+  Inline HTML inside Mermaid diagrams is now disabled by default to prevent XSS
+  when rendering user-controlled or external Markdown content. If you need
+  inline HTML features (e.g. clickable links in flowchart nodes), opt in
+  explicitly: `createMermaidRenderer({ securityLevel: 'loose' })`.
+- **Simplified diagram discovery** — replaced the two-step
+  `getElementsByClassName` + fallback `querySelectorAll('pre')` scan with a
+  single `querySelectorAll('pre > code.mermaid, pre > code.language-mermaid')`
+  selector, eliminating the full-page `<pre>` iteration and the custom
+  `HTMLCollectionOf` shim.
+- **Early retry termination** — `renderWithRetry()` now stops the
+  exponential-backoff loop immediately when the `MutationObserver` is active,
+  since it will pick up any late-arriving Mermaid blocks. Reduced
+  `maxRenderAttempts` from 15 to 5 accordingly.
+- **IntersectionObserver-based lazy rendering** — offscreen Mermaid diagrams are
+  no longer rendered immediately; they are observed with an
+  `IntersectionObserver` (200 px root margin) and enqueued only when they scroll
+  near the viewport, significantly reducing initial page-load cost on long
+  documents.
+- **`requestAnimationFrame` instead of fixed delays** — replaced the
+  `setTimeout(resolve, 200)` delay in `renderMermaidDiagram()` and the 150 ms /
+  50 ms production/cap delays in `useMermaidRenderer` with
+  `requestAnimationFrame`-based paint waits, ensuring the SVG is settled without
+  arbitrary timing guesses.
+- **`MutationObserver` scoped to `attributes: false`** — the DOM observer now
+  explicitly opts out of attribute-change notifications, reducing unnecessary
+  callback invocations for style/class mutations unrelated to Mermaid content.
+- **Duplicate-render prevention** — discovered `<pre>` elements are immediately
+  marked with `data-mermaid-processed` so that concurrent `MutationObserver`
+  triggers and retry passes cannot re-queue the same element.
+- **Shared Vue context for diagram rendering** — replaced per-diagram
+  `createApp().mount()` with `render(h(MermaidDiagram), wrapper)`. Each diagram
+  now mounts into a lightweight render call instead of creating a full Vue app
+  instance, reducing memory pressure on pages with many diagrams.
+- **Singleton fullscreen event manager** — extracted fullscreen-change listeners
+  into `useFullscreenManager.ts`. Instead of each diagram registering 4 event
+  listeners (`fullscreenchange` + vendor prefixes), a single shared manager
+  attaches exactly 4 listeners regardless of how many diagrams are on the page.
+- **CSS-only controls visibility** — removed the `onMounted` inline style hack
+  that forced `.controls { opacity: 1; visibility: visible }` via JavaScript.
+  Controls now default to `opacity: 1; visibility: visible` in CSS and are
+  shown/hidden purely through CSS classes and transitions.
+- **IntersectionObserver reuse** — `observeOffscreenElements()` now reuses the
+  existing `lazyObserver` instead of disconnecting and recreating it on every
+  call, eliminating unnecessary observer churn during route transitions.
+- **SVG download sanitization** — `useMermaidDownload` now strips `<script>`,
+  `<iframe>`, `<object>`, `<embed>`, stylesheet `<link>` elements, and all `on*`
+  event-handler attributes from the cloned SVG before serialisation, preventing
+  malicious content from being exported even when `securityLevel: 'loose'` is
+  used.
+- **requestAnimationFrame throttle for high-frequency events** — `wheel` and
+  `mousemove` handlers now coalesce rapid events via `requestAnimationFrame`,
+  limiting reactive style updates to the browser's frame rate instead of firing
+  on every event (60+ per second).
+- **Config deep merge** — `MermaidRenderer.setConfig()` now deep-merges nested
+  objects instead of shallow-spread, so `flowchart: { useMaxWidth: true }`
+  merges with defaults instead of replacing the entire `flowchart` section.
+- **CSS custom properties (design tokens)** — introduced `--mermaid-control-bg`,
+  `--mermaid-control-text`, `--mermaid-control-border`,
+  `--mermaid-control-shadow`, `--mermaid-control-radius`,
+  `--mermaid-control-padding`, `--mermaid-control-gap`,
+  `--mermaid-spinner-duration`, `--mermaid-notification-duration`,
+  `--mermaid-error-bg`, `--mermaid-error-border`, and `--mermaid-error-text`.
+  All hardcoded colour, spacing, and timing values in `style.css` now use these
+  variables with fallbacks to the VitePress `--vp-c-*` tokens, allowing theme
+  customisation without overriding the entire stylesheet.
+- **Dialog backdrop progressive enhancement** — `.mermaid-dialog-backdrop` now
+  uses `rgba(0,0,0,0.5)` as a solid fallback; `backdrop-filter: blur(4px)` is
+  applied only in browsers that support it via `@supports`, fixing the invisible
+  backdrop in Firefox and older browsers.
+- **Configurable zoom limits** — `MIN_SCALE` (0.2), `MAX_SCALE` (10), and
+  `ZOOM_STEP` (1.2) are now configurable via the `MermaidNavigationOptions`
+  parameter of `useMermaidNavigation()`, enabling accessibility and
+  diagram-specific customisation.
+
+### Added
+
+- **Security section in README** — documents the `securityLevel` setting, its
+  impact on inline HTML, and when to use `'loose'` vs `'strict'`.
+- **`MermaidRenderer.resetInstance()` + `destroy()`** — static `resetInstance()`
+  method and private `destroy()` for proper cleanup of observers, timers, DOM
+  references, and event listeners (including `popstate` and
+  `vitepress:routeChanged`). Useful in test teardown and SPA route transitions.
+- **`useMermaidDownload` composable** — extracted the download logic (SVG / PNG
+  / JPEG export) from `MermaidDiagram.vue` into a dedicated composable for
+  better testability and separation of concerns.
+- **Accessibility improvements**:
+  - `role="img"` and `aria-label` on the diagram wrapper so screen readers
+    announce the diagram purpose.
+  - Keyboard navigation: `+`/`-` for zoom, `0` for reset, arrow keys for pan,
+    `f` for fullscreen — all when the diagram wrapper has focus
+    (`tabindex="0"`).
+  - `role="status"` + `aria-live="polite"` on a visually-hidden element that
+    announces "Loading diagram…" and "Diagram loaded" states.
+  - `role="alert"` on the error container (`MermaidError.vue`) so screen readers
+    immediately announce rendering failures.
+  - `.sr-only` utility class in `style.css` for visually-hidden but
+    screen-reader-accessible content.
+- **`_resetFullscreenManager()`** — internal test helper for resetting the
+  singleton fullscreen manager state between test runs.
+- **`resetRenderPipeline()`** — exported from `useMermaidRenderer` so that
+  `MermaidRenderer.handleRouteChange()` can reset the global promise chain,
+  preventing stale promise accumulation across SPA route changes.
+- **`prefers-reduced-motion` support** — animations and transitions are disabled
+  via `@media (prefers-reduced-motion: reduce)` for users who have requested
+  reduced motion in their OS settings.
+- **Error message i18n** — `MermaidError.vue` now accepts `errorText`,
+  `showDetailsText`, and `hideDetailsText` props that flow from the toolbar i18n
+  system (`resolvedToolbar.i18n.tooltips`), enabling localised error messages
+  and toggle button text.
+- **CSS design tokens** — see "Changed" section above for the full list of new
+  custom properties.
+
+### Fixed
+
+- **Memory leak: event listeners not cleaned up** — `popstate` and
+  `vitepress:routeChanged` listeners added in `MermaidRenderer.initialize()` are
+  now properly removed in `destroy()`.
+- **Memory leak: retry setTimeout not cleared on unmount** — the 1-second retry
+  timeout in `useMermaidRenderer` is now tracked and cleared in `onUnmounted`,
+  preventing callbacks on unmounted components.
+- **`NodeJS.Timeout` type in browser code** — replaced with
+  `ReturnType<typeof setTimeout>` so the correct `number` type is used in
+  browser bundles (previously masked by `skipLibCheck`).
+
+### Removed
+
+- Unused `createApp` import from `MermaidRenderer.ts`.
+- Unused `DownloadFormat` type import from `MermaidDiagram.vue`.
+
 ## 1.1.24
 
 - fix: remove line numbers from Mermaid code blocks when VitePress

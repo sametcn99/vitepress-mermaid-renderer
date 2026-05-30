@@ -74,10 +74,10 @@ mermaidRenderer.setToolbar({
           copyCode: 'Kodu kopyala',
           copyCodeCopied: 'Kopyalandı',
           download: 'Diyagramı indir',
+          renderErrorText: 'Diyagram render edilemedi',
+          toggleErrorDetailsText: 'Detayları göster',
+          toggleErrorDetailsHideText: 'Detayları gizle',
           toggleFullscreen: 'Tam ekranı aç/kapa',
-        },
-      },
-      zh: {
         tooltips: {
           zoomIn: '放大',
           zoomOut: '缩小',
@@ -85,6 +85,9 @@ mermaidRenderer.setToolbar({
           copyCode: '复制代码',
           copyCodeCopied: '已复制',
           download: '下载图表',
+          renderErrorText: '图表渲染失败',
+          toggleErrorDetailsText: '显示详情',
+          toggleErrorDetailsHideText: '隐藏详情',
           toggleFullscreen: '切换全屏',
         },
       },
@@ -102,6 +105,10 @@ Her metin anahtarı için çözüm sırası şöyledir:
 Boş string değerleri her katmanda yok sayılır. Kopyalama düğmesinden sonra
 görünen kısa başarı metni için `copyCodeCopied` anahtarını çevirin.
 
+Mermaid diyagramı render edilemediğinde gösterilen hata mesajları da
+`renderErrorText`, `toggleErrorDetailsText` ve `toggleErrorDetailsHideText`
+anahtarlarıyla yerelleştirilebilir.
+
 Her `setToolbar()` çağrısı `vitepress-mermaid:toolbar-updated` eventini
 gönderir. Mount edilmiş diyagramlar bu eventi dinler ve SVG’yi yeniden mount
 etmeden yeni araç çubuğu metinlerini uygular.
@@ -110,7 +117,18 @@ etmeden yeni araç çubuğu metinlerini uygular.
 
 - `showLanguageLabel` açık kaldığında ekran okuyucular Mermaid diyagram
   bağlamını daha kolay duyurur.
-- Her breakpoint’te `resetView` bulundurmak, zoom veya drag sonrası güvenli bir
+- Her diyagram yürüneyicisi `role="img"` ve `aria-label` bulundurur; ekran
+  okuyucular diyagram amacını duyurur.
+- Diyagram odak aldığında (`tabindex="0"`) klavye navigasyonu kullanılabilir:
+  `+`/`-` yakınlaştırma, `0` sıfırlama, ok tuşlarıyla kaydırma, `f` tam ekran.
+- Görsel olarak gizlenmiş bir durum duyurucusu (`role="status"`,
+  `aria-live="polite"`) "Diyagram yükleniyor…" ve "Diyagram yüklendi"
+  durumlarını okur.
+- Hata konteyneri `role="alert"` kullanır; ekran okuyucular render hatalarını
+  hemen duyurur.
+- `prefers-reduced-motion` ayarına otomatik olarak saygı duyulur; azaltılmış
+  hareket isteyen kullanıcılar için animasyon ve geçişler devre dışı bırakılır.
+- Her breakpoint'te `resetView` bulundurmak, zoom veya drag sonrası güvenli bir
   geri dönüş sağlar.
 - Mobilde fazla düğme yığmayın; `positions` ile kontrolleri diyagramın yoğun
   bölgelerinden uzaklaştırın.

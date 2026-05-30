@@ -39,6 +39,15 @@ import mermaid, { type MermaidConfig } from 'mermaid';
 let renderPipeline: Promise<void> = Promise.resolve();
 
 /**
+ * Resets the global render pipeline so that stale promise chains from
+ * previous route pages do not accumulate. Called by the route-change
+ * handler in `MermaidRenderer.ts` before starting a fresh render pass.
+ */
+export const resetRenderPipeline = (): void => {
+  renderPipeline = Promise.resolve();
+};
+
+/**
  * Appends a rendering task to the global {@link renderPipeline} chain.
  *
  * This ensures that only one `mermaid.run()` call executes at any given
@@ -111,7 +120,39 @@ export interface MermaidRendererActions {
 }
 
 /**
- * Options accepted by the {@link useMermaidRenderer} composable.
+ * Waits for the browser to complete its next repaint cycle by wrapping
+ * `requestAnimationFrame` in a promise. Calling this twice in succession
+ * gives the renderer a reliable signal that layout and paint have settled.
+ *
+ * @returns A promise that resolves after the next animation frame.
+ */
+const waitForPaint = (): Promise<void> =>
+  new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
+/**
+ * Vue 3 composable that handles the **Mermaid rendering lifecycle** for
+ * a single diagram: library initialisation, diagram rendering with
+ * retry support, SVG sizing adjustments, error handling, and config
+ * hot-reloading.
+ *
+ * Consumed by `MermaidDiagram.vue` which pairs this composable with
+ * {@link useMermaidNavigation} to create a fully interactive diagram.
+ *
+ * **Rendering pipeline:**
+ * A global promise chain (`renderPipeline`) serialises all `mermaid.run()`
+ * calls across every diagram instance on the page to prevent concurrent
+ * Mermaid renders that can corrupt the global state.
+ *
+ * @example
+ * ```ts
+ * import { useMermaidRenderer } from "./composables/useMermaidRenderer";
+ *
+ * const { mounted, isRendered, renderError, renderMermaidDiagram, detectDiagramType }
+ *   = useMermaidRenderer({ config: { theme: "dark" } });
+ * ```
+ *
+ * @see {@link useMermaidNavigation} for the navigation counterpart.
+ * @see {@link MermaidDiagram}    for the consuming component.
  */
 export interface MermaidRendererOptions {
   /** Optional Mermaid configuration merged into the defaults. */
@@ -162,6 +203,9 @@ export function useMermaidRenderer(
   const originalDiagramSize = ref({ width: 0, height: 0 });
   const lastRenderContext = ref<{ id: string; code: string } | null>(null);
 
+  /** Handle for the component-scoped retry timeout, cleared on unmount. */
+  let retryTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
+
   /**
    * Sensible default Mermaid configuration used as the base layer.
    *
@@ -172,13 +216,16 @@ export function useMermaidRenderer(
    *
    * Notable defaults:
    * - `startOnLoad: false` — rendering is controlled explicitly.
-   * - `securityLevel: "loose"` — allows inline HTML in diagrams.
+   * - `securityLevel: "strict"` — disallows inline HTML in diagrams
+   *   by default to prevent XSS when rendering user-controlled or
+   *   external Markdown content.  Set `securityLevel: "loose"` only
+   *   if you trust all diagram sources and need advanced HTML features.
    * - `useMaxWidth: false` on most diagram types to enable natural
    *   sizing and user-controlled zooming.
    */
   const defaultConfig: MermaidConfig = {
     theme: 'default',
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     startOnLoad: false,
     flowchart: {
       useMaxWidth: false,
@@ -395,27 +442,21 @@ export function useMermaidRenderer(
       element.classList.add('mermaid-rendering');
 
       await enqueueMermaidRender(async () => {
-        const isProduction = typeof window !== 'undefined';
-
         try {
           await mermaid.run({
             nodes: [element],
             suppressErrors: false,
           });
 
-          // Add a longer delay for production environments
-          await new Promise((resolve) =>
-            setTimeout(resolve, isProduction ? 150 : 50),
-          );
+          // Wait for the browser to paint the SVG before measuring sizes.
+          await waitForPaint();
 
           // Store original diagram size and apply container size adjustments
           if (element.firstElementChild) {
             const svgElement = element.querySelector('svg');
             if (svgElement) {
-              // Wait for SVG to be fully rendered, longer in production
-              await new Promise((resolve) =>
-                setTimeout(resolve, isProduction ? 150 : 50),
-              );
+              // Wait for SVG layout to settle before reading dimensions.
+              await waitForPaint();
 
               // Get the container dimensions
               const containerElement =
@@ -490,8 +531,9 @@ export function useMermaidRenderer(
           // Emit error event
           options.onRenderComplete?.({ id, success: false, error });
 
-          if (isProduction && retryCount === 0) {
-            setTimeout(() => {
+          if (typeof window !== 'undefined' && retryCount === 0) {
+            retryTimeoutHandle = setTimeout(() => {
+              retryTimeoutHandle = null;
               void renderMermaidDiagram(id, code, retryCount + 1, maxRetries);
             }, 1000);
           }
@@ -525,6 +567,10 @@ export function useMermaidRenderer(
   });
 
   onUnmounted(() => {
+    if (retryTimeoutHandle) {
+      clearTimeout(retryTimeoutHandle);
+      retryTimeoutHandle = null;
+    }
     document.removeEventListener(
       'vitepress-mermaid:config-updated',
       handleConfigUpdated,

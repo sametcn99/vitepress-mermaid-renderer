@@ -50,6 +50,9 @@ mermaidRenderer.setToolbar({
 工具栏默认使用英文文本。请从 VitePress 获取当前 `localeIndex`，并通过
 `setToolbar` 的 `i18n` 选项传入按 locale 划分的文本表。
 
+图表渲染失败时显示的错误消息也可以通过 `renderErrorText`、
+`toggleErrorDetailsText` 和 `toggleErrorDetailsHideText` 进行本地化。
+
 ```typescript
 import { useData } from 'vitepress';
 
@@ -68,6 +71,9 @@ mermaidRenderer.setToolbar({
           copyCodeCopied: 'Kopyalandı',
           download: 'Diyagramı indir',
           toggleFullscreen: 'Tam ekranı aç/kapa',
+          renderErrorText: 'Diyagram render edilemedi',
+          toggleErrorDetailsText: 'Detayları göster',
+          toggleErrorDetailsHideText: 'Detayları gizle',
         },
       },
       zh: {
@@ -79,6 +85,9 @@ mermaidRenderer.setToolbar({
           copyCodeCopied: '已复制',
           download: '下载图表',
           toggleFullscreen: '切换全屏',
+          renderErrorText: '图表渲染失败',
+          toggleErrorDetailsText: '显示详情',
+          toggleErrorDetailsHideText: '隐藏详情',
         },
       },
     },
@@ -101,6 +110,12 @@ mermaidRenderer.setToolbar({
 ## 可访问性建议
 
 - 保持 `showLanguageLabel` 开启可以帮助屏幕阅读器识别 Mermaid 图表上下文。
+- 每个图表包装器具有 `role="img"` 和 `aria-label`，屏幕阅读器会播报图表用途。
+- 图表获得焦点时（`tabindex="0"`），键盘用户可以缩放（`+`/`-`）、重置（`0`）、平移（方向键）和切换全屏（`f`）。
+- 视觉隐藏的状态播报器会朗读"正在加载图表…"和"图表已加载"状态。
+- 错误容器使用 `role="alert"`，屏幕阅读器会立即播报渲染失败。
+- `prefers-reduced-motion`
+  设置会被自动遵守；对请求减少动画的用户，所有动画和过渡效果将被禁用。
 - 每个断点都保留 `resetView`，可以在缩放或拖拽后提供可靠的恢复路径。
 - 移动端不要堆叠过多按钮；使用 `positions` 将控件移离图表密集区域。
 

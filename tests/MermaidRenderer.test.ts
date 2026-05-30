@@ -115,8 +115,9 @@ describe('MermaidRenderer', () => {
         renderer as unknown as { renderMermaidDiagrams: () => boolean }
       ).renderMermaidDiagrams();
       expect(found).toBe(true);
-      // Wait long enough for the 200ms mount delay.
-      await flush(250);
+      // Wait for the double requestAnimationFrame used by renderMermaidDiagram.
+      // Each rAF is polyfilled as a setTimeout(~16ms) in happy-dom.
+      await flush(350);
       expect(document.querySelector('.mermaid-wrapper')).not.toBeNull();
       // Copy button removed
       expect(document.querySelector('.copy')).toBeNull();
@@ -141,7 +142,7 @@ describe('MermaidRenderer', () => {
         renderer as unknown as { renderMermaidDiagrams: () => boolean }
       ).renderMermaidDiagrams();
       expect(result).toBe(true);
-      await flush(250);
+      await flush(350);
       expect(document.querySelector('.mermaid-wrapper')).not.toBeNull();
     });
 

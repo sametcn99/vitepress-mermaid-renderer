@@ -53,6 +53,7 @@ const isClientEnvironment =
  */
 const noopRenderer = {
   setToolbar: () => {},
+  resetInstance: () => {},
 };
 
 if (isClientEnvironment) {
@@ -100,3 +101,4 @@ const createMermaidRenderer = (config?: MermaidConfig) => {
 };
 
 export { createMermaidRenderer };
+export { MermaidRenderer };

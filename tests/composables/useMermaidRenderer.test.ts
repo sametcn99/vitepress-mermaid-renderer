@@ -96,7 +96,7 @@ describe('useMermaidRenderer', () => {
     const arg = mermaidMocks.initialize.mock.calls[0]![0];
     expect(arg.theme).toBe('dark');
     expect(arg.startOnLoad).toBe(false);
-    expect(arg.securityLevel).toBe('loose');
+    expect(arg.securityLevel).toBe('strict');
     wrapper.unmount();
   });
 
@@ -194,6 +194,8 @@ describe('useMermaidRenderer', () => {
     const wrapper = mountHost({}, 'mermaid-cleanup');
     const expose = wrapper.vm as unknown as HostExpose;
     await expose.renderMermaidDiagram('mermaid-cleanup', 'flowchart LR\nA-->B');
+    // Allow any pending requestAnimationFrame callbacks to flush
+    await new Promise((resolve) => setTimeout(resolve, 50));
     const beforeUnmount = mermaidMocks.initialize.mock.calls.length;
 
     wrapper.unmount();

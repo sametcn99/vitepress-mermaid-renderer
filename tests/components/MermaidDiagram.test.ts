@@ -3,6 +3,7 @@ import { nextTick } from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import MermaidDiagram from '../../src/MermaidDiagram.vue';
 import { resolveToolbarConfig } from '../../src/toolbar';
+import { _resetFullscreenManager } from '../../src/composables/useFullscreenManager';
 
 const mermaidMocks = vi.hoisted(() => ({
   initialize: vi.fn(),
@@ -26,6 +27,7 @@ describe('MermaidDiagram', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     document.body.className = '';
+    _resetFullscreenManager();
     mermaidMocks.initialize.mockReset();
     mermaidMocks.run.mockReset();
     mermaidMocks.run.mockImplementation(

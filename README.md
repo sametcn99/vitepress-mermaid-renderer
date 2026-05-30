@@ -100,6 +100,30 @@ const mermaidRenderer = createMermaidRenderer({
 For a complete list of available configuration options, refer to the
 [Mermaid Configuration Documentation](https://mermaid.js.org/config/schema-docs/config.html).
 
+### Security
+
+By default, the renderer uses `securityLevel: 'strict'`, which **disables inline
+HTML** inside Mermaid diagrams. This is the safest default because Mermaid
+diagrams are often sourced from user-written Markdown files, and inline HTML in
+that context can introduce XSS vulnerabilities.
+
+If you need advanced Mermaid features that require inline HTML (for example,
+clickable links or formatted labels inside flowchart nodes), you can explicitly
+opt into the `loose` security level — but **only** when you fully trust all
+diagram sources:
+
+```typescript
+// ⚠️ Only use 'loose' when you trust every Mermaid code block on the site.
+const mermaidRenderer = createMermaidRenderer({
+  securityLevel: 'loose',
+});
+```
+
+| `securityLevel` | Inline HTML | Recommended when                                      |
+| --------------- | ----------- | ----------------------------------------------------- |
+| `strict`        | Disabled    | Diagrams come from user input or external Markdown.   |
+| `loose`         | Allowed     | All diagram sources are trusted (e.g. internal docs). |
+
 ### Toolbar Configuration
 
 You can fully customize the toolbar for desktop, mobile, and fullscreen modes
@@ -241,5 +265,4 @@ Use `bun run build` to generate the smallest distributable bundle.
 
 ---
 
-**If you found this project helpful, please consider giving it a star on
-GitHub!**
+_If you found this project helpful, please consider giving it a star on GitHub!_

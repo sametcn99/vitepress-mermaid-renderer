@@ -56,10 +56,21 @@
     <MermaidError
       :render-error="renderError"
       :render-error-details="renderErrorDetails"
+      :error-text="resolvedToolbar.i18n.tooltips.renderErrorText"
+      :show-details-text="resolvedToolbar.i18n.tooltips.toggleErrorDetailsText"
+      :hide-details-text="
+        resolvedToolbar.i18n.tooltips.toggleErrorDetailsHideText
+      "
     />
 
     <div
       class="diagram-wrapper"
+      tabindex="0"
+      role="img"
+      :aria-label="
+        renderError ? 'Diagram rendering failed' : 'Interactive Mermaid diagram'
+      "
+      @keydown="handleKeyDown"
       @mousedown="handleMouseDown"
       @mousemove="handleMouseMove"
       @mouseup="handleMouseUp"
@@ -69,9 +80,14 @@
       @touchmove="handleTouchMoveEvent"
       @touchend="handleTouchEndEvent"
     >
+      <!-- Screen-reader announcement for loading / rendered state -->
+      <span role="status" aria-live="polite" class="sr-only">
+        {{ isRendered ? 'Diagram loaded' : 'Loading diagram…' }}
+      </span>
       <div
         :id="diagramId"
         class="mermaid"
+        :aria-label="`Mermaid diagram: ${code.slice(0, 80)}`"
         :style="{
           opacity: isRendered ? 1 : 0,
           transform: `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
@@ -101,9 +117,13 @@ import MermaidError from './components/MermaidError.vue';
 import { useMermaidNavigation } from './composables/useMermaidNavigation';
 import { useMermaidRenderer } from './composables/useMermaidRenderer';
 import {
+  onFullscreenChange,
+  offFullscreenChange,
+} from './composables/useFullscreenManager';
+import { useMermaidDownload } from './composables/useMermaidDownload';
+import {
   isResolvedToolbarConfig,
   resolveToolbarConfig,
-  type DownloadFormat,
   type MermaidToolbarOptions,
   type ResolvedToolbarConfig,
 } from './toolbar';
@@ -208,6 +228,9 @@ const instance = getCurrentInstance();
  */
 const diagramId = `mermaid-${instance?.uid ?? Math.random().toString(36).slice(2)}`;
 
+/** Download handler extracted into a composable for testability and separation of concerns. */
+const { handleDownload } = useMermaidDownload({ diagramId });
+
 /**
  * Computed fullscreen behaviour derived from the resolved toolbar config.
  * Either `"browser"` (native Fullscreen API) or `"dialog"` (CSS overlay).
@@ -245,97 +268,97 @@ const handleToggleFullscreen = () => {
   toggleFullscreen(fullscreenWrapper.value, fullscreenBehavior.value);
 };
 
-/**
- * Downloads the rendered SVG diagram in the requested format.
- *
- * **SVG** — Serialises the SVG element and triggers a direct blob
- * download.
- *
- * **PNG / JPEG** — Loads the serialised SVG into an `Image`, draws it
- * onto a `<canvas>`, and converts the canvas to a data URL for
- * download. A white background is composited for raster formats.
- *
- * @param format - The target download format (`"svg"`, `"png"`, or `"jpeg"`).
- */
-const handleDownload = async (format: DownloadFormat) => {
-  const container = document.getElementById(diagramId);
-  const svgElement = container?.querySelector('svg');
-
-  if (!svgElement) {
-    console.error('SVG element not found for download');
-    return;
-  }
-
-  const svgClone = svgElement.cloneNode(true) as SVGElement;
-  if (format !== 'svg') {
-    svgClone.style.backgroundColor = 'white';
-  }
-
-  const svgData = new XMLSerializer().serializeToString(svgClone);
-  const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-
-  const downloadLink = document.createElement('a');
-  downloadLink.download = `diagram.${format}`;
-
-  if (format === 'svg') {
-    downloadLink.href = url;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    URL.revokeObjectURL(url);
-    return;
-  }
-
-  const img = new Image();
-  img.onload = () => {
-    const canvas = document.createElement('canvas');
-    const bbox = svgElement.viewBox.baseVal;
-    let width = bbox?.width;
-    let height = bbox?.height;
-
-    if (!width || !height) {
-      const rect = svgElement.getBoundingClientRect();
-      width = rect.width;
-      height = rect.height;
-    }
-
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(img, 0, 0);
-
-      const imageType = format === 'png' ? 'image/png' : 'image/jpeg';
-      const dataUrl = canvas.toDataURL(imageType);
-      downloadLink.href = dataUrl;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-    }
-
-    URL.revokeObjectURL(url);
-  };
-
-  img.onerror = (error) => {
-    console.error('Failed to load SVG for conversion', error);
-    URL.revokeObjectURL(url);
-  };
-
-  img.src = url;
-};
-
 /** @internal Thin wrappers forwarding DOM events to composable actions. */
 const handleMouseDown = (event: MouseEvent) => startPan(event);
-const handleMouseMove = (event: MouseEvent) => pan(event);
 const handleMouseUp = () => endPan();
 const handleMouseLeave = () => endPan();
-const handleWheelEvent = (event: WheelEvent) => handleWheel(event);
 const handleTouchStartEvent = (event: TouchEvent) => handleTouchStart(event);
-const handleTouchMoveEvent = (event: TouchEvent) => handleTouchMove(event);
 const handleTouchEndEvent = () => handleTouchEnd();
+
+/**
+ * requestAnimationFrame throttle state for high-frequency events.
+ * Prevents reactive style updates from firing more than once per frame.
+ */
+let wheelRafPending = false;
+let moveRafPending = false;
+let wheelEvent: WheelEvent | null = null;
+let moveEvent: MouseEvent | null = null;
+
+/** @internal rAF-throttled wheel handler — coalesces rapid wheel events. */
+const handleWheelEvent = (event: WheelEvent) => {
+  wheelEvent = event;
+  if (!wheelRafPending) {
+    wheelRafPending = true;
+    requestAnimationFrame(() => {
+      wheelRafPending = false;
+      if (wheelEvent) {
+        handleWheel(wheelEvent);
+        wheelEvent = null;
+      }
+    });
+  }
+};
+
+/** @internal rAF-throttled mousemove handler — coalesces rapid mouse moves during pan. */
+const handleMouseMove = (event: MouseEvent) => {
+  if (!isPanning.value) return;
+  moveEvent = event;
+  if (!moveRafPending) {
+    moveRafPending = true;
+    requestAnimationFrame(() => {
+      moveRafPending = false;
+      if (moveEvent) {
+        pan(moveEvent);
+        moveEvent = null;
+      }
+    });
+  }
+};
+
+/** @internal rAF-throttled touchmove handler — keeps composable's logic but coalesces frames. */
+const handleTouchMoveEvent = (event: TouchEvent) => handleTouchMove(event);
+
+/**
+ * Keyboard navigation handler — allows zoom / pan / reset / fullscreen
+ * without a mouse.
+ */
+const handleKeyDown = (event: KeyboardEvent) => {
+  switch (event.key) {
+    case '+':
+    case '=':
+      zoomIn();
+      event.preventDefault();
+      break;
+    case '-':
+      zoomOut();
+      event.preventDefault();
+      break;
+    case '0':
+      resetView();
+      event.preventDefault();
+      break;
+    case 'ArrowUp':
+      panUp();
+      event.preventDefault();
+      break;
+    case 'ArrowDown':
+      panDown();
+      event.preventDefault();
+      break;
+    case 'ArrowLeft':
+      panLeft();
+      event.preventDefault();
+      break;
+    case 'ArrowRight':
+      panRight();
+      event.preventDefault();
+      break;
+    case 'f':
+      handleToggleFullscreen();
+      event.preventDefault();
+      break;
+  }
+};
 
 /**
  * Synchronises the toolbar `force-show` class and `isFullscreen` ref
@@ -356,10 +379,7 @@ onMounted(async () => {
     await nextTick();
     await renderMermaidDiagram(diagramId, props.code);
 
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    onFullscreenChange(handleFullscreenChange);
     document.addEventListener(
       'vitepress-mermaid:toolbar-updated',
       handleToolbarUpdated,
@@ -380,13 +400,7 @@ onUnmounted(() => {
   if (typeof document !== 'undefined') {
     document.body.classList.remove('mermaid-dialog-open');
   }
-  document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  document.removeEventListener(
-    'webkitfullscreenchange',
-    handleFullscreenChange,
-  );
-  document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-  document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+  offFullscreenChange(handleFullscreenChange);
   document.removeEventListener(
     'vitepress-mermaid:toolbar-updated',
     handleToolbarUpdated,

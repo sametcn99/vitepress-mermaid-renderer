@@ -29,9 +29,10 @@
  * renderer.setToolbar({ desktop: { download: "enabled" } });
  * ```
  */
-import { createApp, h } from 'vue';
+import { h, render } from 'vue';
 import MermaidDiagram from './MermaidDiagram.vue';
 import { MermaidConfig } from 'mermaid';
+import { resetRenderPipeline } from './composables/useMermaidRenderer';
 import {
   resolveToolbarConfig,
   type MermaidToolbarOptions,
@@ -90,13 +91,15 @@ export class MermaidRenderer {
 
   /**
    * Maximum number of exponential-backoff retry iterations before the
-   * renderer gives up looking for Mermaid blocks. Set to `15` to
-   * accommodate slow production builds and CDN latency.
+   * renderer gives up looking for Mermaid blocks.
+   *
+   * Reduced from 15 to 5 because the `MutationObserver` already watches
+   * for dynamically-added content, making aggressive retries unnecessary.
    */
-  private maxRenderAttempts = 15;
+  private maxRenderAttempts = 5;
 
   /** Handle returned by `setTimeout` for the active retry timer, used for cancellation on route changes. */
-  private retryTimeout: NodeJS.Timeout | null = null;
+  private retryTimeout: ReturnType<typeof setTimeout> | null = null;
 
   /** FIFO queue of `<pre>` elements waiting to be replaced by diagram components. */
   private renderQueue: HTMLPreElement[] = [];
@@ -114,6 +117,14 @@ export class MermaidRenderer {
   private mutationObserver: MutationObserver | null = null;
 
   /**
+   * `IntersectionObserver` used to defer rendering of offscreen diagrams
+   * until they scroll into the viewport. Only created when there are
+   * elements below the fold; diagrams already visible are rendered
+   * immediately.
+   */
+  private lazyObserver: IntersectionObserver | null = null;
+
+  /**
    * Private constructor enforcing the singleton pattern.
    *
    * Initialises the Mermaid configuration, resolves the default toolbar
@@ -121,10 +132,10 @@ export class MermaidRenderer {
    * DOM readiness hooks and navigation listeners.
    *
    * @param config - Optional initial Mermaid configuration object.
-   *   When provided, its values are shallow-merged into the defaults.
+   *   When provided, its values are deep-merged into the defaults.
    */
   private constructor(config?: MermaidConfig) {
-    this.config = config ? { ...config } : {};
+    this.config = config ? this.deepMerge({}, config) : {};
     this.toolbarConfig = resolveToolbarConfig();
     this.initialize();
   }
@@ -133,7 +144,7 @@ export class MermaidRenderer {
    * Returns the singleton renderer instance, creating it on first call.
    *
    * If the instance already exists and a `config` object is supplied, the
-   * new settings are shallow-merged into the active configuration via
+   * new settings are deep-merged into the active configuration via
    * {@link setConfig}, and a `vitepress-mermaid:config-updated` event is
    * dispatched so that already-mounted diagrams can re-render.
    *
@@ -160,7 +171,84 @@ export class MermaidRenderer {
   }
 
   /**
-   * Shallow-merges the provided Mermaid options into the runtime config
+   * Destroys the singleton instance, cleaning up all DOM observers,
+   * event listeners, and timers.
+   *
+   * This is primarily useful for test environments where multiple
+   * test suites need isolated renderer instances without leaking
+   * state from previous tests. In production, the singleton lives
+   * for the lifetime of the page and does not need to be destroyed.
+   *
+   * After calling this method, the next call to
+   * {@link MermaidRenderer.getInstance} will create a fresh instance.
+   */
+  public static resetInstance(): void {
+    if (!MermaidRenderer.instance) return;
+    MermaidRenderer.instance.destroy();
+    MermaidRenderer.instance = undefined as unknown as MermaidRenderer;
+  }
+
+  /**
+   * Route-change handler bound once in {@link initialize} so it can be
+   * removed in {@link destroy}.
+   */
+  private boundRouteChangeHandler: (() => void) | null = null;
+
+  /** Cleans up all DOM observers, event listeners, and pending timers
+   * held by this instance. Called automatically by
+   * {@link MermaidRenderer.resetInstance}.
+   */
+  private destroy(): void {
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect();
+      this.mutationObserver = null;
+    }
+    if (this.lazyObserver) {
+      this.lazyObserver.disconnect();
+      this.lazyObserver = null;
+    }
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout);
+      this.retryTimeout = null;
+    }
+    if (this.boundRouteChangeHandler) {
+      window.removeEventListener('popstate', this.boundRouteChangeHandler);
+      document.removeEventListener(
+        'vitepress:routeChanged',
+        this.boundRouteChangeHandler,
+      );
+      this.boundRouteChangeHandler = null;
+    }
+  }
+
+  /**
+   * Recursively merges `source` into `target` so that nested objects are
+   * combined rather than replaced. Arrays and primitives are overwritten
+   * directly.
+   */
+  private deepMerge(target: any, source: any): any {
+    const result = { ...target };
+    for (const key of Object.keys(source)) {
+      const sourceVal = source[key];
+      const targetVal = target[key];
+      if (
+        sourceVal &&
+        typeof sourceVal === 'object' &&
+        !Array.isArray(sourceVal) &&
+        targetVal &&
+        typeof targetVal === 'object' &&
+        !Array.isArray(targetVal)
+      ) {
+        result[key] = this.deepMerge(targetVal, sourceVal);
+      } else {
+        result[key] = sourceVal;
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Deep-merges the provided Mermaid options into the runtime config
    * and dispatches a `vitepress-mermaid:config-updated` custom event so
    * that already-mounted `<MermaidDiagram>` components can re-initialise
    * `mermaid.initialize()` and re-render with the new settings.
@@ -168,7 +256,7 @@ export class MermaidRenderer {
    * @param config - Partial Mermaid configuration object to merge.
    */
   private setConfig(config: MermaidConfig): void {
-    this.config = { ...this.config, ...config };
+    this.config = this.deepMerge(this.config, config);
     this.dispatchConfigUpdate();
   }
 
@@ -299,35 +387,26 @@ export class MermaidRenderer {
   }
 
   /**
-   * Creates a Virtual DOM node for the `<MermaidDiagram>` component using
-   * Vue's `h()` function, together with a fresh wrapper `<div>` that will
-   * replace the original `<pre>` element in the DOM.
+   * Creates a wrapper `<div>` element that will replace the original
+   * `<pre>` element in the DOM.
    *
    * The wrapper receives a unique, random id (e.g.
    * `mermaid-wrapper-x7k3f2`) and the CSS class `"mermaid-wrapper"`,
    * which is used by the `MutationObserver` to skip already-processed
    * blocks.
    *
-   * @param code - The raw Mermaid source code string extracted from the
-   *   code block's `textContent`.
-   * @returns An object with `wrapper` (the DOM node) and `component`
-   *   (the Vue VNode), or `null` if creation fails.
+   * @param _code - The raw Mermaid source code (retained for API
+   *   compatibility; the actual rendering is done by `render()`).
+   * @returns The wrapper DOM element, or `null` if creation fails.
    */
-  private createMermaidComponent(code: string) {
+  private createMermaidWrapper(_code: string): HTMLDivElement | null {
     try {
       const wrapper = document.createElement('div');
       wrapper.id = `mermaid-wrapper-${Math.random().toString(36).slice(2)}`;
       wrapper.className = 'mermaid-wrapper';
-      return {
-        wrapper,
-        component: h(MermaidDiagram, {
-          code,
-          config: this.config,
-          toolbar: this.toolbarConfig,
-        }),
-      };
+      return wrapper;
     } catch (error) {
-      console.error('Failed to create mermaid component:', error);
+      console.error('Failed to create mermaid wrapper:', error);
       return null;
     }
   }
@@ -375,41 +454,52 @@ export class MermaidRenderer {
 
   /**
    * Renders a single Mermaid diagram by replacing its original `<pre>`
-   * element with a freshly-mounted Vue application containing the
-   * `<MermaidDiagram>` component.
+   * element with a Vue-powered `<MermaidDiagram>` component.
    *
    * Steps:
    * 1. Extract the raw Mermaid source from the element's `textContent`.
    * 2. Create a wrapper `<div>` and a Vue VNode via
    *    {@link createMermaidComponent}.
    * 3. Replace the `<pre>` node in the DOM with the wrapper.
-   * 4. Mount a new Vue app onto the wrapper. A 200 ms delay is added
-   *    after mounting to allow the SVG to be fully painted in production
-   *    environments.
+   * 4. Render the component into the wrapper using Vue's `render()`
+   *    function. Unlike `createApp().mount()`, `render()` does not
+   *    create a full Vue application context per diagram, reducing
+   *    memory and CPU overhead when many diagrams are present.
    *
    * @param element - The `<pre>` element containing the Mermaid source code.
    * @returns A promise that resolves once the component is mounted and
-   *   the rendering delay has elapsed.
+   *   the browser has had a chance to paint.
    */
   private async renderMermaidDiagram(element: HTMLPreElement): Promise<void> {
     try {
       if (!element || !element.parentNode) return;
       const code = element.textContent?.trim() || '';
-      const result = this.createMermaidComponent(code);
-      if (!result) return;
-      const { wrapper, component } = result;
+      const wrapper = this.createMermaidWrapper(code);
+      if (!wrapper) return;
 
-      // Replace pre element with component
+      // Replace pre element with component wrapper
       element.parentNode.replaceChild(wrapper, element);
 
-      // Mount the component and wait for it to render
-      return new Promise<void>((resolve) => {
-        createApp({
-          render: () => component,
-        }).mount(wrapper);
+      // Render the component into the wrapper using Vue's lightweight
+      // render() API. This avoids creating a full Vue application context
+      // per diagram, significantly reducing overhead on pages with many
+      // diagrams.
+      render(
+        h(MermaidDiagram, {
+          code,
+          config: this.config,
+          toolbar: this.toolbarConfig,
+        }),
+        wrapper,
+      );
 
-        // Give more time for the diagram to render in production environments
-        setTimeout(resolve, 200);
+      // Wait for the browser's next repaint cycle so the SVG is
+      // visually settled. Two consecutive animation frames give
+      // the renderer a reliable signal that paint has occurred.
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => resolve());
+        });
       });
     } catch (error) {
       console.error('Failed to render mermaid diagram:', error);
@@ -492,6 +582,9 @@ export class MermaidRenderer {
         }
       };
 
+      // Store the handler so we can remove it in destroy()
+      this.boundRouteChangeHandler = handleRouteChangeWithErrorBoundary;
+
       window.addEventListener('popstate', handleRouteChangeWithErrorBoundary);
       document.addEventListener(
         'vitepress:routeChanged',
@@ -538,7 +631,13 @@ export class MermaidRenderer {
    *    (e.g. via JavaScript) is picked up automatically.
    *
    * The observer uses `requestAnimationFrame` debouncing to batch rapid
-   * successive mutations into a single render pass.
+   * successive mutations into a single render pass. Only mutations that
+   * add nodes containing Mermaid code elements (checked via
+   * {@link hasNewMermaidNodes}) trigger a re-render, avoiding unnecessary
+   * work for unrelated DOM changes (e.g. sidebar updates, search index).
+   *
+   * The observer is configured with `attributes: false` so style and
+   * class changes on existing elements do **not** fire the callback.
    */
   private setupDomMutationObserver(): void {
     if (
@@ -581,6 +680,7 @@ export class MermaidRenderer {
       this.mutationObserver.observe(target, {
         childList: true,
         subtree: true,
+        attributes: false,
       });
     } catch (error) {
       console.error('Failed to observe DOM mutations for Mermaid:', error);
@@ -675,18 +775,31 @@ export class MermaidRenderer {
   /**
    * Handles route changes in the VitePress SPA router.
    *
-   * Clears any active retry timeout, resets the attempt counter, and
-   * starts a fresh render pass to process Mermaid blocks on the new
-   * page. Called by the `popstate` and `vitepress:routeChanged` event
+   * Clears any active retry timeout, tears down the `IntersectionObserver`
+   * from the previous page, resets the attempt counter, and starts a
+   * fresh render pass to process Mermaid blocks on the new page.
+   *
+   * Called by the `popstate` and `vitepress:routeChanged` event
    * listeners registered in {@link initialize}.
    */
   private handleRouteChange(): void {
     // Reset attempts and start fresh on route change
     this.renderAttempts = 0;
     this.initialPageRenderComplete = false;
+
+    // Reset the global render pipeline to prevent stale promise
+    // chains from previous pages from accumulating.
+    resetRenderPipeline();
+
     if (this.retryTimeout) {
       clearTimeout(this.retryTimeout);
       this.retryTimeout = null;
+    }
+    // Tear down the lazy observer; a new one will be created if needed
+    // by renderMermaidDiagrams() for the new page content.
+    if (this.lazyObserver) {
+      this.lazyObserver.disconnect();
+      this.lazyObserver = null;
     }
     this.renderWithRetry();
   }
@@ -695,6 +808,11 @@ export class MermaidRenderer {
    * Attempts to discover and render all Mermaid diagrams on the current
    * page. If no diagrams are found and the retry budget has not been
    * exhausted, schedules another attempt using exponential backoff.
+   *
+   * **Early exit:** When the `MutationObserver` is active, it will
+   * trigger {@link handleRouteChange} whenever new Mermaid blocks are
+   * injected into the DOM. Therefore, once the observer is running we
+   * can safely stop retrying — the observer will pick up any late content.
    *
    * **Backoff formula:**
    * `delay = min(300 × 1.4^attempt, 10 000)` milliseconds.
@@ -707,13 +825,17 @@ export class MermaidRenderer {
     // First attempt to render
     const diagramsFound = this.renderMermaidDiagrams();
 
-    // If no diagrams found and we haven't exceeded max attempts, retry with exponential backoff
-    if (!diagramsFound && this.renderAttempts < this.maxRenderAttempts) {
-      // More aggressive retry strategy, starting with shorter intervals
+    if (diagramsFound) return; // Diagrams found and queued — no retry needed.
+
+    // If the MutationObserver is already active, it will pick up any
+    // late-arriving mermaid blocks, so further retries are unnecessary.
+    if (this.mutationObserver) return;
+
+    if (this.renderAttempts < this.maxRenderAttempts) {
       const backoffTime = Math.min(
         300 * Math.pow(1.4, this.renderAttempts),
         10000,
-      ); // Max 10 seconds
+      );
 
       if (this.retryTimeout) {
         clearTimeout(this.retryTimeout);
@@ -731,102 +853,201 @@ export class MermaidRenderer {
    * language labels), and pushes the underlying `<pre>` elements onto
    * the {@link renderQueue} for sequential processing.
    *
-   * Two discovery strategies are used:
-   * 1. **Primary** — `getElementsByClassName("language-mermaid")`.
-   * 2. **Fallback** — Iterates all `<pre>` elements and checks for a
-   *    child `<code>` with a `mermaid` or `language-mermaid` class.
-   *    This handles edge-cases in certain SSR output formats.
+   * Uses a single `querySelectorAll('pre > code.mermaid, pre > code.language-mermaid')`
+   * selector that matches both commonly-produced VitePress class patterns in
+   * one pass, avoiding the need to scan all `<pre>` elements on the page.
+   *
+   * Elements that have already been processed (carrying a
+   * `data-mermaid-processed` attribute) are skipped to prevent duplicate
+   * rendering.
    *
    * @returns `true` if at least one `<pre>` element was discovered and
    *   queued; `false` otherwise.
    */
   private renderMermaidDiagrams(): boolean {
     try {
-      // First try to find diagrams using the standard class
-      let mermaidWrappers = document.getElementsByClassName('language-mermaid');
+      // Collect mermaid <pre> elements from two structural patterns:
+      // 1. VitePress standard: <div class="language-mermaid">... <pre><code class="language-mermaid">
+      // 2. Direct code block:  <pre><code class="mermaid"> or <pre><code class="language-mermaid">
+      // 3. SSR fallback:       <div class="language-mermaid">... <pre>text</pre> (no <code>)
+      const preElements: HTMLPreElement[] = [];
+      const seen = new Set<HTMLPreElement>();
 
-      // If no diagrams found, try an alternative selector that might work in SSR context
-      if (mermaidWrappers.length === 0) {
-        const preElements = document.querySelectorAll('pre');
-        const filteredElements = Array.from(preElements).filter((el) => {
-          // Check if this pre element contains mermaid code
-          const codeElement = el.querySelector('code');
-          if (
-            codeElement &&
-            (codeElement.className.includes('mermaid') ||
-              codeElement.className.includes('language-mermaid'))
-          ) {
-            return true;
-          }
-          return false;
-        });
+      // Pattern 1 & 2: find <code> elements with mermaid classes and map to parent <pre>
+      const codeElements = document.querySelectorAll(
+        'pre > code.mermaid, pre > code.language-mermaid',
+      );
+      codeElements.forEach((codeEl) => {
+        const pre = codeEl.parentElement;
+        if (
+          pre &&
+          pre instanceof HTMLPreElement &&
+          !seen.has(pre) &&
+          !pre.hasAttribute('data-mermaid-processed')
+        ) {
+          seen.add(pre);
+          preElements.push(pre);
+          pre.setAttribute('data-mermaid-processed', '');
+        }
+      });
 
-        if (filteredElements.length > 0) {
-          // Create a proper array-like object that TypeScript can understand
-          const customCollection: HTMLCollectionOf<Element> = {
-            length: filteredElements.length,
-            item(i: number) {
-              return i >= 0 && i < filteredElements.length
-                ? filteredElements[i]
-                : null;
-            },
-            namedItem(name: string) {
-              return null; // We don't support named items in our custom collection
-            },
-            // Implement Symbol.iterator using the array iterator to satisfy disposal typing
-            [Symbol.iterator](): ArrayIterator<Element> {
-              return filteredElements[Symbol.iterator]();
-            },
-            // Add indexed access
-            ...filteredElements.reduce(
-              (acc, el, i) => ({ ...acc, [i]: el }),
-              {},
-            ),
-          };
+      // Pattern 3: find .language-mermaid wrappers that contain a <pre> without
+      // a <code> child (SSR edge-case). Already-seen elements are skipped.
+      const wrappers = document.getElementsByClassName('language-mermaid');
+      Array.from(wrappers).forEach((wrapper) => {
+        // Skip wrappers that are <code> elements themselves (already caught above)
+        if (wrapper.tagName.toLowerCase() === 'code') return;
 
-          mermaidWrappers = customCollection;
+        const pre = wrapper.querySelector('pre');
+        if (
+          pre &&
+          pre instanceof HTMLPreElement &&
+          !seen.has(pre) &&
+          !pre.hasAttribute('data-mermaid-processed')
+        ) {
+          seen.add(pre);
+          preElements.push(pre);
+          pre.setAttribute('data-mermaid-processed', '');
+        }
+
+        // Also handle the case where the wrapper itself is a <pre>
+        if (
+          wrapper instanceof HTMLPreElement &&
+          !seen.has(wrapper) &&
+          !wrapper.hasAttribute('data-mermaid-processed')
+        ) {
+          seen.add(wrapper);
+          preElements.push(wrapper);
+          wrapper.setAttribute('data-mermaid-processed', '');
+        }
+      });
+
+      if (preElements.length === 0) return false;
+
+      // Clean up VitePress wrappers on the elements we found.
+      preElements.forEach((pre) => {
+        const wrapper = pre.closest('.language-mermaid');
+        if (wrapper) {
+          this.cleanupMermaidWrapper(wrapper);
+        }
+      });
+
+      // Partition elements into those already in the viewport (render
+      // immediately) and those below the fold (defer via IntersectionObserver
+      // when available).
+      const visibleElements: HTMLPreElement[] = [];
+      const offscreenElements: HTMLPreElement[] = [];
+
+      const hasIntersectionObserver =
+        typeof IntersectionObserver !== 'undefined';
+
+      for (const pre of preElements) {
+        // An element that already has a `.mermaid-wrapper` ancestor has been
+        // processed by a previous render pass — skip it entirely.
+        if (pre.closest('.mermaid-wrapper')) continue;
+
+        if (!hasIntersectionObserver) {
+          // No IntersectionObserver (SSR / Node) — render everything eagerly.
+          visibleElements.push(pre);
+          continue;
+        }
+
+        const rect = pre.getBoundingClientRect();
+
+        // When the viewport dimensions are zero (happens in jsdom / happy-dom
+        // test environments or during SSR), fall back to eager rendering.
+        if (window.innerWidth === 0 || window.innerHeight === 0) {
+          visibleElements.push(pre);
+          continue;
+        }
+
+        // An element with zero dimensions (common in test environments
+        // and before layout) should be rendered eagerly since we cannot
+        // reliably determine if it is in the viewport.
+        const hasZeroDimensions = rect.width === 0 && rect.height === 0;
+
+        const isInViewport =
+          hasZeroDimensions ||
+          (rect.top < window.innerHeight &&
+            rect.bottom > 0 &&
+            rect.left < window.innerWidth &&
+            rect.right > 0);
+
+        if (isInViewport) {
+          visibleElements.push(pre);
+        } else {
+          offscreenElements.push(pre);
         }
       }
 
-      if (mermaidWrappers.length === 0) return false;
-
-      // Cleanup wrappers
-      Array.from(mermaidWrappers).forEach((wrapper) =>
-        this.cleanupMermaidWrapper(wrapper),
-      );
-
-      // Get all diagram elements
-      const mermaidElements = Array.from(mermaidWrappers)
-        .map((wrapper) => {
-          // Try to find pre element directly
-          let preElement = wrapper.querySelector('pre');
-
-          // If not found and the wrapper itself is a pre element, use it
-          if (!preElement && wrapper.tagName.toLowerCase() === 'pre') {
-            preElement = wrapper as HTMLPreElement;
-          }
-
-          return preElement;
-        })
-        .filter(
-          (element): element is HTMLPreElement =>
-            element instanceof HTMLPreElement,
-        );
-
-      // Add diagrams to render queue
-      if (mermaidElements.length > 0) {
-        this.renderQueue.push(...mermaidElements);
-
-        // Start rendering if not already in progress
+      // Render visible diagrams immediately.
+      if (visibleElements.length > 0) {
+        this.renderQueue.push(...visibleElements);
         if (!this.isRendering) {
           this.renderNextDiagram();
         }
       }
 
-      return mermaidElements.length > 0;
+      // Defer offscreen diagrams with IntersectionObserver (only when available).
+      if (offscreenElements.length > 0) {
+        this.observeOffscreenElements(offscreenElements);
+      }
+
+      return visibleElements.length > 0 || offscreenElements.length > 0;
     } catch (error) {
       console.error('Error rendering Mermaid diagrams:', error);
       return false;
+    }
+  }
+
+  /**
+   * Ensures offscreen `<pre>` elements are observed by an
+   * `IntersectionObserver` and enqueued for rendering as soon as
+   * they scroll into the viewport.
+   *
+   * Reuses the existing observer when possible — only creating a new
+   * one when it does not yet exist. On route changes
+   * ({@link handleRouteChange}), the observer is disconnected and
+   * re-created for the new page content.
+   *
+   * @param elements - `<pre>` elements that are currently below the fold.
+   */
+  private observeOffscreenElements(elements: HTMLPreElement[]): void {
+    // Create the observer only if it does not already exist.
+    // Reusing the observer across multiple calls avoids unnecessary
+    // teardown/recreate cycles when dynamic content is injected
+    // without a route change.
+    if (!this.lazyObserver) {
+      this.lazyObserver = new IntersectionObserver(
+        (entries) => {
+          const newlyVisible: HTMLPreElement[] = [];
+
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              const pre = entry.target as HTMLPreElement;
+              this.lazyObserver!.unobserve(pre);
+              newlyVisible.push(pre);
+            }
+          }
+
+          if (newlyVisible.length > 0) {
+            this.renderQueue.push(...newlyVisible);
+            if (!this.isRendering) {
+              this.renderNextDiagram();
+            }
+          }
+        },
+        {
+          // Start loading slightly before the element enters the viewport
+          // so the diagram is ready when the user scrolls to it.
+          rootMargin: '200px 0px',
+          threshold: 0,
+        },
+      );
+    }
+
+    for (const pre of elements) {
+      this.lazyObserver.observe(pre);
     }
   }
 }

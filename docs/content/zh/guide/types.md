@@ -54,15 +54,18 @@
 
 ### `ToolbarText`
 
-| Key                | 默认英文            |
-| :----------------- | :------------------ |
-| `zoomIn`           | `Zoom In`           |
-| `zoomOut`          | `Zoom Out`          |
-| `resetView`        | `Reset View`        |
-| `copyCode`         | `Copy Code`         |
-| `copyCodeCopied`   | `Copied`            |
-| `download`         | `Download Diagram`  |
-| `toggleFullscreen` | `Toggle Fullscreen` |
+| Key                          | 默认英文                   |
+| :--------------------------- | :------------------------- |
+| `zoomIn`                     | `Zoom In`                  |
+| `zoomOut`                    | `Zoom Out`                 |
+| `resetView`                  | `Reset View`               |
+| `copyCode`                   | `Copy Code`                |
+| `copyCodeCopied`             | `Copied`                   |
+| `download`                   | `Download Diagram`         |
+| `toggleFullscreen`           | `Toggle Fullscreen`        |
+| `renderErrorText`            | `Failed to render diagram` |
+| `toggleErrorDetailsText`     | `Show Details`             |
+| `toggleErrorDetailsHideText` | `Hide Details`             |
 
 解析顺序：`locales[localeIndex].tooltips[key]` → `tooltips[key]`
 → 内置默认值。空字符串会在每层被忽略。

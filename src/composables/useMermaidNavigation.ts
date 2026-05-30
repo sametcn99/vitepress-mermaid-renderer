@@ -51,6 +51,19 @@ import { ref, watch, type Ref } from 'vue';
 export type FullscreenBehavior = 'browser' | 'dialog';
 
 /**
+ * Optional configuration for zoom and pan limits in
+ * {@link useMermaidNavigation}.
+ */
+export interface MermaidNavigationOptions {
+  /** Minimum zoom scale. Defaults to `0.2`. */
+  minScale?: number;
+  /** Maximum zoom scale. Defaults to `10`. */
+  maxScale?: number;
+  /** Zoom factor applied on each zoom-in / zoom-out step. Defaults to `1.2`. */
+  zoomStep?: number;
+}
+
+/**
  * Reactive state exposed by the {@link useMermaidNavigation} composable.
  *
  * All values are Vue `Ref` objects and are two-way bound to the diagram
@@ -152,6 +165,7 @@ export interface MermaidNavigationActions {
  * In fullscreen (and on desktop), single-finger/single-click drag pans
  * the diagram, and mouse-wheel / pinch zooms.
  *
+ * @param options - Optional zoom limit overrides.
  * @returns A merged object of {@link MermaidNavigationState} and
  *   {@link MermaidNavigationActions}.
  *
@@ -163,8 +177,13 @@ export interface MermaidNavigationActions {
  * </script>
  * ```
  */
-export function useMermaidNavigation(): MermaidNavigationState &
-  MermaidNavigationActions {
+export function useMermaidNavigation(
+  options: MermaidNavigationOptions = {},
+): MermaidNavigationState & MermaidNavigationActions {
+  const MIN_SCALE = options.minScale ?? 0.2;
+  const MAX_SCALE = options.maxScale ?? 10;
+  const ZOOM_STEP = options.zoomStep ?? 1.2;
+
   // State
   const scale = ref(1);
   const translateX = ref(0);
@@ -212,20 +231,20 @@ export function useMermaidNavigation(): MermaidNavigationState &
    */
   const PAN_STEP = 50;
 
-  /** Increases the zoom level by a factor of 1.2 (20 %). */
+  /** Increases the zoom level by {@link ZOOM_STEP}. */
   const zoomIn = () => {
-    scale.value = scale.value * 1.2;
+    scale.value = scale.value * ZOOM_STEP;
   };
 
   /**
-   * Decreases the zoom level by a factor of 1.2. The minimum zoom
-   * scale is clamped at `0.2` (20 %) to prevent the diagram from
+   * Decreases the zoom level by {@link ZOOM_STEP}. The minimum zoom
+   * scale is clamped at {@link MIN_SCALE} to prevent the diagram from
    * becoming invisible.
    */
   const zoomOut = () => {
-    if (scale.value > 0.2) {
+    if (scale.value > MIN_SCALE) {
       // Prevent extreme zooming out
-      scale.value = scale.value / 1.2;
+      scale.value = scale.value / ZOOM_STEP;
     }
   };
 
@@ -371,7 +390,7 @@ export function useMermaidNavigation(): MermaidNavigationState &
    * normally so the page can scroll.
    *
    * The zoom factor is `±10 %` per wheel tick, clamped between
-   * `0.2` and `10`.
+   * {@link MIN_SCALE} and {@link MAX_SCALE}.
    *
    * @param e - The `wheel` event on the diagram wrapper.
    */
@@ -388,7 +407,7 @@ export function useMermaidNavigation(): MermaidNavigationState &
     const newScale = scale.value * (1 + delta);
 
     // Apply bounds to prevent extreme zooming
-    if (newScale >= 0.2 && newScale <= 10) {
+    if (newScale >= MIN_SCALE && newScale <= MAX_SCALE) {
       scale.value = newScale;
     }
   };
@@ -481,7 +500,7 @@ export function useMermaidNavigation(): MermaidNavigationState &
         if (initialTouchDistance.value > 0) {
           const zoomRatio = currentDistance / initialTouchDistance.value;
           const newScale = scale.value * (1 + (zoomRatio - 1) * 0.2);
-          if (newScale >= 0.2 && newScale <= 10) {
+          if (newScale >= MIN_SCALE && newScale <= MAX_SCALE) {
             scale.value = newScale;
           }
           initialTouchDistance.value = currentDistance;
@@ -527,7 +546,7 @@ export function useMermaidNavigation(): MermaidNavigationState &
         const newScale = scale.value * (1 + (zoomRatio - 1) * 0.2);
 
         // Limit scale to reasonable bounds
-        if (newScale >= 0.2 && newScale <= 10) {
+        if (newScale >= MIN_SCALE && newScale <= MAX_SCALE) {
           scale.value = newScale;
         }
 

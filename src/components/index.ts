@@ -35,11 +35,18 @@ export { default as MermaidError } from './MermaidError.vue';
 // Composables
 export { useMermaidNavigation } from '../composables/useMermaidNavigation';
 export { useMermaidRenderer } from '../composables/useMermaidRenderer';
+export {
+  onFullscreenChange,
+  offFullscreenChange,
+} from '../composables/useFullscreenManager';
+export { useMermaidDownload } from '../composables/useMermaidDownload';
+export { resetRenderPipeline } from '../composables/useMermaidRenderer';
 
 // Types
 export type {
   MermaidNavigationState,
   MermaidNavigationActions,
+  MermaidNavigationOptions,
 } from '../composables/useMermaidNavigation';
 
 export type {

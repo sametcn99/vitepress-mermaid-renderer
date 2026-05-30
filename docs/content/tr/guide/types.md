@@ -55,15 +55,18 @@ Bu seçenekler `mermaidRenderer.setToolbar()` içine geçirilir.
 
 ### `ToolbarText`
 
-| Anahtar            | Varsayılan İngilizce |
-| :----------------- | :------------------- |
-| `zoomIn`           | `Zoom In`            |
-| `zoomOut`          | `Zoom Out`           |
-| `resetView`        | `Reset View`         |
-| `copyCode`         | `Copy Code`          |
-| `copyCodeCopied`   | `Copied`             |
-| `download`         | `Download Diagram`   |
-| `toggleFullscreen` | `Toggle Fullscreen`  |
+| Anahtar                      | Varsayılan İngilizce       |
+| :--------------------------- | :------------------------- |
+| `zoomIn`                     | `Zoom In`                  |
+| `zoomOut`                    | `Zoom Out`                 |
+| `resetView`                  | `Reset View`               |
+| `copyCode`                   | `Copy Code`                |
+| `copyCodeCopied`             | `Copied`                   |
+| `download`                   | `Download Diagram`         |
+| `toggleFullscreen`           | `Toggle Fullscreen`        |
+| `renderErrorText`            | `Failed to render diagram` |
+| `toggleErrorDetailsText`     | `Show Details`             |
+| `toggleErrorDetailsHideText` | `Hide Details`             |
 
 Çözüm sırası: `locales[localeIndex].tooltips[key]` → `tooltips[key]` → yerleşik
 varsayılan. Boş string değerleri her katmanda yok sayılır.

@@ -13,7 +13,7 @@
   Used by {@link MermaidDiagram} as a child component.
 -->
 <template>
-  <div v-if="renderError" class="diagram-error">
+  <div v-if="renderError" class="diagram-error" role="alert">
     <div class="error-message">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -27,9 +27,13 @@
         <line x1="12" y1="8" x2="12" y2="12"></line>
         <line x1="12" y1="16" x2="12.01" y2="16"></line>
       </svg>
-      <span>Failed to render diagram</span>
+      <span>{{ props.errorText || 'Failed to render diagram' }}</span>
       <button @click="toggleErrorDetails" class="error-toggle-button">
-        {{ showErrorDetails ? 'Hide Details' : 'Show Details' }}
+        {{
+          showErrorDetails
+            ? props.hideDetailsText || 'Hide Details'
+            : props.showDetailsText || 'Show Details'
+        }}
       </button>
     </div>
     <pre v-if="showErrorDetails" class="error-details">{{
@@ -53,6 +57,9 @@ import { ref } from 'vue';
 const props = defineProps<{
   renderError: boolean;
   renderErrorDetails: string;
+  errorText?: string;
+  showDetailsText?: string;
+  hideDetailsText?: string;
 }>();
 
 /**

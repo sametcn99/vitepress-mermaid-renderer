@@ -61,9 +61,27 @@ tutabilir.
 
 - Ekran okuyucular diyagram bağlamı için `showLanguageLabel` değerinden
   yararlanabilir. Kapalı kullanıyorsanız çevrede açıklayıcı metin sağlayın.
+- Her diyagram sarmalayıcısı `role="img"` ve `aria-label` bulundurur.
+- Klavye kullanıcısı diyagram odaklıyken yakınlaştırma (`+`/`-`), sıfırlama
+  (`0`), kaydırma (ok tuşları) ve tam ekran (`f`) yapabilir.
+- Görsel olarak gizlenmiş bir durum duyurucusu "Diyagram yükleniyor…" ve
+  "Diyagram yüklendi" durumlarını okur.
+- Hata konteyneri `role="alert"` kullanır; ekran okuyucular render hatalarını
+  hemen duyurur.
+- `prefers-reduced-motion` ayarına otomatik olarak saygı duyulur; azaltılmış
+  hareket isteyen kullanıcılar için animasyon ve geçişler devre dışı bırakılır.
 - Kritik bilgi taşıyan diyagramlar için çevre metinde eşdeğer açıklama sunun.
 - Yerelleştirilmiş toolbar metinlerinin sadece görsel tooltip değil, anlamlı
   `aria-label` değeri olarak da çalıştığını doğrulayın.
+
+## 7.5. Güvenlik notu
+
+- Varsayılan `securityLevel` değeri `'strict'` olup Mermaid diyagramlarındaki
+  inline HTML'i devre dışı bırakarak XSS'i önler. Yalnızca sitedeki tüm diyagram
+  kaynaklarına güveniyorsanız `'loose'` kullanın.
+- SVG indirme işlemleri dışa aktarımdan önce sterilize edilir — `<script>`,
+  `<iframe>`, `<object>`, `<embed>`, stylesheet `<link>` öğeleri ve `on*` olay
+  işleyici nitelikleri `securityLevel` ayarından bağımsız olarak kaldırılır.
 
 ## 8. En iyi uygulamalar
 

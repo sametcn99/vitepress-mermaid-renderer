@@ -532,19 +532,6 @@ const updateFullscreenControls = () => {
   }
 };
 
-onMounted(() => {
-  // Set controls visible immediately
-  if (controls.value) {
-    controls.value.style.opacity = '1';
-    controls.value.style.visibility = 'visible';
-  }
-
-  if (mobileControls.value) {
-    mobileControls.value.style.opacity = '1';
-    mobileControls.value.style.visibility = 'visible';
-  }
-});
-
 // Expose methods that parent might need
 defineExpose({
   updateFullscreenControls,

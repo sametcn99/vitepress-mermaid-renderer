@@ -59,10 +59,28 @@ stale dependencies.
 - Clean `.vitepress/cache` before `vitepress build` when you change Mermaid
   dependencies; stale cache entries lock in old versions of the renderer.
 
+## 6.5. Security note
+
+- The default `securityLevel` is `'strict'`, which disables inline HTML in
+  Mermaid diagrams to prevent XSS. Only use `'loose'` if you trust every diagram
+  source on the site.
+- SVG downloads are sanitized before export — `<script>`, `<iframe>`,
+  `<object>`, `<embed>`, stylesheet `<link>` elements, and `on*` event-handler
+  attributes are stripped regardless of `securityLevel`.
+
 ## 7. Accessibility checks
 
 - Screen readers rely on `showLanguageLabel` to announce that the container is a
   Mermaid diagram. Keep it enabled or add descriptive labels manually.
+- Each diagram wrapper has `role="img"` and an `aria-label` for screen readers.
+- Keyboard users can zoom (`+`/`-`), reset (`0`), pan (arrow keys), and toggle
+  fullscreen (`f`) when the diagram has focus.
+- A visually-hidden announcer reads "Loading diagram…" and "Diagram loaded"
+  states.
+- The error container uses `role="alert"` so rendering failures are announced
+  immediately.
+- `prefers-reduced-motion` is respected automatically; animations are disabled
+  for users who request it.
 - Provide `alt` text equivalents in surrounding prose when diagrams convey
   critical information.
 - Verify localized toolbar strings are meaningful as `aria-label` values, not

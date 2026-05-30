@@ -54,8 +54,21 @@ sidebarDepth: 2
 
 - 屏幕阅读器可以利用 `showLanguageLabel`
   理解图表上下文。如果关闭它，请在周围文本中提供说明。
+- 每个图表包装器具有 `role="img"` 和 `aria-label`，屏幕阅读器会播报图表用途。
+- 键盘用户可以在图表获得焦点时缩放（`+`/`-`）、重置（`0`）、平移（方向键）和切换全屏（`f`）。
+- 视觉隐藏的状态播报器会朗读"正在加载图表…"和"图表已加载"状态。
+- 错误容器使用 `role="alert"`，屏幕阅读器会立即播报渲染失败。
+- `prefers-reduced-motion`
+  会被自动遵守；对请求减少动画的用户，所有动画和过渡效果将被禁用。
 - 对承载关键信息的图表，请在正文中提供等价说明。
 - 验证本地化工具栏文本不仅是视觉 tooltip，也能作为有意义的 `aria-label`。
+
+## 7.5. 安全性说明
+
+- 默认 `securityLevel` 为 `'strict'`，禁用 Mermaid 图表中的 inline
+  HTML 以防止 XSS。仅在你信任站点上所有图表来源时使用 `'loose'`。
+- SVG 下载在导出前会进行消毒——`<script>`、`<iframe>`、`<object>`、`<embed>`、stylesheet
+  `<link>` 元素和 `on*` 事件处理属性无论 `securityLevel` 设置如何都会被移除。
 
 ## 8. 最佳实践回顾
 

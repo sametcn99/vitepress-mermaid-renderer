@@ -60,6 +60,10 @@ The toolbar buttons ship with English text by default. Pass the active
 option of `setToolbar`. Missing keys fall back to the global override and then
 to the built-in English defaults.
 
+Error messages shown when a diagram fails to render can also be localized
+through the `renderErrorText`, `toggleErrorDetailsText`, and
+`toggleErrorDetailsHideText` keys.
+
 ```typescript
 import { useData } from 'vitepress';
 
@@ -78,6 +82,9 @@ mermaidRenderer.setToolbar({
           copyCodeCopied: 'Kopyalandı',
           download: 'Diyagramı indir',
           toggleFullscreen: 'Tam ekranı aç/kapa',
+          renderErrorText: 'Diyagram render edilemedi',
+          toggleErrorDetailsText: 'Detayları göster',
+          toggleErrorDetailsHideText: 'Detayları gizle',
         },
       },
       zh: {
@@ -89,6 +96,9 @@ mermaidRenderer.setToolbar({
           copyCodeCopied: '已复制',
           download: '下载图表',
           toggleFullscreen: '切换全屏',
+          renderErrorText: '图表渲染失败',
+          toggleErrorDetailsText: '显示详情',
+          toggleErrorDetailsHideText: '隐藏详情',
         },
       },
     },
@@ -138,6 +148,10 @@ Empty strings are ignored at every layer so toolbar text can never be blanked
 out by accident. Use `copyCodeCopied` to translate the short success message
 shown after the copy button writes to the clipboard.
 
+`renderErrorText` overrides the error heading shown when a diagram fails to
+render. `toggleErrorDetailsText` and `toggleErrorDetailsHideText` override the
+button labels that show and hide the technical error details.
+
 Every `setToolbar()` invocation dispatches a `vitepress-mermaid:toolbar-updated`
 event. Mounted diagrams listen for that event and apply new toolbar text without
 remounting the SVG.
@@ -146,7 +160,17 @@ remounting the SVG.
 
 - Keep `showLanguageLabel` enabled so screen readers announce `Mermaid diagram`
   before the SVG is focused.
-- Maintain `resetView` on every breakpoint; it’s a reliable escape hatch when
+- Each diagram wrapper has `role="img"` and an `aria-label` so screen readers
+  announce the diagram purpose.
+- Keyboard navigation is available when the diagram has focus (`tabindex="0"`):
+  `+`/`-` for zoom, `0` for reset, arrow keys for panning, `f` for fullscreen.
+- A visually-hidden status announcer (`role="status"`, `aria-live="polite"`)
+  reads "Loading diagram…" and "Diagram loaded" states.
+- The error container uses `role="alert"` so screen readers immediately announce
+  rendering failures.
+- `prefers-reduced-motion` is respected — animations and transitions are
+  disabled for users who request reduced motion in their OS settings.
+- Maintain `resetView` on every breakpoint; it's a reliable escape hatch when
   zoom/drag generate confusion.
 - Avoid stacking too many buttons on mobile to prevent accidental taps, and use
   `positions` to steer controls away from diagram hotspots.
