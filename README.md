@@ -1,7 +1,7 @@
 # VitePress Mermaid Renderer
 
-[![npm version](https://img.shields.io/npm/v/vitepress-mermaid-renderer)](https://www.npmjs.com/package/vitepress-mermaid-renderer)
-[![npm monthly downloads](https://img.shields.io/npm/dm/vitepress-mermaid-renderer)](https://www.npmjs.com/package/vitepress-mermaid-renderer)
+[![npm version](https://img.shields.io/npm/v/vitepress-mermaid-renderer)](https://npmx.dev/package/vitepress-mermaid-renderer)
+[![npm monthly downloads](https://img.shields.io/npm/dm/vitepress-mermaid-renderer)](https://npmx.dev/package/vitepress-mermaid-renderer)
 [![Release](https://github.com/sametcn99/vitepress-mermaid-renderer/actions/workflows/release.yml/badge.svg)](https://github.com/sametcn99/vitepress-mermaid-renderer/actions/workflows/release.yml)
 
 Transform static Mermaid diagrams into interactive visualizations in VitePress.

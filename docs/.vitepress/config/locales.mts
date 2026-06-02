@@ -236,7 +236,7 @@ const createThemeConfig = (locale: LocaleKey): DefaultTheme.Config => {
           },
           {
             text: text.npmPackage,
-            link: 'https://www.npmjs.com/package/vitepress-mermaid-renderer',
+            link: 'https://npmx.dev/package/vitepress-mermaid-renderer',
           },
         ],
       },
@@ -293,7 +293,7 @@ export const commonThemeConfig: DefaultTheme.Config = {
     },
     {
       icon: 'npm',
-      link: 'https://www.npmjs.com/package/vitepress-mermaid-renderer',
+      link: 'https://npmx.dev/package/vitepress-mermaid-renderer',
     },
   ],
   externalLinkIcon: true,
