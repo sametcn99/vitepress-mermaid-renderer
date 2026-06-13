@@ -12,7 +12,7 @@
       "import": "./dist/vitepress-mermaid-renderer.js",
       "default": "./dist/vitepress-mermaid-renderer.js"
     },
-    "./css": "./dist/vitepress-mermaid-renderer.css"
+    "./css": "./dist/index.css"
   },
   "files": [
     "dist"
