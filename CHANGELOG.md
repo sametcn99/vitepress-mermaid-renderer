@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.28
+
+- Updated dependencies to their latest versions.
+
 ## 1.1.26
 
 - Install size minification
