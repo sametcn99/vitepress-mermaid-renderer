@@ -25,13 +25,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24.15.0
           registry-url: https://registry.npmjs.org
           always-auth: false
 
       - name: Prepare npm trusted publishing context
         run: |
-          npm i -g npm@latest
           npm --version
           npm config delete //registry.npmjs.org/:_authToken || true
           rm -f ~/.npmrc
