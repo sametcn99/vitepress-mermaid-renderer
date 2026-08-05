@@ -21,8 +21,7 @@ sidebarDepth: 2
 
 ## 3. 工具栏按钮缺失
 
-- 检查 `setToolbar()`
-  配置。Renderer 会进行深度合并，错误的嵌套对象可能影响所有断点。
+- 检查 `setToolbar()` 配置。部分嵌套选项会针对每个断点分别与默认值合并。
 - 如果需要为图表使用更精简的 toolbar，请在首次 render 前调用
   `mermaidRenderer.setToolbar()`。
 - 移动端 toolbar 会在窄视口下更精简。使用 `positions`
@@ -40,7 +39,7 @@ sidebarDepth: 2
 - 确认 VitePress locale key 与 `i18n.locales` 中的 key 一致。本 docs 站点支持
   `root`、`tr` 和 `zh`。
 - 将 `useData()` 中的 `localeIndex.value` 传给
-  `setToolbar({ i18n: { localeIndex } })`。
+  `setToolbar({ i18n: { localeIndex: localeIndex.value } })`。
 - 如果要翻译复制成功消息，请包含 `copyCodeCopied` key。
 - 为了让客户端 locale 切换更新已挂载图表，请 watch `localeIndex` 并再次调用
   `setToolbar()`。
@@ -52,8 +51,9 @@ sidebarDepth: 2
 
 ## 7. 可访问性检查
 
-- 屏幕阅读器可以利用 `showLanguageLabel`
-  理解图表上下文。如果关闭它，请在周围文本中提供说明。
+- `showLanguageLabel` 只控制原始可见的 VitePress `mermaid`
+  标签，不控制图表包装器的 ARIA 属性。包装器本身已经提供 `role="img"` 和
+  `aria-label`。
 - 每个图表包装器具有 `role="img"` 和 `aria-label`，屏幕阅读器会播报图表用途。
 - 键盘用户可以在图表获得焦点时缩放（`+`/`-`）、重置（`0`）、平移（方向键）和切换全屏（`f`）。
 - 视觉隐藏的状态播报器会朗读"正在加载图表…"和"图表已加载"状态。

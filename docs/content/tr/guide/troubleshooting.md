@@ -26,8 +26,8 @@ dependency sorununu çözer.
 
 ## 3. Araç çubuğu düğmeleri eksik
 
-- `setToolbar()` yapılandırmasını kontrol edin. Renderer derin merge yapar;
-  hatalı nested nesneler tüm breakpoint’lerde düğme kaybına neden olabilir.
+- `setToolbar()` yapılandırmasını kontrol edin. Kısmi iç içe seçenekler her
+  breakpoint için varsayılanlarla ayrı ayrı birleştirilir.
 - Diyagram başına sade bir toolbar gerekiyorsa `mermaidRenderer.setToolbar()`
   çağrısını ilk render öncesinde yapın.
 - Mobil toolbar dar ekranlarda sadeleşir. `positions` ile kontrolleri
@@ -46,7 +46,7 @@ dependency sorununu çözer.
   eşleştiğini doğrulayın. Bu docs sitesinde desteklenen anahtarlar `root`, `tr`
   ve `zh`.
 - `useData()` içindeki `localeIndex.value` değerini
-  `setToolbar({ i18n: { localeIndex } })` içine geçin.
+  `setToolbar({ i18n: { localeIndex: localeIndex.value } })` içine geçin.
 - Kopyalama başarı mesajını çevirmek için `copyCodeCopied` anahtarını ekleyin.
 - Client-side locale geçişlerinde mount edilmiş diyagramları güncellemek için
   `localeIndex` değerini watch edip `setToolbar()` çağrısını tekrarlayın.
@@ -59,8 +59,9 @@ tutabilir.
 
 ## 7. Erişilebilirlik kontrolleri
 
-- Ekran okuyucular diyagram bağlamı için `showLanguageLabel` değerinden
-  yararlanabilir. Kapalı kullanıyorsanız çevrede açıklayıcı metin sağlayın.
+- `showLanguageLabel`, orijinal görünür VitePress `mermaid` etiketini kontrol
+  eder; diyagram sarmalayıcısının ARIA niteliklerini kontrol etmez. Sarmalayıcı
+  zaten `role="img"` ve `aria-label` sağlar.
 - Her diyagram sarmalayıcısı `role="img"` ve `aria-label` bulundurur.
 - Klavye kullanıcısı diyagram odaklıyken yakınlaştırma (`+`/`-`), sıfırlama
   (`0`), kaydırma (ok tuşları) ve tam ekran (`f`) yapabilir.

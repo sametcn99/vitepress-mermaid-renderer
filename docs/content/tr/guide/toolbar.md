@@ -74,10 +74,13 @@ mermaidRenderer.setToolbar({
           copyCode: 'Kodu kopyala',
           copyCodeCopied: 'Kopyalandı',
           download: 'Diyagramı indir',
+          toggleFullscreen: 'Tam ekranı aç/kapa',
           renderErrorText: 'Diyagram render edilemedi',
           toggleErrorDetailsText: 'Detayları göster',
           toggleErrorDetailsHideText: 'Detayları gizle',
-          toggleFullscreen: 'Tam ekranı aç/kapa',
+        },
+      },
+      zh: {
         tooltips: {
           zoomIn: '放大',
           zoomOut: '缩小',
@@ -85,10 +88,10 @@ mermaidRenderer.setToolbar({
           copyCode: '复制代码',
           copyCodeCopied: '已复制',
           download: '下载图表',
+          toggleFullscreen: '切换全屏',
           renderErrorText: '图表渲染失败',
           toggleErrorDetailsText: '显示详情',
           toggleErrorDetailsHideText: '隐藏详情',
-          toggleFullscreen: '切换全屏',
         },
       },
     },
@@ -115,8 +118,9 @@ etmeden yeni araç çubuğu metinlerini uygular.
 
 ## Erişilebilirlik notları
 
-- `showLanguageLabel` açık kaldığında ekran okuyucular Mermaid diyagram
-  bağlamını daha kolay duyurur.
+- Orijinal görünür VitePress `mermaid` etiketini korumak istiyorsanız
+  `showLanguageLabel` değerini açık tutun. Diyagram sarmalayıcısının
+  `role="img"` ve `aria-label` değerleri bu ayardan bağımsızdır.
 - Her diyagram yürüneyicisi `role="img"` ve `aria-label` bulundurur; ekran
   okuyucular diyagram amacını duyurur.
 - Diyagram odak aldığında (`tabindex="0"`) klavye navigasyonu kullanılabilir:

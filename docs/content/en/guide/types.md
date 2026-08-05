@@ -3,24 +3,24 @@
 This page provides a reference for the toolbar configuration options available
 in **VitePress Mermaid Renderer**.
 
-## Top-Level Configuration
+## Renderer Configuration
 
-These options are passed to the `createMermaidRenderer()` function or set via
-`mermaidRenderer.setConfig()`.
+`createMermaidRenderer()` accepts Mermaid configuration options directly. It
+also accepts the renderer-specific `static` option shown below.
 
-| Option              | Type                      | Default     | Description                                                           |
-| :------------------ | :------------------------ | :---------- | :-------------------------------------------------------------------- |
-| `showLanguageLabel` | `boolean`                 | `true`      | Toggles the original VitePress `mermaid` badge.                       |
-| `downloadFormat`    | `'svg' \| 'png' \| 'jpg'` | `'svg'`     | Specifies the default download format for diagrams.                   |
-| `fullscreenMode`    | `'browser' \| 'dialog'`   | `'browser'` | Controls whether fullscreen uses the native API or an in-page dialog. |
-| `desktop`           | `object`                  | `{}`        | Toolbar configuration for desktop devices.                            |
-| `mobile`            | `object`                  | `{}`        | Toolbar configuration for mobile devices.                             |
-| `fullscreen`        | `object`                  | `{}`        | Toolbar configuration when in fullscreen mode.                        |
-| `i18n`              | `object`                  | English     | Toolbar text localization, keyed by VitePress `localeIndex`.          |
+| Option   | Type      | Default | Description                                                                 |
+| :------- | :-------- | :------ | :-------------------------------------------------------------------------- |
+| `static` | `boolean` | `false` | Renders a plain theme-aware SVG without controls or interactive navigation. |
 
----
+All other renderer options, such as `theme`, `flowchart`, and `securityLevel`,
+follow the
+[Mermaid configuration schema](https://mermaid.js.org/config/configuration.html).
 
 ## Toolbar Configuration
+
+These options are passed to `mermaidRenderer.setToolbar()`.
+
+---
 
 The `desktop`, `mobile`, and `fullscreen` objects share the same structure to
 control toolbar behavior.

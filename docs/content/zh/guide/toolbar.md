@@ -109,7 +109,9 @@ mermaidRenderer.setToolbar({
 
 ## 可访问性建议
 
-- 保持 `showLanguageLabel` 开启可以帮助屏幕阅读器识别 Mermaid 图表上下文。
+- 如果希望保留图表旁边原始的 VitePress `mermaid` 可见标签，请保持
+  `showLanguageLabel` 开启。图表包装器自身的 `role="img"` 和 `aria-label`
+  与此设置无关。
 - 每个图表包装器具有 `role="img"` 和 `aria-label`，屏幕阅读器会播报图表用途。
 - 图表获得焦点时（`tabindex="0"`），键盘用户可以缩放（`+`/`-`）、重置（`0`）、平移（方向键）和切换全屏（`f`）。
 - 视觉隐藏的状态播报器会朗读"正在加载图表…"和"图表已加载"状态。

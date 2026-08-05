@@ -27,7 +27,7 @@ const mermaidRenderer = createMermaidRenderer({
     axisFormatter: (value) =>
       value.toLocaleString('tr-TR', { timeZone: 'UTC' }),
   },
-  securityLevel: 'loose',
+  securityLevel: 'strict',
 });
 ```
 

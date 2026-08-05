@@ -40,6 +40,15 @@ import {
 } from './toolbar';
 
 /**
+ * Renderer options accepted by {@link MermaidRenderer.getInstance} and
+ * {@link createMermaidRenderer}.
+ */
+export type MermaidRendererOptions = MermaidConfig & {
+  /** Render diagrams as non-interactive SVGs while preserving theme updates. */
+  static?: boolean;
+};
+
+/**
  * Central orchestrator that discovers Mermaid code blocks inside VitePress pages,
  * mounts Vue-powered renderers for them, and retries rendering across hydration
  * boundaries, navigation events, and slower environments.
@@ -79,6 +88,9 @@ export class MermaidRenderer {
 
   /** Active Mermaid library configuration merged from defaults and user overrides. */
   private config: MermaidConfig;
+
+  /** Whether mounted diagrams omit every interactive control and gesture. */
+  private staticMode: boolean;
 
   /** Fully-resolved toolbar configuration passed to every diagram mount. */
   private toolbarConfig: ResolvedToolbarConfig;
@@ -134,8 +146,10 @@ export class MermaidRenderer {
    * @param config - Optional initial Mermaid configuration object.
    *   When provided, its values are deep-merged into the defaults.
    */
-  private constructor(config?: MermaidConfig) {
-    this.config = config ? this.deepMerge({}, config) : {};
+  private constructor(options?: MermaidRendererOptions) {
+    const { static: staticMode = false, ...config } = options ?? {};
+    this.config = this.deepMerge({}, config);
+    this.staticMode = staticMode;
     this.toolbarConfig = resolveToolbarConfig();
     this.initialize();
   }
@@ -161,11 +175,11 @@ export class MermaidRenderer {
    * MermaidRenderer.getInstance({ securityLevel: "strict" });
    * ```
    */
-  public static getInstance(config?: MermaidConfig): MermaidRenderer {
+  public static getInstance(options?: MermaidRendererOptions): MermaidRenderer {
     if (!MermaidRenderer.instance) {
-      MermaidRenderer.instance = new MermaidRenderer(config);
-    } else if (config) {
-      MermaidRenderer.instance.setConfig(config);
+      MermaidRenderer.instance = new MermaidRenderer(options);
+    } else if (options) {
+      MermaidRenderer.instance.setOptions(options);
     }
     return MermaidRenderer.instance;
   }
@@ -260,6 +274,18 @@ export class MermaidRenderer {
     this.dispatchConfigUpdate();
   }
 
+  /** Updates Mermaid configuration and, when supplied, static SVG mode. */
+  private setOptions(options: MermaidRendererOptions): void {
+    const { static: staticMode, ...config } = options;
+    if (staticMode !== undefined && staticMode !== this.staticMode) {
+      this.staticMode = staticMode;
+      this.dispatchStaticModeUpdate();
+    }
+    if (Object.keys(config).length > 0) {
+      this.setConfig(config);
+    }
+  }
+
   /**
    * Resolves and stores the toolbar options that will be passed to every
    * diagram component mounted after this call.
@@ -343,6 +369,19 @@ export class MermaidRenderer {
       );
     } catch (error) {
       console.error('Failed to dispatch Mermaid config update:', error);
+    }
+  }
+
+  /** Notifies mounted diagrams that their interactive rendering mode changed. */
+  private dispatchStaticModeUpdate(): void {
+    try {
+      document.dispatchEvent(
+        new CustomEvent<boolean>('vitepress-mermaid:static-mode-updated', {
+          detail: this.staticMode,
+        }),
+      );
+    } catch (error) {
+      console.error('Failed to dispatch Mermaid static mode update:', error);
     }
   }
 
@@ -489,6 +528,7 @@ export class MermaidRenderer {
           code,
           config: this.config,
           toolbar: this.toolbarConfig,
+          static: this.staticMode,
         }),
         wrapper,
       );

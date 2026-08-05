@@ -24,7 +24,7 @@
 -->
 <template>
   <div
-    v-if="mounted && isDialogFullscreenActive"
+    v-if="mounted && !isStatic && isDialogFullscreenActive"
     class="mermaid-dialog-backdrop"
     @click="handleToggleFullscreen"
     aria-hidden="true"
@@ -33,10 +33,14 @@
     v-if="mounted"
     ref="fullscreenWrapper"
     class="mermaid-container"
-    :class="{ 'dialog-fullscreen-active': isDialogFullscreenActive }"
+    :class="{
+      'dialog-fullscreen-active': isDialogFullscreenActive,
+      'static-mermaid-container': isStatic,
+    }"
     data-fullscreen-wrapper
   >
     <MermaidControls
+      v-if="!isStatic"
       ref="controlsRef"
       :scale="scale"
       :code="code"
@@ -54,6 +58,7 @@
     />
 
     <MermaidError
+      v-if="!isStatic"
       :render-error="renderError"
       :render-error-details="renderErrorDetails"
       :error-text="resolvedToolbar.i18n.tooltips.renderErrorText"
@@ -65,23 +70,26 @@
 
     <div
       class="diagram-wrapper"
-      tabindex="0"
-      role="img"
+      :tabindex="isStatic ? undefined : 0"
+      :role="isStatic ? undefined : 'img'"
       :aria-label="
-        renderError ? 'Diagram rendering failed' : 'Interactive Mermaid diagram'
+        isStatic
+          ? undefined
+          : renderError
+            ? 'Diagram rendering failed'
+            : 'Interactive Mermaid diagram'
       "
-      @keydown="handleKeyDown"
-      @mousedown="handleMouseDown"
-      @mousemove="handleMouseMove"
-      @mouseup="handleMouseUp"
-      @mouseleave="handleMouseLeave"
-      @wheel="handleWheelEvent"
-      @touchstart="handleTouchStartEvent"
-      @touchmove="handleTouchMoveEvent"
-      @touchend="handleTouchEndEvent"
+      @keydown="!isStatic && handleKeyDown($event)"
+      @mousedown="!isStatic && handleMouseDown($event)"
+      @mousemove="!isStatic && handleMouseMove($event)"
+      @mouseup="!isStatic && handleMouseUp()"
+      @mouseleave="!isStatic && handleMouseLeave()"
+      @wheel="!isStatic && handleWheelEvent($event)"
+      @touchstart="!isStatic && handleTouchStartEvent($event)"
+      @touchmove="!isStatic && handleTouchMoveEvent($event)"
+      @touchend="!isStatic && handleTouchEndEvent()"
     >
-      <!-- Screen-reader announcement for loading / rendered state -->
-      <span role="status" aria-live="polite" class="sr-only">
+      <span v-if="!isStatic" role="status" aria-live="polite" class="sr-only">
         {{ isRendered ? 'Diagram loaded' : 'Loading diagram…' }}
       </span>
       <div
@@ -90,8 +98,10 @@
         :aria-label="`Mermaid diagram: ${code.slice(0, 80)}`"
         :style="{
           opacity: isRendered ? 1 : 0,
-          transform: `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
-          cursor: isPanning ? 'grabbing' : 'grab',
+          transform: isStatic
+            ? undefined
+            : `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
+          cursor: isStatic ? undefined : isPanning ? 'grabbing' : 'grab',
         }"
       >
         {{ code }}
@@ -138,7 +148,11 @@ const props = defineProps<{
   code: string;
   config?: MermaidConfig;
   toolbar?: MermaidToolbarOptions | ResolvedToolbarConfig;
+  static?: boolean;
 }>();
+
+/** Whether this instance renders a plain, non-interactive SVG. */
+const isStatic = ref(props.static ?? false);
 
 /**
  * Normalises the incoming `toolbar` prop, which may be either raw
@@ -259,6 +273,11 @@ const handleToolbarUpdated = (event: Event) => {
   resolvedToolbar.value = resolveIncomingToolbar(customEvent.detail);
 };
 
+/** Applies a global static-mode change from the shared renderer. */
+const handleStaticModeUpdated = (event: Event) => {
+  isStatic.value = (event as CustomEvent<boolean>).detail;
+};
+
 /**
  * Toggles fullscreen using the configured behaviour (`"browser"` or
  * `"dialog"`) on the fullscreen wrapper element.
@@ -373,15 +392,39 @@ const handleFullscreenChange = () => {
   updateFullscreenControls(controlsElements);
 };
 
+let fullscreenChangeListenerRegistered = false;
+
+/** Registers fullscreen state updates only while interactive controls are active. */
+const registerFullscreenChangeListener = () => {
+  if (!fullscreenChangeListenerRegistered) {
+    onFullscreenChange(handleFullscreenChange);
+    fullscreenChangeListenerRegistered = true;
+  }
+};
+
+/** Removes fullscreen state updates while static SVG mode is active. */
+const unregisterFullscreenChangeListener = () => {
+  if (fullscreenChangeListenerRegistered) {
+    offFullscreenChange(handleFullscreenChange);
+    fullscreenChangeListenerRegistered = false;
+  }
+};
+
 onMounted(async () => {
   try {
     await nextTick();
     await renderMermaidDiagram(diagramId, props.code);
 
-    onFullscreenChange(handleFullscreenChange);
+    if (!isStatic.value) {
+      registerFullscreenChangeListener();
+    }
     document.addEventListener(
       'vitepress-mermaid:toolbar-updated',
       handleToolbarUpdated,
+    );
+    document.addEventListener(
+      'vitepress-mermaid:static-mode-updated',
+      handleStaticModeUpdated,
     );
   } catch (error) {
     console.error('Error in component initialization:', error);
@@ -395,14 +438,26 @@ watch(isDialogFullscreenActive, (active) => {
   document.body.classList.toggle('mermaid-dialog-open', active);
 });
 
+watch(isStatic, (staticMode) => {
+  if (staticMode) {
+    unregisterFullscreenChangeListener();
+  } else {
+    registerFullscreenChangeListener();
+  }
+});
+
 onUnmounted(() => {
   if (typeof document !== 'undefined') {
     document.body.classList.remove('mermaid-dialog-open');
   }
-  offFullscreenChange(handleFullscreenChange);
+  unregisterFullscreenChangeListener();
   document.removeEventListener(
     'vitepress-mermaid:toolbar-updated',
     handleToolbarUpdated,
+  );
+  document.removeEventListener(
+    'vitepress-mermaid:static-mode-updated',
+    handleStaticModeUpdated,
   );
 });
 </script>

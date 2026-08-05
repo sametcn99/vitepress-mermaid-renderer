@@ -34,7 +34,7 @@ pnpm add vitepress-mermaid-renderer
 :::
 
 Mermaid ve Vue peer dependency olarak beklenir. Bu docs projesi Mermaid
-`^11.14.0`, VitePress üzerinden Vue ve VitePress `^1.6.4` kullanır.
+`^11.16.1`, VitePress üzerinden Vue ve VitePress `^1.6.4` kullanır.
 
 ## Renderer'ı `.vitepress/theme` içine bağlayın
 

@@ -19,6 +19,13 @@
   overflow: hidden !important;
 }
 
+.static-mermaid-container {
+  min-height: 0;
+  max-height: none;
+  overflow: visible !important;
+  background: transparent !important;
+}
+
 .mermaid-container.dialog-fullscreen-active {
   position: fixed;
   top: 50%;
@@ -248,6 +255,13 @@ body.mermaid-dialog-open {
   z-index: 1;
 }
 
+.static-mermaid-container .diagram-wrapper {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  background: transparent !important;
+}
+
 .mermaid-container:fullscreen .diagram-wrapper {
   background: var(--vp-c-bg);
   color: var(--vp-c-text-1);
@@ -287,6 +301,19 @@ body.mermaid-dialog-open {
   transition: opacity 0.3s ease-in-out;
   transform-origin: center center;
   display: inline-block;
+}
+
+.static-mermaid-container .mermaid {
+  display: block;
+  background: transparent !important;
+}
+
+.static-mermaid-container .mermaid svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+  background: transparent !important;
 }
 
 .mermaid-rendering {

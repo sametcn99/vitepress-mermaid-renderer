@@ -13,7 +13,7 @@ renderer instance. Toolbar behavior is configured separately through
 ```typescript
 const mermaidRenderer = createMermaidRenderer({
   theme: isDark.value ? 'dark' : 'forest',
-  startOnLoad: true,
+  startOnLoad: false,
   flowchart: {
     useMaxWidth: true,
     htmlLabels: true,
@@ -26,7 +26,7 @@ const mermaidRenderer = createMermaidRenderer({
     axisFormatter: (value) =>
       value.toLocaleString('en-US', { timeZone: 'UTC' }),
   },
-  securityLevel: 'loose',
+  securityLevel: 'strict',
 });
 ```
 
@@ -37,11 +37,25 @@ const mermaidRenderer = createMermaidRenderer({
 | `flowchart` / `sequence` | Mirrors the options in the official Mermaid config schema while maintaining type safety. Set margins, spacing, and label behavior per diagram family.                                                                                                                           |
 | `gantt`                  | Customize date formatting or axis visibility when embedding project timelines.                                                                                                                                                                                                  |
 | `securityLevel`          | Mermaid security mode passed through to `mermaid.initialize()`. Use the strictness level that matches your content policy. **Changed:** the default is now `'strict'`, which disables inline HTML inside diagrams. Use `'loose'` only when you fully trust all diagram sources. |
+| `static`                 | When `true`, renders a plain SVG without the toolbar, zoom, pan, fullscreen, download, or keyboard controls. Theme updates continue to re-render the SVG.                                                                                                                       |
 
 Calling `createMermaidRenderer()` again with a new Mermaid config
 **deep-merges** the config into the existing singleton (nested objects like
 `flowchart` are merged rather than replaced) and dispatches a runtime update to
 mounted diagrams.
+
+## Static SVG mode
+
+Enable `static` to render the Mermaid SVG directly in VitePress without any
+interactive plugin functionality. The normal responsive SVG sizing and Mermaid
+theme updates remain active.
+
+```typescript
+createMermaidRenderer({
+  static: true,
+  theme: isDark.value ? 'dark' : 'default',
+});
+```
 
 ## Theme awareness and re-rendering
 

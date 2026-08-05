@@ -3,21 +3,22 @@
 Bu sayfa **VitePress Mermaid Renderer** içindeki araç çubuğu yapılandırma
 seçeneklerini özetler.
 
-## Üst seviye yapılandırma
+## Renderer yapılandırması
+
+`createMermaidRenderer()` Mermaid yapılandırma seçeneklerini doğrudan alır.
+Ayrıca aşağıdaki renderer'a özel `static` seçeneğini destekler.
+
+| Seçenek  | Tip       | Varsayılan | Açıklama                                                       |
+| :------- | :-------- | :--------- | :------------------------------------------------------------- |
+| `static` | `boolean` | `false`    | Kontrol ve etkileşimli gezinme olmadan tema uyumlu SVG üretir. |
+
+`theme`, `flowchart` ve `securityLevel` gibi diğer seçenekler
+[Mermaid yapılandırma şemasını](https://mermaid.js.org/config/configuration.html)
+izler.
+
+## Araç çubuğu yapılandırması
 
 Bu seçenekler `mermaidRenderer.setToolbar()` içine geçirilir.
-
-| Seçenek             | Tip                       | Varsayılan  | Açıklama                                                              |
-| :------------------ | :------------------------ | :---------- | :-------------------------------------------------------------------- |
-| `showLanguageLabel` | `boolean`                 | `true`      | Orijinal VitePress `mermaid` etiketini gösterir veya gizler.          |
-| `downloadFormat`    | `'svg' \| 'png' \| 'jpg'` | `'svg'`     | Diyagram indirme formatını belirler.                                  |
-| `fullscreenMode`    | `'browser' \| 'dialog'`   | `'browser'` | Tam ekranın native API mi sayfa içi dialog mu kullanacağını belirler. |
-| `desktop`           | `object`                  | `{}`        | Masaüstü araç çubuğu ayarları.                                        |
-| `mobile`            | `object`                  | `{}`        | Mobil araç çubuğu ayarları.                                           |
-| `fullscreen`        | `object`                  | `{}`        | Tam ekran modundaki araç çubuğu ayarları.                             |
-| `i18n`              | `object`                  | İngilizce   | VitePress `localeIndex` anahtarına göre toolbar metni yerelleştirme.  |
-
-## Toolbar yapılandırması
 
 `desktop`, `mobile` ve `fullscreen` nesneleri aynı yapıyı paylaşır.
 

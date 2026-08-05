@@ -85,6 +85,42 @@ describe('MermaidDiagram', () => {
     expect(document.body.classList.contains('mermaid-dialog-open')).toBe(false);
   });
 
+  it('renders a plain SVG without controls or interactive navigation in static mode', async () => {
+    const wrapper = mount(MermaidDiagram, {
+      attachTo: document.body,
+      props: {
+        code: 'flowchart LR\nA-->B',
+        static: true,
+      },
+    });
+    await flushDiagramRender();
+
+    expect(wrapper.find('.static-mermaid-container').exists()).toBe(true);
+    expect(wrapper.find('.mermaid > svg').exists()).toBe(true);
+    expect(wrapper.find('.controls').exists()).toBe(false);
+    expect(wrapper.find('.diagram-error').exists()).toBe(false);
+    expect(
+      wrapper.get('.diagram-wrapper').attributes('tabindex'),
+    ).toBeUndefined();
+    expect(wrapper.get('.diagram-wrapper').attributes('role')).toBeUndefined();
+
+    await wrapper.get('.diagram-wrapper').trigger('wheel', { ctrlKey: true });
+    expect(wrapper.find('.mermaid').attributes('style')).not.toContain('scale');
+
+    document.dispatchEvent(
+      new CustomEvent('vitepress-mermaid:config-updated', {
+        detail: { theme: 'dark' },
+      }),
+    );
+    await flushDiagramRender();
+
+    expect(mermaidMocks.initialize.mock.calls.at(-1)?.[0]).toMatchObject({
+      theme: 'dark',
+    });
+    expect(wrapper.find('.mermaid > svg').exists()).toBe(true);
+    wrapper.unmount();
+  });
+
   it('surfaces render failures through the error component and event payload', async () => {
     vi.useRealTimers();
     mermaidMocks.run.mockRejectedValueOnce(new Error('render failed'));

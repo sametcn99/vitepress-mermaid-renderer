@@ -5,10 +5,10 @@
     "": {
       "name": "vitepress-mermaid-renderer-test",
       "dependencies": {
-        "mermaid": "latest",
+        "mermaid": "^11.16.0",
       },
       "devDependencies": {
-        "vitepress": "latest",
+        "vitepress": "^1.6.4",
       },
     },
   },

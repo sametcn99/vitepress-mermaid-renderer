@@ -2,21 +2,21 @@
 
 本页概述 **VitePress Mermaid Renderer** 中可用的工具栏配置选项。
 
-## 顶层配置
+## Renderer 配置
 
-这些选项传给 `mermaidRenderer.setToolbar()`。
+`createMermaidRenderer()` 直接接收 Mermaid 配置选项，也支持下面的 renderer 专用
+`static` 选项。
 
-| 选项                | 类型                      | 默认值      | 说明                                            |
-| :------------------ | :------------------------ | :---------- | :---------------------------------------------- |
-| `showLanguageLabel` | `boolean`                 | `true`      | 显示或隐藏 VitePress 原始的 `mermaid` 标签。    |
-| `downloadFormat`    | `'svg' \| 'png' \| 'jpg'` | `'svg'`     | 指定图表下载格式。                              |
-| `fullscreenMode`    | `'browser' \| 'dialog'`   | `'browser'` | 控制全屏使用原生 API 还是页面内 dialog。        |
-| `desktop`           | `object`                  | `{}`        | 桌面端工具栏配置。                              |
-| `mobile`            | `object`                  | `{}`        | 移动端工具栏配置。                              |
-| `fullscreen`        | `object`                  | `{}`        | 全屏模式下的工具栏配置。                        |
-| `i18n`              | `object`                  | 英文        | 根据 VitePress `localeIndex` 本地化工具栏文本。 |
+| 选项     | 类型      | 默认值  | 说明                                     |
+| :------- | :-------- | :------ | :--------------------------------------- |
+| `static` | `boolean` | `false` | 生成没有控件和交互式导航的主题感知 SVG。 |
+
+其他 renderer 选项（如 `theme`、`flowchart` 和 `securityLevel`）遵循
+[Mermaid 配置 schema](https://mermaid.js.org/config/configuration.html)。
 
 ## 工具栏配置
+
+这些选项传给 `mermaidRenderer.setToolbar()`。
 
 `desktop`、`mobile` 和 `fullscreen` 对象共享同一结构。
 

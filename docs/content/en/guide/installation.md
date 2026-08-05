@@ -34,7 +34,7 @@ pnpm add vitepress-mermaid-renderer
 :::
 
 Mermaid and Vue are peer dependencies, so your VitePress project must also
-provide compatible versions. The docs project uses Mermaid `^11.14.0`, Vue
+provide compatible versions. The docs project uses Mermaid `^11.16.1`, Vue
 through VitePress, and VitePress `^1.6.4`.
 
 ## Link the renderer inside your `.vitepress/theme`

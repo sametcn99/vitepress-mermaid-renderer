@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.1.29
+
+### Added
+
+- Added static SVG rendering through `createMermaidRenderer({ static: true })`.
+  Static diagrams remain theme-aware while omitting toolbar controls, gestures,
+  fullscreen, downloads, and keyboard navigation.
+- Added static-mode lifecycle updates so existing diagrams react when the shared
+  renderer switches between interactive and static output.
+- Added static SVG layout styles and component coverage for non-interactive
+  rendering.
+
+### Fixed
+
+- Fixed the bundled TypeScript declarations so `createMermaidRenderer()` uses
+  the public Mermaid configuration type instead of colliding with the internal
+  `useMermaidRenderer` composable options type.
+- Updated the multilingual documentation and examples to match the current
+  renderer, toolbar, security, accessibility, and installation APIs.
+
+### Changed
+
+- Updated Mermaid and development dependencies to their latest compatible
+  versions.
+
 ## 1.1.28
 
 - Updated dependencies to their latest versions.

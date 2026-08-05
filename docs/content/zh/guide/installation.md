@@ -32,7 +32,7 @@ pnpm add vitepress-mermaid-renderer
 :::
 
 Mermaid 和 Vue 是 peer dependencies。当前 docs 项目使用 Mermaid
-`^11.14.0`、由 VitePress 提供的 Vue，以及 VitePress `^1.6.4`。
+`^11.16.1`、由 VitePress 提供的 Vue，以及 VitePress `^1.6.4`。
 
 ## 在 `.vitepress/theme` 中接入 renderer
 

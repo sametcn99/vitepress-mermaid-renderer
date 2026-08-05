@@ -23,6 +23,8 @@ _Stay up to date with new releases in the
 - **Flexible Fullscreen Modes:** Choose between native browser Fullscreen API or
   custom inline modal overlays.
 - **Vibrant Adaptive Themes:** Smoothly matches Light/Dark mode transitions.
+- **Static SVG Mode:** Render theme-aware diagrams without controls, navigation,
+  fullscreen, or downloads.
 - **High-Quality Downloads:** Export and download diagrams as SVG, PNG, or JPG.
 - **Complete Customization:** Selectively toggle toolbar buttons per display
   mode (desktop, mobile, fullscreen).
@@ -36,7 +38,7 @@ _Stay up to date with new releases in the
 ### 1. Installation
 
 ```bash
-npm install vitepress-mermaid-renderer
+bun add vitepress-mermaid-renderer
 ```
 
 ### 2. Integration
@@ -74,6 +76,19 @@ export default {
 
 That's it! Any fenced `mermaid` code blocks in your markdown will automatically
 be rendered with interactive controls.
+
+### Static SVG mode
+
+Set `static: true` when you want a plain, non-interactive SVG in VitePress.
+Theme updates still re-render the diagram, but the toolbar, zooming, panning,
+keyboard shortcuts, fullscreen mode, and downloading are all disabled.
+
+```typescript
+createMermaidRenderer({
+  static: true,
+  theme: isDark.value ? 'dark' : 'default',
+});
+```
 
 ---
 

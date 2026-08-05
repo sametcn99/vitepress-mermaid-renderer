@@ -154,7 +154,7 @@ const waitForPaint = (): Promise<void> =>
  * @see {@link useMermaidNavigation} for the navigation counterpart.
  * @see {@link MermaidDiagram}    for the consuming component.
  */
-export interface MermaidRendererOptions {
+export interface UseMermaidRendererOptions {
   /** Optional Mermaid configuration merged into the defaults. */
   config?: MermaidConfig;
   /**
@@ -193,7 +193,7 @@ export interface MermaidRendererOptions {
  * ```
  */
 export function useMermaidRenderer(
-  options: MermaidRendererOptions = {},
+  options: UseMermaidRendererOptions = {},
 ): MermaidRendererState & MermaidRendererActions {
   // State
   const mounted = ref(false);

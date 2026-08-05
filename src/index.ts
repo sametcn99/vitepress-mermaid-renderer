@@ -34,7 +34,7 @@
  */
 import { MermaidRenderer } from './MermaidRenderer';
 import { ensureStylesInjected } from './styleManager';
-import type { MermaidConfig } from 'mermaid';
+import type { MermaidRendererOptions } from './MermaidRenderer';
 
 /**
  * `true` when the code is running in a browser context with access to
@@ -93,12 +93,13 @@ if (isClientEnvironment) {
  *
  * @see {@link MermaidRenderer.getInstance}
  */
-const createMermaidRenderer = (config?: MermaidConfig) => {
+const createMermaidRenderer = (options?: MermaidRendererOptions) => {
   if (!isClientEnvironment) {
     return noopRenderer as unknown as MermaidRenderer;
   }
-  return MermaidRenderer.getInstance(config);
+  return MermaidRenderer.getInstance(options);
 };
 
 export { createMermaidRenderer };
 export { MermaidRenderer };
+export type { MermaidRendererOptions };

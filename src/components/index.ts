@@ -52,5 +52,5 @@ export type {
 export type {
   MermaidRendererState,
   MermaidRendererActions,
-  MermaidRendererOptions,
+  UseMermaidRendererOptions,
 } from '../composables/useMermaidRenderer';

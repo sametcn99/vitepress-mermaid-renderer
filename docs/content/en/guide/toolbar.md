@@ -158,8 +158,9 @@ remounting the SVG.
 
 ## Accessibility considerations
 
-- Keep `showLanguageLabel` enabled so screen readers announce `Mermaid diagram`
-  before the SVG is focused.
+- Keep `showLanguageLabel` enabled when you want the original visible VitePress
+  `mermaid` label to remain next to the diagram. The diagram wrapper provides
+  its own `role="img"` and `aria-label` independently of this setting.
 - Each diagram wrapper has `role="img"` and an `aria-label` so screen readers
   announce the diagram purpose.
 - Keyboard navigation is available when the diagram has focus (`tabindex="0"`):

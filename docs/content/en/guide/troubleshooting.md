@@ -28,8 +28,8 @@ stale dependencies.
 
 ## 3. Toolbar missing buttons
 
-- Check `setToolbar()` configuration; the renderer merges deeply, so a
-  misconfigured nested object can drop buttons for all breakpoints.
+- Check the `setToolbar()` configuration. Partial nested options are merged with
+  the defaults independently for each breakpoint.
 - When you need a lean toolbar per diagram, call `mermaidRenderer.setToolbar()`
   immediately after `createMermaidRenderer()` and before the first render.
 - Mobile toolbars hide by default in narrow viewports—but they can reappear if
@@ -48,7 +48,7 @@ stale dependencies.
 - Confirm your VitePress locale keys match the keys passed to `i18n.locales`. In
   this docs site, the supported keys are `root`, `tr`, and `zh`.
 - Pass `localeIndex.value` from `useData()` into
-  `setToolbar({ i18n: { localeIndex } })`.
+  `setToolbar({ i18n: { localeIndex: localeIndex.value } })`.
 - Include `copyCodeCopied` if you want the copy-success status text translated
   too.
 - Watch `localeIndex` and call `setToolbar()` again so client-side locale
@@ -70,8 +70,9 @@ stale dependencies.
 
 ## 7. Accessibility checks
 
-- Screen readers rely on `showLanguageLabel` to announce that the container is a
-  Mermaid diagram. Keep it enabled or add descriptive labels manually.
+- `showLanguageLabel` controls the original visible VitePress `mermaid` label;
+  it does not control the diagram wrapper's ARIA attributes. The wrapper already
+  exposes `role="img"` and an `aria-label`.
 - Each diagram wrapper has `role="img"` and an `aria-label` for screen readers.
 - Keyboard users can zoom (`+`/`-`), reset (`0`), pan (arrow keys), and toggle
   fullscreen (`f`) when the diagram has focus.
