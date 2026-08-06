@@ -100,6 +100,49 @@ describe('useMermaidRenderer', () => {
     wrapper.unmount();
   });
 
+  it('defines natural sizing defaults for every supported diagram type', async () => {
+    const wrapper = mountHost();
+    await nextTick();
+
+    const config = mermaidMocks.initialize.mock.calls[0]![0];
+    const diagramConfigKeys = [
+      'flowchart',
+      'swimlane',
+      'sequence',
+      'gantt',
+      'journey',
+      'timeline',
+      'class',
+      'state',
+      'er',
+      'pie',
+      'quadrantChart',
+      'xyChart',
+      'requirement',
+      'architecture',
+      'mindmap',
+      'ishikawa',
+      'kanban',
+      'gitGraph',
+      'c4',
+      'sankey',
+      'packet',
+      'block',
+      'eventmodeling',
+      'treeView',
+      'radar',
+      'venn',
+      'wardley-beta',
+      'cynefin',
+      'railroad',
+    ];
+
+    for (const key of diagramConfigKeys) {
+      expect(config[key]).toMatchObject({ useMaxWidth: false });
+    }
+    wrapper.unmount();
+  });
+
   it('renders the diagram successfully and invokes onRenderComplete with success=true', async () => {
     const onRenderComplete = vi.fn();
     const wrapper = mountHost({ onRenderComplete }, 'mermaid-success');
@@ -184,7 +227,8 @@ describe('useMermaidRenderer', () => {
     expect(mermaidMocks.initialize.mock.calls.length).toBeGreaterThan(
       initialInitCount,
     );
-    const lastInit = mermaidMocks.initialize.mock.calls.at(-1)![0];
+    const initializeCalls = mermaidMocks.initialize.mock.calls;
+    const lastInit = initializeCalls[initializeCalls.length - 1]![0];
     expect(lastInit.theme).toBe('forest');
     expect(mermaidMocks.run.mock.calls.length).toBeGreaterThan(initialRunCount);
     wrapper.unmount();

@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.1.30
+
+### Added in 1.1.30
+
+- Added the opt-in `fitToContainer` renderer option. When enabled, diagrams are
+  scaled and centered after rendering to fit their container, including when the
+  option changes at runtime. The default interactive view remains unscaled at
+  100%.
+- Added fit-and-center navigation and component coverage, including geometry
+  edge cases and runtime renderer option updates.
+
+### Changed in 1.1.30
+
+- Expanded the default Mermaid configuration to define natural-size
+  (`useMaxWidth: false`) settings for every supported diagram configuration
+  type, keeping zoom, pan, and fit-to-container behavior consistent.
+- Moved duplicated usage and configuration content from the README to the
+  documentation site, and documented `fitToContainer` in English, Turkish, and
+  Chinese configuration and type reference pages.
+- Pinned the test project's Mermaid and VitePress dependencies to `^11.16.1` and
+  `^1.6.4`, respectively, for reproducible smoke tests.
+
 ## 1.1.29
 
 ### Added

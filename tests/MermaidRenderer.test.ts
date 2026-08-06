@@ -43,6 +43,27 @@ describe('MermaidRenderer', () => {
       const detail = (spy.mock.calls[0]![0] as CustomEvent).detail;
       expect(detail).toMatchObject({ theme: 'forest' });
     });
+
+    it('updates fitting mode without passing it to Mermaid configuration', async () => {
+      const mod = await importFresh();
+      const renderer = mod.MermaidRenderer.getInstance({
+        fitToContainer: false,
+      });
+      const spy = vi.fn();
+      document.addEventListener(
+        'vitepress-mermaid:fit-to-container-updated',
+        spy,
+      );
+
+      mod.MermaidRenderer.getInstance({ fitToContainer: true });
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ detail: true }),
+      );
+      expect(
+        (renderer as unknown as { config: Record<string, unknown> }).config,
+      ).not.toHaveProperty('fitToContainer');
+    });
   });
 
   describe('setToolbar', () => {

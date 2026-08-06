@@ -46,6 +46,8 @@ import {
 export type MermaidRendererOptions = MermaidConfig & {
   /** Render diagrams as non-interactive SVGs while preserving theme updates. */
   static?: boolean;
+  /** Fit and center interactive diagrams after each render. */
+  fitToContainer?: boolean;
 };
 
 /**
@@ -91,6 +93,8 @@ export class MermaidRenderer {
 
   /** Whether mounted diagrams omit every interactive control and gesture. */
   private staticMode: boolean;
+  /** Whether mounted interactive diagrams fit and center after rendering. */
+  private fitToContainer: boolean;
 
   /** Fully-resolved toolbar configuration passed to every diagram mount. */
   private toolbarConfig: ResolvedToolbarConfig;
@@ -147,9 +151,14 @@ export class MermaidRenderer {
    *   When provided, its values are deep-merged into the defaults.
    */
   private constructor(options?: MermaidRendererOptions) {
-    const { static: staticMode = false, ...config } = options ?? {};
+    const {
+      static: staticMode = false,
+      fitToContainer = false,
+      ...config
+    } = options ?? {};
     this.config = this.deepMerge({}, config);
     this.staticMode = staticMode;
+    this.fitToContainer = fitToContainer;
     this.toolbarConfig = resolveToolbarConfig();
     this.initialize();
   }
@@ -276,10 +285,17 @@ export class MermaidRenderer {
 
   /** Updates Mermaid configuration and, when supplied, static SVG mode. */
   private setOptions(options: MermaidRendererOptions): void {
-    const { static: staticMode, ...config } = options;
+    const { static: staticMode, fitToContainer, ...config } = options;
     if (staticMode !== undefined && staticMode !== this.staticMode) {
       this.staticMode = staticMode;
       this.dispatchStaticModeUpdate();
+    }
+    if (
+      fitToContainer !== undefined &&
+      fitToContainer !== this.fitToContainer
+    ) {
+      this.fitToContainer = fitToContainer;
+      this.dispatchFitToContainerUpdate();
     }
     if (Object.keys(config).length > 0) {
       this.setConfig(config);
@@ -382,6 +398,19 @@ export class MermaidRenderer {
       );
     } catch (error) {
       console.error('Failed to dispatch Mermaid static mode update:', error);
+    }
+  }
+
+  /** Notifies mounted diagrams that their fitting mode changed. */
+  private dispatchFitToContainerUpdate(): void {
+    try {
+      document.dispatchEvent(
+        new CustomEvent<boolean>('vitepress-mermaid:fit-to-container-updated', {
+          detail: this.fitToContainer,
+        }),
+      );
+    } catch (error) {
+      console.error('Failed to dispatch Mermaid fitting update:', error);
     }
   }
 
@@ -529,6 +558,7 @@ export class MermaidRenderer {
           config: this.config,
           toolbar: this.toolbarConfig,
           static: this.staticMode,
+          fitToContainer: this.fitToContainer,
         }),
         wrapper,
       );

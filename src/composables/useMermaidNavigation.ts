@@ -103,6 +103,11 @@ export interface MermaidNavigationActions {
   zoomOut: () => void;
   /** Resets `scale`, `translateX`, and `translateY` to their defaults. */
   resetView: () => void;
+  /** Fits the untransformed diagram inside its container and centers it. */
+  fitDiagramToContainer: (
+    container: HTMLElement | null,
+    diagram: HTMLElement | null,
+  ) => void;
   /**
    * Toggles fullscreen on the given wrapper element.
    * @param diagramWrapper - The DOM element to make fullscreen.
@@ -253,6 +258,45 @@ export function useMermaidNavigation(
     scale.value = 1;
     translateX.value = 0;
     translateY.value = 0;
+  };
+
+  /**
+   * Scales a diagram to the largest size that fits inside its container and
+   * translates it so both centers align. The translation is divided by the
+   * scale because the component applies `scale(...) translate(...)`.
+   *
+   * @param container - The viewport that constrains the diagram.
+   * @param diagram - The Mermaid element whose rendered bounds are measured.
+   */
+  const fitDiagramToContainer = (
+    container: HTMLElement | null,
+    diagram: HTMLElement | null,
+  ) => {
+    if (!container || !diagram) return;
+
+    const containerBounds = container.getBoundingClientRect();
+    const diagramBounds = diagram.getBoundingClientRect();
+    if (
+      containerBounds.width <= 0 ||
+      containerBounds.height <= 0 ||
+      diagramBounds.width <= 0 ||
+      diagramBounds.height <= 0
+    ) {
+      return;
+    }
+
+    const fittedScale = Math.min(
+      containerBounds.width / diagramBounds.width,
+      containerBounds.height / diagramBounds.height,
+    );
+
+    if (!Number.isFinite(fittedScale) || fittedScale <= 0) return;
+
+    scale.value = fittedScale;
+    translateX.value =
+      (containerBounds.width - diagramBounds.width) / 2 / fittedScale;
+    translateY.value =
+      (containerBounds.height - diagramBounds.height) / 2 / fittedScale;
   };
 
   /** Restores the non-fullscreen view after a fullscreen session ends. */
@@ -632,6 +676,7 @@ export function useMermaidNavigation(
     zoomIn,
     zoomOut,
     resetView,
+    fitDiagramToContainer,
     toggleFullscreen,
     startPan,
     pan,

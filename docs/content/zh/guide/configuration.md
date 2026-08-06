@@ -37,10 +37,28 @@ const mermaidRenderer = createMermaidRenderer({
 | `flowchart` / `sequence` | 映射官方 Mermaid config schema，可按图表类型设置间距和标签行为。                                                                                        |
 | `gantt`                  | 嵌入项目时间线时自定义日期格式或坐标轴显示。                                                                                                            |
 | `securityLevel`          | 传给 `mermaid.initialize()` 的 Mermaid 安全模式。**变更：** 默认值现在是 `'strict'`，禁用图表内的 inline HTML。仅在你信任所有图表来源时使用 `'loose'`。 |
+| `static`                 | 设为 `true` 时，渲染不含工具栏、缩放、拖拽、全屏、下载或键盘控制的纯 SVG。主题更新仍会重新渲染 SVG。                                                    |
+| `fitToContainer`         | 设为 `true` 时，会将每个交互式图表缩放到可用宽度和高度内，并在渲染后居中。默认值为 `false`。                                                            |
 
 如果再次调用 `createMermaidRenderer()` 并传入新的 Mermaid
 config，现有 singleton 会**深度合并**配置（嵌套对象如 `flowchart`
 会被合并而非替换），并向已挂载图表发送运行时更新。
+
+## 将图表适配并居中到容器
+
+启用 `fitToContainer` 后，每个交互式图表会在保持宽高比的同时，以能够放入
+`.diagram-wrapper`
+的最大比例渲染，并在水平和垂直方向居中。它适用于原本会以 100% 比例显示在左上角的图表。
+
+```typescript
+createMermaidRenderer({
+  fitToContainer: true,
+});
+```
+
+该选项会在每次 Mermaid 渲染后生效，包括主题触发的重新渲染，以及再次调用
+`createMermaidRenderer()` 进行的运行时更新。它不会影响 `static: true`
+图表。工具栏中的**重置视图**操作仍会恢复原始的 100% 视图，以便读者回到未缩放的图表。
 
 ## 主题感知
 

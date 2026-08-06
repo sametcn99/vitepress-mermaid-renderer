@@ -38,11 +38,32 @@ const mermaidRenderer = createMermaidRenderer({
 | `flowchart` / `sequence` | Resmi Mermaid config şemasındaki seçenekleri tip güvenliğiyle yansıtır.                                                                                                                                                               |
 | `gantt`                  | Proje zaman çizelgelerinde tarih biçimlendirme veya eksen görünürlüğünü özelleştirir.                                                                                                                                                 |
 | `securityLevel`          | `mermaid.initialize()` içine geçirilen Mermaid güvenlik modudur. **Değişiklik:** varsayılan artık `'strict'`; diyagramlardaki inline HTML devre dışı bırakılır. Yalnızca tüm diyagram kaynaklarına güveniyorsanız `'loose'` kullanın. |
+| `static`                 | `true` olduğunda araç çubuğu, yakınlaştırma, sürükleme, tam ekran, indirme ve klavye kontrolleri olmayan düz bir SVG oluşturur. Tema güncellemeleri SVG'yi yeniden render etmeye devam eder.                                          |
+| `fitToContainer`         | `true` olduğunda her etkileşimli diyagramı kullanılabilir genişlik ve yüksekliğe sığacak şekilde ölçekler, ardından render sonrasında ortalar. Varsayılanı `false` değeridir.                                                         |
 
 `createMermaidRenderer()` yeni bir Mermaid config ile tekrar çağrıldığında
 mevcut singleton config'i **derin birleştirilir** (iç içe nesneler `flowchart`
 gibi replaced yerine merge edilir) ve mount edilmiş diyagramlara runtime update
 gönderilir.
+
+## Diyagramları kapsayıcıya sığdırma ve ortalama
+
+`fitToContainer` seçeneğini etkinleştirdiğinizde her etkileşimli diyagram,
+en-boy oranı korunarak `.diagram-wrapper` içine sığacak en büyük ölçekte render
+edilir ve her iki eksende ortalanır. Bu seçenek, normalde %100 ölçekte sol üst
+köşede açılan diyagramlar için kullanışlıdır.
+
+```typescript
+createMermaidRenderer({
+  fitToContainer: true,
+});
+```
+
+Bu seçenek, tema kaynaklı yeniden render işlemleri ve başka bir
+`createMermaidRenderer()` çağrısıyla yapılan runtime güncellemeleri dahil her
+Mermaid render işleminden sonra uygulanır. `static: true` diyagramları
+etkilemez. Araç çubuğundaki **Görünümü sıfırla** işlemi, okuyucuların
+ölçeklenmemiş diyagrama dönebilmesi için özgün %100 görünümünü geri yükler.
 
 ## Tema farkındalığı
 

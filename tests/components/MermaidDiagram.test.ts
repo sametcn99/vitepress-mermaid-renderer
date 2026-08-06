@@ -114,10 +114,41 @@ describe('MermaidDiagram', () => {
     );
     await flushDiagramRender();
 
-    expect(mermaidMocks.initialize.mock.calls.at(-1)?.[0]).toMatchObject({
+    const initializeCalls = mermaidMocks.initialize.mock.calls;
+    expect(initializeCalls[initializeCalls.length - 1]?.[0]).toMatchObject({
       theme: 'dark',
     });
     expect(wrapper.find('.mermaid > svg').exists()).toBe(true);
+    wrapper.unmount();
+  });
+
+  it('fits and centers the diagram when fitToContainer is enabled', async () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        if (this.classList.contains('diagram-wrapper')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        if (this.classList.contains('mermaid')) {
+          return new DOMRect(0, 0, 600, 100);
+        }
+        return new DOMRect();
+      },
+    );
+
+    const wrapper = mount(MermaidDiagram, {
+      attachTo: document.body,
+      props: {
+        code: 'flowchart LR\nA-->B',
+        fitToContainer: true,
+      },
+    });
+    await flushDiagramRender();
+    await vi.runAllTimersAsync();
+
+    const diagram = wrapper.get('.mermaid').element as HTMLElement;
+    const transform = diagram.style.transform;
+    expect(transform).toContain('scale(0.6666666666666666)');
+    expect(transform).toContain('translate(-150px, 75px)');
     wrapper.unmount();
   });
 

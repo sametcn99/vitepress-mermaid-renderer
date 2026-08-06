@@ -231,6 +231,9 @@ export function useMermaidRenderer(
       useMaxWidth: false,
       htmlLabels: true,
     },
+    swimlane: {
+      useMaxWidth: false,
+    },
     sequence: {
       diagramMarginX: 50,
       diagramMarginY: 10,
@@ -268,7 +271,39 @@ export function useMermaidRenderer(
     journey: {
       useMaxWidth: false,
     },
-    pie: {},
+    timeline: {
+      useMaxWidth: false,
+    },
+    state: {
+      useMaxWidth: false,
+    },
+    er: {
+      useMaxWidth: false,
+    },
+    pie: {
+      useMaxWidth: false,
+    },
+    quadrantChart: {
+      useMaxWidth: false,
+    },
+    xyChart: {
+      useMaxWidth: false,
+    },
+    requirement: {
+      useMaxWidth: false,
+    },
+    architecture: {
+      useMaxWidth: false,
+    },
+    mindmap: {
+      useMaxWidth: false,
+    },
+    ishikawa: {
+      useMaxWidth: false,
+    },
+    kanban: {
+      useMaxWidth: false,
+    },
     c4: {
       useMaxWidth: false,
       diagramMarginX: 20,
@@ -280,6 +315,36 @@ export function useMermaidRenderer(
       showBranches: true,
       showCommitLabel: true,
       mainBranchName: 'main',
+    },
+    sankey: {
+      useMaxWidth: false,
+    },
+    packet: {
+      useMaxWidth: false,
+    },
+    block: {
+      useMaxWidth: false,
+    },
+    eventmodeling: {
+      useMaxWidth: false,
+    },
+    treeView: {
+      useMaxWidth: false,
+    },
+    radar: {
+      useMaxWidth: false,
+    },
+    venn: {
+      useMaxWidth: false,
+    },
+    'wardley-beta': {
+      useMaxWidth: false,
+    },
+    cynefin: {
+      useMaxWidth: false,
+    },
+    railroad: {
+      useMaxWidth: false,
     },
   };
 

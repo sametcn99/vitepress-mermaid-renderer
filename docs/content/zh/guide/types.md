@@ -4,12 +4,13 @@
 
 ## Renderer 配置
 
-`createMermaidRenderer()` 直接接收 Mermaid 配置选项，也支持下面的 renderer 专用
-`static` 选项。
+`createMermaidRenderer()`
+直接接收 Mermaid 配置选项，也支持下面的 renderer 专用选项。
 
-| 选项     | 类型      | 默认值  | 说明                                     |
-| :------- | :-------- | :------ | :--------------------------------------- |
-| `static` | `boolean` | `false` | 生成没有控件和交互式导航的主题感知 SVG。 |
+| 选项             | 类型      | 默认值  | 说明                                                  |
+| :--------------- | :-------- | :------ | :---------------------------------------------------- |
+| `static`         | `boolean` | `false` | 生成没有控件和交互式导航的主题感知 SVG。              |
+| `fitToContainer` | `boolean` | `false` | 在每次 Mermaid 渲染后将交互式图表适配并居中到其容器。 |
 
 其他 renderer 选项（如 `theme`、`flowchart` 和 `securityLevel`）遵循
 [Mermaid 配置 schema](https://mermaid.js.org/config/configuration.html)。

@@ -69,6 +69,7 @@
     />
 
     <div
+      ref="diagramWrapper"
       class="diagram-wrapper"
       :tabindex="isStatic ? undefined : 0"
       :role="isStatic ? undefined : 'img'"
@@ -149,10 +150,14 @@ const props = defineProps<{
   config?: MermaidConfig;
   toolbar?: MermaidToolbarOptions | ResolvedToolbarConfig;
   static?: boolean;
+  fitToContainer?: boolean;
 }>();
 
 /** Whether this instance renders a plain, non-interactive SVG. */
 const isStatic = ref(props.static ?? false);
+
+/** Whether this instance fits and centers its interactive diagram after rendering. */
+const fitToContainer = ref(props.fitToContainer ?? false);
 
 /**
  * Normalises the incoming `toolbar` prop, which may be either raw
@@ -199,6 +204,7 @@ const {
   zoomIn,
   zoomOut,
   resetView,
+  fitDiagramToContainer,
   toggleFullscreen,
   startPan,
   pan,
@@ -227,6 +233,9 @@ const controlsRef = ref<InstanceType<typeof MermaidControls> | null>(null);
 
 /** Reference to the fullscreen wrapper `<div>` used as the Fullscreen API target. */
 const fullscreenWrapper = ref<HTMLElement | null>(null);
+
+/** Reference to the viewport that constrains the interactive diagram. */
+const diagramWrapper = ref<HTMLElement | null>(null);
 
 /**
  * Component-instance UID used to generate a globally unique `id`
@@ -276,6 +285,26 @@ const handleToolbarUpdated = (event: Event) => {
 /** Applies a global static-mode change from the shared renderer. */
 const handleStaticModeUpdated = (event: Event) => {
   isStatic.value = (event as CustomEvent<boolean>).detail;
+};
+
+/** Applies the configured fit mode after Vue has committed the rendered SVG. */
+const applyFitToContainer = async () => {
+  if (!fitToContainer.value || isStatic.value) return;
+
+  resetView();
+  await nextTick();
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+  if (!fitToContainer.value || isStatic.value) return;
+  fitDiagramToContainer(
+    diagramWrapper.value,
+    document.getElementById(diagramId),
+  );
+};
+
+/** Updates the fitting mode for already-mounted diagrams. */
+const handleFitToContainerUpdated = (event: Event) => {
+  fitToContainer.value = (event as CustomEvent<boolean>).detail;
 };
 
 /**
@@ -426,6 +455,10 @@ onMounted(async () => {
       'vitepress-mermaid:static-mode-updated',
       handleStaticModeUpdated,
     );
+    document.addEventListener(
+      'vitepress-mermaid:fit-to-container-updated',
+      handleFitToContainerUpdated,
+    );
   } catch (error) {
     console.error('Error in component initialization:', error);
   }
@@ -446,6 +479,15 @@ watch(isStatic, (staticMode) => {
   }
 });
 
+watch(
+  [isRendered, fitToContainer, isStatic],
+  ([rendered, enabled, staticMode]) => {
+    if (rendered && enabled && !staticMode) {
+      void applyFitToContainer();
+    }
+  },
+);
+
 onUnmounted(() => {
   if (typeof document !== 'undefined') {
     document.body.classList.remove('mermaid-dialog-open');
@@ -458,6 +500,10 @@ onUnmounted(() => {
   document.removeEventListener(
     'vitepress-mermaid:static-mode-updated',
     handleStaticModeUpdated,
+  );
+  document.removeEventListener(
+    'vitepress-mermaid:fit-to-container-updated',
+    handleFitToContainerUpdated,
   );
 });
 </script>

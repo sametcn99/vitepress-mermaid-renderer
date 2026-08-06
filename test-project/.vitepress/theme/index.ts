@@ -24,6 +24,7 @@ export default {
     const initMermaid = () => {
       const mermaidRenderer = createMermaidRenderer({
         theme: isDark.value ? 'dark' : 'forest',
+        fitToContainer: true,
       });
       mermaidRenderer.setToolbar({
         showLanguageLabel: false,

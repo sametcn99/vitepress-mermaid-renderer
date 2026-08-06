@@ -60,6 +60,42 @@ describe('useMermaidNavigation', () => {
       expect(nav.translateX.value).toBe(0);
       expect(nav.translateY.value).toBe(0);
     });
+
+    it('fits and centers a diagram within its container', () => {
+      const nav = useMermaidNavigation();
+      const container = document.createElement('div');
+      const diagram = document.createElement('div');
+      vi.spyOn(container, 'getBoundingClientRect').mockReturnValue(
+        new DOMRect(0, 0, 400, 200),
+      );
+      vi.spyOn(diagram, 'getBoundingClientRect').mockReturnValue(
+        new DOMRect(0, 0, 600, 100),
+      );
+
+      nav.fitDiagramToContainer(container, diagram);
+
+      expect(nav.scale.value).toBeCloseTo(2 / 3);
+      expect(nav.translateX.value).toBeCloseTo(-150);
+      expect(nav.translateY.value).toBeCloseTo(75);
+    });
+
+    it('does not update the view when either element has no layout size', () => {
+      const nav = useMermaidNavigation();
+      const container = document.createElement('div');
+      const diagram = document.createElement('div');
+      vi.spyOn(container, 'getBoundingClientRect').mockReturnValue(
+        new DOMRect(0, 0, 400, 0),
+      );
+      vi.spyOn(diagram, 'getBoundingClientRect').mockReturnValue(
+        new DOMRect(0, 0, 600, 100),
+      );
+
+      nav.fitDiagramToContainer(container, diagram);
+
+      expect(nav.scale.value).toBe(1);
+      expect(nav.translateX.value).toBe(0);
+      expect(nav.translateY.value).toBe(0);
+    });
   });
 
   describe('mouse pan', () => {
