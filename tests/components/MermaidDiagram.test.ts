@@ -149,6 +149,16 @@ describe('MermaidDiagram', () => {
     const transform = diagram.style.transform;
     expect(transform).toContain('scale(0.6666666666666666)');
     expect(transform).toContain('translate(-150px, 75px)');
+
+    await wrapper.get('[data-mermaid-control="zoomIn"]').trigger('click');
+    expect(diagram.style.transform).toContain('scale(0.7999999999999999)');
+
+    await wrapper.get('[data-mermaid-control="resetView"]').trigger('click');
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(diagram.style.transform).toContain('scale(0.6666666666666666)');
+    expect(diagram.style.transform).toContain('translate(-150px, 75px)');
     wrapper.unmount();
   });
 

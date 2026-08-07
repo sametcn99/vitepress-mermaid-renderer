@@ -48,7 +48,7 @@
       :toolbar="resolvedToolbar"
       @zoom-in="zoomIn"
       @zoom-out="zoomOut"
-      @reset-view="resetView"
+      @reset-view="handleResetView"
       @toggle-fullscreen="handleToggleFullscreen"
       @pan-up="panUp"
       @pan-down="panDown"
@@ -307,6 +307,16 @@ const handleFitToContainerUpdated = (event: Event) => {
   fitToContainer.value = (event as CustomEvent<boolean>).detail;
 };
 
+/** Resets to the fitted view when automatic fitting is enabled. */
+const handleResetView = () => {
+  if (fitToContainer.value && !isStatic.value) {
+    void applyFitToContainer();
+    return;
+  }
+
+  resetView();
+};
+
 /**
  * Toggles fullscreen using the configured behaviour (`"browser"` or
  * `"dialog"`) on the fullscreen wrapper element.
@@ -381,7 +391,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
       event.preventDefault();
       break;
     case '0':
-      resetView();
+      handleResetView();
       event.preventDefault();
       break;
     case 'ArrowUp':
