@@ -42,12 +42,12 @@ test.describe('toolbar accessibility', () => {
 
   test('zoom in is operable via keyboard activation', async ({ page }) => {
     const diagram = page.locator('.mermaid-container').first();
-    const inner = diagram.locator('.mermaid').first();
+    const viewport = diagram.locator('.mermaid-viewport').first();
     const zoomIn = diagram
       .locator('.desktop-controls [data-mermaid-control="zoomIn"]')
       .first();
 
-    const before = await inner.evaluate(
+    const before = await viewport.evaluate(
       (el) => (el as HTMLElement).style.transform,
     );
 
@@ -58,7 +58,7 @@ test.describe('toolbar accessibility', () => {
 
     await expect
       .poll(async () =>
-        inner.evaluate((el) => (el as HTMLElement).style.transform),
+        viewport.evaluate((el) => (el as HTMLElement).style.transform),
       )
       .not.toEqual(before);
   });

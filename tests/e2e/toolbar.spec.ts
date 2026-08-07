@@ -14,9 +14,9 @@ test.describe('toolbar interactions', () => {
 
   test('zoom in increases the SVG transform scale', async ({ page }) => {
     const diagram = page.locator('.mermaid-container').first();
-    const inner = diagram.locator('.mermaid').first();
+    const viewport = diagram.locator('.mermaid-viewport').first();
 
-    const initialTransform = await inner.evaluate(
+    const initialTransform = await viewport.evaluate(
       (el) => (el as HTMLElement).style.transform,
     );
 
@@ -29,11 +29,11 @@ test.describe('toolbar interactions', () => {
 
     await expect
       .poll(async () =>
-        inner.evaluate((el) => (el as HTMLElement).style.transform),
+        viewport.evaluate((el) => (el as HTMLElement).style.transform),
       )
       .not.toEqual(initialTransform);
 
-    const finalTransform = await inner.evaluate(
+    const finalTransform = await viewport.evaluate(
       (el) => (el as HTMLElement).style.transform,
     );
     expect(finalTransform).toMatch(/scale\(/);
@@ -41,8 +41,8 @@ test.describe('toolbar interactions', () => {
 
   test('reset view restores the original transform', async ({ page }) => {
     const diagram = page.locator('.mermaid-container').first();
-    const inner = diagram.locator('.mermaid').first();
-    const initialTransform = await inner.evaluate(
+    const viewport = diagram.locator('.mermaid-viewport').first();
+    const initialTransform = await viewport.evaluate(
       (el) => (el as HTMLElement).style.transform,
     );
 
@@ -58,7 +58,7 @@ test.describe('toolbar interactions', () => {
 
     await expect
       .poll(async () =>
-        inner.evaluate((el) => (el as HTMLElement).style.transform),
+        viewport.evaluate((el) => (el as HTMLElement).style.transform),
       )
       .toEqual(initialTransform);
   });
@@ -81,7 +81,7 @@ test.describe('toolbar interactions', () => {
 
   test('zoom out reverses prior zoom in changes', async ({ page }) => {
     const diagram = page.locator('.mermaid-container').first();
-    const inner = diagram.locator('.mermaid').first();
+    const viewport = diagram.locator('.mermaid-viewport').first();
     const zoomIn = diagram.locator(
       '.desktop-controls [data-mermaid-control="zoomIn"]',
     );
@@ -89,7 +89,7 @@ test.describe('toolbar interactions', () => {
       '.desktop-controls [data-mermaid-control="zoomOut"]',
     );
 
-    const initialTransform = await inner.evaluate(
+    const initialTransform = await viewport.evaluate(
       (el) => (el as HTMLElement).style.transform,
     );
 
@@ -97,7 +97,7 @@ test.describe('toolbar interactions', () => {
     await zoomIn.click();
     await zoomIn.click();
 
-    const zoomedTransform = await inner.evaluate(
+    const zoomedTransform = await viewport.evaluate(
       (el) => (el as HTMLElement).style.transform,
     );
     expect(zoomedTransform).not.toEqual(initialTransform);
@@ -108,7 +108,7 @@ test.describe('toolbar interactions', () => {
 
     await expect
       .poll(async () =>
-        inner.evaluate((el) => (el as HTMLElement).style.transform),
+        viewport.evaluate((el) => (el as HTMLElement).style.transform),
       )
       .not.toEqual(zoomedTransform);
   });

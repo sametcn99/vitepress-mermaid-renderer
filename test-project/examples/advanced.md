@@ -192,3 +192,326 @@ C4Context
 
     UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 ```
+
+## Swimlane Diagram
+
+```mermaid
+swimlane-beta LR
+    subgraph Customer
+        request[Open request]
+        update[Receive update]
+    end
+
+    subgraph Support
+        triage[Triage request]
+        answer[Send answer]
+    end
+
+    request --> triage --> answer --> update
+```
+
+## Class Diagram
+
+```mermaid
+classDiagram
+    class Account {
+        +String id
+        +Decimal balance
+        +deposit(amount)
+    }
+    class Customer {
+        +String name
+    }
+    Customer "1" --> "*" Account : owns
+```
+
+## User Journey
+
+```mermaid
+journey
+    title Checkout journey
+    section Browse
+      Find a product: 5: Customer
+      Add to cart: 4: Customer
+    section Purchase
+      Enter payment details: 3: Customer
+      Receive confirmation: 5: Customer
+```
+
+## Gantt Chart
+
+```mermaid
+gantt
+    title Release plan
+    dateFormat YYYY-MM-DD
+    section Development
+    Design        :done, design, 2026-03-01, 3d
+    Implement     :active, implement, after design, 5d
+    section Release
+    Verify        :verify, after implement, 2d
+    Deploy        :milestone, deploy, after verify, 0d
+```
+
+## Pie Chart
+
+```mermaid
+pie showData
+    title Traffic by device
+    "Desktop" : 55
+    "Mobile" : 35
+    "Tablet" : 10
+```
+
+## Quadrant Chart
+
+```mermaid
+quadrantChart
+    title Feature prioritization
+    x-axis Low effort --> High effort
+    y-axis Low impact --> High impact
+    quadrant-1 Invest
+    quadrant-2 Quick wins
+    quadrant-3 Avoid
+    quadrant-4 Consider
+    Improve search: [0.25, 0.8]
+    Redesign dashboard: [0.8, 0.7]
+    Update copy: [0.2, 0.3]
+```
+
+## Requirement Diagram
+
+```mermaid
+requirementDiagram
+    requirement user_login {
+        id: 1
+        text: the login requirement
+        risk: high
+        verifymethod: test
+    }
+
+    element authentication_service {
+        type: simulation
+    }
+
+    authentication_service - satisfies -> user_login
+```
+
+## Mindmap
+
+```mermaid
+mindmap
+    root((Release))
+        Planning
+            Scope
+            Schedule
+        Delivery
+            Build
+            Test
+        Operations
+            Monitor
+```
+
+## Timeline
+
+```mermaid
+timeline
+    title Product milestones
+    2024 : Research
+         : Prototype
+    2025 : Public beta
+         : General availability
+    2026 : Expansion
+```
+
+## ZenUML Sequence Diagram
+
+```mermaid
+zenuml
+    title Order processing
+    Customer->Service: Place order
+    Service->Inventory: Reserve items
+    Inventory->Service: Items reserved
+    Service->Customer: Confirm order
+```
+
+## Sankey Diagram
+
+```mermaid
+sankey-beta
+Visitors,Documentation,700
+Visitors,Examples,300
+Documentation,Installation,420
+Documentation,Configuration,280
+Examples,Advanced examples,180
+Examples,Basic examples,120
+```
+
+## XY Chart
+
+```mermaid
+xychart
+    title "Monthly signups"
+    x-axis [Jan, Feb, Mar, Apr]
+    y-axis "Users" 0 --> 100
+    bar [35, 52, 76, 90]
+    line [30, 50, 72, 85]
+```
+
+## Block Diagram
+
+```mermaid
+block
+    columns 3
+    Browser space API
+    space:3
+    Cache space Database
+    Browser --> API
+    API --> Cache
+    API --> Database
+```
+
+## Packet Diagram
+
+```mermaid
+packet
+    title UDP Packet
+    +16: "Source Port"
+    +16: "Destination Port"
+    +16: "Length"
+    +16: "Checksum"
+    +32: "Payload"
+```
+
+## Kanban Board
+
+```mermaid
+kanban
+    backlog[Backlog]
+        research[Research requirements]
+    progress[In progress]
+        implement[Implement renderer]@{ assigned: "Developer", priority: "High" }
+    done[Done]
+        tests[Add browser tests]
+```
+
+## Architecture Diagram
+
+```mermaid
+architecture-beta
+    group platform(cloud)[Platform]
+
+    service web(server)[Web app] in platform
+    service api(server)[API] in platform
+    service data(database)[Database] in platform
+
+    web:R --> L:api
+    api:B --> T:data
+```
+
+## Radar Chart
+
+```mermaid
+radar-beta
+    title Engineering metrics
+    axis quality["Quality"], delivery["Delivery"], reliability["Reliability"]
+    curve current["Current"]{80, 70, 75}
+    curve target["Target"]{90, 85, 90}
+    max 100
+```
+
+## Event Modeling Diagram
+
+```mermaid
+eventmodeling
+
+    tf 01 ui CheckoutUI
+    tf 02 cmd SubmitOrder
+    tf 03 evt OrderSubmitted
+```
+
+## Treemap
+
+```mermaid
+treemap-beta
+    "Documentation"
+        "Guides": 45
+        "Examples": 30
+    "Source"
+        "Components": 35
+        "Composables": 20
+```
+
+## Venn Diagram
+
+```mermaid
+venn-beta
+    title "Team skills"
+    set frontend[Frontend]
+    set backend[Backend]
+    union frontend,backend[Full stack]
+```
+
+## Ishikawa Diagram
+
+```mermaid
+ishikawa-beta
+    Slow page load
+    Network
+        High latency
+        Large payloads
+    Application
+        Expensive queries
+        Uncached responses
+    Browser
+        Blocking scripts
+```
+
+## Wardley Map
+
+```mermaid
+wardley-beta
+    title Delivery platform
+
+    anchor User [0.9, 0.9]
+    component WebApp [0.75, 0.6]
+    component API [0.6, 0.7]
+    component Cloud [0.3, 0.9]
+
+    User -> WebApp
+    WebApp -> API
+    API -> Cloud
+```
+
+## Cynefin Framework
+
+```mermaid
+cynefin-beta
+    title Delivery decisions
+
+    complex
+        "Explore a new product"
+    complicated
+        "Tune a database"
+    clear
+        "Apply a routine update"
+    chaotic
+        "Restore an unavailable service"
+    confusion
+        "Classify an incident"
+
+    complex --> complicated : "Pattern identified"
+    clear --> chaotic : "Complacency"
+```
+
+## TreeView Diagram
+
+```mermaid
+treeView-beta
+    vitepress-mermaid-renderer/
+        src/
+            MermaidDiagram.vue
+            index.ts
+        tests/
+            e2e/
+        package.json
+```

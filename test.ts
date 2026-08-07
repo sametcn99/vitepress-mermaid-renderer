@@ -99,10 +99,12 @@ class FileManager {
       return;
     }
 
+    const removePath =
+      process.platform === 'win32' ? path.replaceAll('/', '\\') : path;
     const command =
       process.platform === 'win32'
-        ? ['cmd', '/c', 'rmdir', '/s', '/q', path]
-        : ['rm', '-rf', path];
+        ? ['cmd', '/c', 'rmdir', '/s', '/q', removePath]
+        : ['rm', '-rf', removePath];
 
     const proc = Bun.spawn(command, {
       stdout: 'inherit',
@@ -219,14 +221,11 @@ class TestWorkflow {
           'Cleaning dist directory',
         );
         await this.fileManager.removeSafeItem(
-          'node_modules',
-          'Cleaning node_modules',
+          'node_modules/vitepress-mermaid-renderer',
+          'Removing local package',
         );
 
-        this.logger.step('Installing dependencies');
-        await this.packageManager.installDependencies();
-
-        this.logger.subStep('Installing local package');
+        this.logger.step('Installing local package');
         const packageFile = await this.findPackageArchive();
         if (!packageFile) {
           throw new Error('No package archive found in parent directory.');

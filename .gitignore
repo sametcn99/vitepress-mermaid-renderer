@@ -140,3 +140,4 @@ test-project/.yalc
 playwright-report
 test-results
 .omo/
+.playwright-mcp/

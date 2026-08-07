@@ -8,12 +8,14 @@ import { _resetFullscreenManager } from '../../src/composables/useFullscreenMana
 const mermaidMocks = vi.hoisted(() => ({
   initialize: vi.fn(),
   run: vi.fn(),
+  registerExternalDiagrams: vi.fn(),
 }));
 
 vi.mock('mermaid', () => ({
   default: {
     initialize: mermaidMocks.initialize,
     run: mermaidMocks.run,
+    registerExternalDiagrams: mermaidMocks.registerExternalDiagrams,
   },
 }));
 
@@ -30,6 +32,8 @@ describe('MermaidDiagram', () => {
     _resetFullscreenManager();
     mermaidMocks.initialize.mockReset();
     mermaidMocks.run.mockReset();
+    mermaidMocks.registerExternalDiagrams.mockReset();
+    mermaidMocks.registerExternalDiagrams.mockResolvedValue(undefined);
     mermaidMocks.run.mockImplementation(
       async ({ nodes }: { nodes: Element[] }) => {
         const [element] = nodes;
@@ -122,6 +126,162 @@ describe('MermaidDiagram', () => {
     wrapper.unmount();
   });
 
+  it('keeps the zoom transform outside the Mermaid render target during theme updates', async () => {
+    const wrapper = mount(MermaidDiagram, {
+      attachTo: document.body,
+      props: {
+        code: 'flowchart LR\nA-->B',
+      },
+    });
+
+    await flushDiagramRender();
+    await wrapper.get('[data-mermaid-control="zoomIn"]').trigger('click');
+    const viewport = wrapper.get('.mermaid-viewport');
+
+    expect(viewport.attributes('style')).toContain('scale(1.2)');
+    expect(viewport.classes()).toContain('mermaid-zooming');
+    await vi.advanceTimersByTimeAsync(300);
+    expect(viewport.classes()).not.toContain('mermaid-zooming');
+
+    document.dispatchEvent(
+      new CustomEvent('vitepress-mermaid:config-updated', {
+        detail: { theme: 'dark' },
+      }),
+    );
+    await flushDiagramRender();
+
+    expect(viewport.attributes('style')).toContain('scale(1.2)');
+    expect(wrapper.find('.mermaid > svg').exists()).toBe(true);
+    wrapper.unmount();
+  });
+
+  it('anchors fullscreen wheel zoom to the cursor position', async () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        if (this.classList.contains('diagram-wrapper')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        return new DOMRect(20, 30, 100, 40);
+      },
+    );
+
+    const wrapper = mount(MermaidDiagram, {
+      attachTo: document.body,
+      props: {
+        code: 'flowchart LR\nA-->B',
+        toolbar: resolveToolbarConfig({ fullscreenMode: 'dialog' }),
+      },
+    });
+    await flushDiagramRender();
+
+    await wrapper
+      .get('[data-mermaid-control="toggleFullscreen"]')
+      .trigger('click');
+    await wrapper.get('.diagram-wrapper').trigger('wheel', {
+      deltaY: -120,
+      clientX: 50,
+      clientY: 30,
+    });
+    await vi.runAllTimersAsync();
+
+    const transform =
+      wrapper.get('.mermaid-viewport').attributes('style') ?? '';
+    expect(transform).toContain('scale(1.1)');
+    const translate = transform.match(/translate\(([-\d.]+)px, ([-\d.]+)px\)/);
+    expect(translate).not.toBeNull();
+    expect(Number(translate?.[1])).toBeCloseTo(13.63636363636364);
+    expect(Number(translate?.[2])).toBeCloseTo(6.363636363636366);
+    wrapper.unmount();
+  });
+
+  it('anchors fullscreen toolbar zoom to the SVG center', async () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        if (this.classList.contains('diagram-wrapper')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        return new DOMRect(20, 30, 100, 40);
+      },
+    );
+    vi.spyOn(SVGElement.prototype, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(20, 30, 100, 40),
+    );
+
+    const wrapper = mount(MermaidDiagram, {
+      attachTo: document.body,
+      props: {
+        code: 'flowchart LR\nA-->B',
+        toolbar: resolveToolbarConfig({
+          fullscreenMode: 'dialog',
+          fullscreen: { zoomIn: 'enabled', zoomOut: 'enabled' },
+        }),
+      },
+    });
+    await flushDiagramRender();
+
+    await wrapper
+      .get('[data-mermaid-control="toggleFullscreen"]')
+      .trigger('click');
+    await wrapper.get('[data-mermaid-control="zoomIn"]').trigger('click');
+
+    const transform =
+      wrapper.get('.mermaid-viewport').attributes('style') ?? '';
+    expect(transform).toContain('scale(1.2)');
+    const translate = transform.match(/translate\(([-\d.]+)px, ([-\d.]+)px\)/);
+    expect(translate).not.toBeNull();
+    expect(Number(translate?.[1])).toBeCloseTo(21.666666666666668);
+    expect(Number(translate?.[2])).toBeCloseTo(8.333333333333334);
+    wrapper.unmount();
+  });
+
+  it('preserves the fitted zoom level when the theme rerenders the diagram', async () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        if (this.classList.contains('diagram-wrapper')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        if (this.classList.contains('mermaid')) {
+          return new DOMRect(0, 0, 600, 100);
+        }
+        return new DOMRect();
+      },
+    );
+
+    const wrapper = mount(MermaidDiagram, {
+      attachTo: document.body,
+      props: {
+        code: 'flowchart LR\nA-->B',
+        fitToContainer: true,
+      },
+    });
+
+    await flushDiagramRender();
+    const viewport = wrapper.get('.mermaid-viewport');
+    await wrapper.get('[data-mermaid-control="zoomOut"]').trigger('click');
+    const zoomedTransform = viewport.attributes('style');
+    let transformDuringThemeRender = '';
+    mermaidMocks.run.mockImplementation(
+      async ({ nodes }: { nodes: Element[] }) => {
+        const [element] = nodes;
+        transformDuringThemeRender = (element.parentElement as HTMLElement)
+          .style.transform;
+        element.innerHTML = '<svg viewBox="0 0 120 60"></svg>';
+      },
+    );
+
+    document.dispatchEvent(
+      new CustomEvent('vitepress-mermaid:config-updated', {
+        detail: { theme: 'dark' },
+      }),
+    );
+    await flushDiagramRender();
+
+    expect(transformDuringThemeRender).toBe('scale(1) translate(0px, 0px)');
+    expect(viewport.attributes('style')).toBe(zoomedTransform);
+    expect(wrapper.find('.mermaid > svg').exists()).toBe(true);
+    wrapper.unmount();
+  });
+
   it('fits and centers the diagram when fitToContainer is enabled', async () => {
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
       function (this: HTMLElement) {
@@ -145,20 +305,22 @@ describe('MermaidDiagram', () => {
     await flushDiagramRender();
     await vi.runAllTimersAsync();
 
-    const diagram = wrapper.get('.mermaid').element as HTMLElement;
+    const diagram = wrapper.get('.mermaid-viewport').element as HTMLElement;
     const transform = diagram.style.transform;
     expect(transform).toContain('scale(0.6666666666666666)');
-    expect(transform).toContain('translate(-150px, 75px)');
+    expect(transform).toContain('translate(-100px, 50px)');
+    expect(wrapper.get('.zoom-level').text()).toBe('100%');
 
     await wrapper.get('[data-mermaid-control="zoomIn"]').trigger('click');
     expect(diagram.style.transform).toContain('scale(0.7999999999999999)');
+    expect(wrapper.get('.zoom-level').text()).toBe('120%');
 
     await wrapper.get('[data-mermaid-control="resetView"]').trigger('click');
     await vi.runAllTimersAsync();
     await nextTick();
 
     expect(diagram.style.transform).toContain('scale(0.6666666666666666)');
-    expect(diagram.style.transform).toContain('translate(-150px, 75px)');
+    expect(diagram.style.transform).toContain('translate(-100px, 50px)');
     wrapper.unmount();
   });
 
@@ -178,6 +340,8 @@ describe('MermaidDiagram', () => {
     await Promise.resolve();
     await nextTick();
     await Promise.resolve();
+    await nextTick();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
     await nextTick();
 
     expect(wrapper.find('.diagram-error').exists()).toBe(true);

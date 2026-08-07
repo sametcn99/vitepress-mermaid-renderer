@@ -27,6 +27,7 @@
  */
 import { ref, onMounted, onUnmounted, nextTick, type Ref } from 'vue';
 import mermaid, { type MermaidConfig } from 'mermaid';
+import zenuml from '@mermaid-js/mermaid-zenuml';
 
 /**
  * Global promise chain that serialises all `mermaid.run()` invocations
@@ -37,6 +38,13 @@ import mermaid, { type MermaidConfig } from 'mermaid';
  * tasks), a failure in one diagram does not block subsequent ones.
  */
 let renderPipeline: Promise<void> = Promise.resolve();
+let externalDiagramRegistration: Promise<void> | null = null;
+
+/** Registers Mermaid diagram modules that are distributed as external plugins. */
+const registerExternalDiagrams = (): Promise<void> => {
+  externalDiagramRegistration ??= mermaid.registerExternalDiagrams([zenuml]);
+  return externalDiagramRegistration;
+};
 
 /**
  * Resets the global render pipeline so that stale promise chains from
@@ -157,6 +165,11 @@ const waitForPaint = (): Promise<void> =>
 export interface UseMermaidRendererOptions {
   /** Optional Mermaid configuration merged into the defaults. */
   config?: MermaidConfig;
+  /** Invoked after the target is found but before Mermaid renders into it. */
+  onBeforeRender?: (payload: {
+    id: string;
+    code: string;
+  }) => void | Promise<void>;
   /**
    * Callback invoked after each render attempt (success or failure).
    * Used by `MermaidDiagram.vue` to emit the `renderComplete` event.
@@ -496,6 +509,10 @@ export function useMermaidRenderer(
       }
 
       lastRenderContext.value = { id, code };
+      const beforeRender = options.onBeforeRender?.({ id, code });
+      if (beforeRender) {
+        await beforeRender;
+      }
 
       element.textContent = code;
       element.removeAttribute('data-processed');
@@ -508,6 +525,7 @@ export function useMermaidRenderer(
 
       await enqueueMermaidRender(async () => {
         try {
+          await registerExternalDiagrams();
           await mermaid.run({
             nodes: [element],
             suppressErrors: false,

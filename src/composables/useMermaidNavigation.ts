@@ -50,6 +50,18 @@ import { ref, watch, type Ref } from 'vue';
  */
 export type FullscreenBehavior = 'browser' | 'dialog';
 
+/** Details of a zoom change initiated by a pointer or pinch gesture. */
+export interface MermaidZoomChange {
+  /** User zoom before the interaction. */
+  previousScale: number;
+  /** User zoom after the interaction. */
+  scale: number;
+  /** Viewport-relative horizontal gesture coordinate. */
+  clientX: number;
+  /** Viewport-relative vertical gesture coordinate. */
+  clientY: number;
+}
+
 /**
  * Optional configuration for zoom and pan limits in
  * {@link useMermaidNavigation}.
@@ -61,6 +73,8 @@ export interface MermaidNavigationOptions {
   maxScale?: number;
   /** Zoom factor applied on each zoom-in / zoom-out step. Defaults to `1.2`. */
   zoomStep?: number;
+  /** Receives pointer coordinates whenever wheel or pinch zoom changes scale. */
+  onGestureZoom?: (change: MermaidZoomChange) => void;
 }
 
 /**
@@ -236,6 +250,24 @@ export function useMermaidNavigation(
    */
   const PAN_STEP = 50;
 
+  /** Applies a gesture scale change and reports the gesture focal point. */
+  const applyGestureZoom = (
+    newScale: number,
+    clientX: number,
+    clientY: number,
+  ) => {
+    if (newScale < MIN_SCALE || newScale > MAX_SCALE) return;
+
+    const previousScale = scale.value;
+    scale.value = newScale;
+    options.onGestureZoom?.({
+      previousScale,
+      scale: newScale,
+      clientX,
+      clientY,
+    });
+  };
+
   /** Increases the zoom level by {@link ZOOM_STEP}. */
   const zoomIn = () => {
     scale.value = scale.value * ZOOM_STEP;
@@ -293,10 +325,8 @@ export function useMermaidNavigation(
     if (!Number.isFinite(fittedScale) || fittedScale <= 0) return;
 
     scale.value = fittedScale;
-    translateX.value =
-      (containerBounds.width - diagramBounds.width) / 2 / fittedScale;
-    translateY.value =
-      (containerBounds.height - diagramBounds.height) / 2 / fittedScale;
+    translateX.value = (containerBounds.width - diagramBounds.width) / 2;
+    translateY.value = (containerBounds.height - diagramBounds.height) / 2;
   };
 
   /** Restores the non-fullscreen view after a fullscreen session ends. */
@@ -451,9 +481,7 @@ export function useMermaidNavigation(
     const newScale = scale.value * (1 + delta);
 
     // Apply bounds to prevent extreme zooming
-    if (newScale >= MIN_SCALE && newScale <= MAX_SCALE) {
-      scale.value = newScale;
-    }
+    applyGestureZoom(newScale, e.clientX, e.clientY);
   };
 
   /**
@@ -535,6 +563,8 @@ export function useMermaidNavigation(
         e.preventDefault();
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
+        const midX = (touch1.clientX + touch2.clientX) / 2;
+        const midY = (touch1.clientY + touch2.clientY) / 2;
 
         // Pinch zoom
         const currentDistance = Math.hypot(
@@ -544,15 +574,11 @@ export function useMermaidNavigation(
         if (initialTouchDistance.value > 0) {
           const zoomRatio = currentDistance / initialTouchDistance.value;
           const newScale = scale.value * (1 + (zoomRatio - 1) * 0.2);
-          if (newScale >= MIN_SCALE && newScale <= MAX_SCALE) {
-            scale.value = newScale;
-          }
+          applyGestureZoom(newScale, midX, midY);
           initialTouchDistance.value = currentDistance;
         }
 
         // Two-finger pan (midpoint tracking)
-        const midX = (touch1.clientX + touch2.clientX) / 2;
-        const midY = (touch1.clientY + touch2.clientY) / 2;
         translateX.value += (midX - lastTouchX.value) / scale.value;
         translateY.value += (midY - lastTouchY.value) / scale.value;
         lastTouchX.value = midX;
@@ -590,9 +616,9 @@ export function useMermaidNavigation(
         const newScale = scale.value * (1 + (zoomRatio - 1) * 0.2);
 
         // Limit scale to reasonable bounds
-        if (newScale >= MIN_SCALE && newScale <= MAX_SCALE) {
-          scale.value = newScale;
-        }
+        const midX = (touch1.clientX + touch2.clientX) / 2;
+        const midY = (touch1.clientY + touch2.clientY) / 2;
+        applyGestureZoom(newScale, midX, midY);
 
         initialTouchDistance.value = currentDistance;
       }

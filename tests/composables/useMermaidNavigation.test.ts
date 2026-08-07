@@ -75,8 +75,8 @@ describe('useMermaidNavigation', () => {
       nav.fitDiagramToContainer(container, diagram);
 
       expect(nav.scale.value).toBeCloseTo(2 / 3);
-      expect(nav.translateX.value).toBeCloseTo(-150);
-      expect(nav.translateY.value).toBeCloseTo(75);
+      expect(nav.translateX.value).toBeCloseTo(-100);
+      expect(nav.translateY.value).toBeCloseTo(50);
     });
 
     it('does not update the view when either element has no layout size', () => {
@@ -159,6 +159,21 @@ describe('useMermaidNavigation', () => {
       expect(nav.scale.value).toBeLessThan(1);
     });
 
+    it('reports the wheel cursor as the zoom focal point', () => {
+      const onGestureZoom = vi.fn();
+      const nav = useMermaidNavigation({ onGestureZoom });
+      nav.toggleFullscreen(null, 'dialog');
+
+      nav.handleWheel(wheelEvent({ deltaY: -120, clientX: 160, clientY: 90 }));
+
+      expect(onGestureZoom).toHaveBeenCalledWith({
+        previousScale: 1,
+        scale: 1.1,
+        clientX: 160,
+        clientY: 90,
+      });
+    });
+
     it('clamps zoom inside [0.2, 10]', () => {
       const nav = useMermaidNavigation();
       nav.toggleFullscreen(null, 'dialog');
@@ -202,6 +217,21 @@ describe('useMermaidNavigation', () => {
       // distance doubled → zoomRatio=2 → newScale = 1*(1+1*0.2) = 1.2
       expect(nav.scale.value).toBeCloseTo(1.2);
       nav.handleTouchEnd();
+    });
+
+    it('reports the pinch midpoint as the zoom focal point', () => {
+      const onGestureZoom = vi.fn();
+      const nav = useMermaidNavigation({ onGestureZoom });
+      nav.toggleFullscreen(null, 'dialog');
+      nav.handleTouchStart(touchEvent([touch(20, 40), touch(80, 40)]));
+      nav.handleTouchMove(touchEvent([touch(10, 40), touch(110, 40)]));
+
+      expect(onGestureZoom).toHaveBeenCalledWith({
+        previousScale: 1,
+        scale: expect.any(Number),
+        clientX: 60,
+        clientY: 40,
+      });
     });
   });
 

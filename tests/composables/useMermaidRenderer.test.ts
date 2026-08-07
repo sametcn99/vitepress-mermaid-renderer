@@ -6,12 +6,14 @@ import { useMermaidRenderer } from '../../src/composables/useMermaidRenderer';
 const mermaidMocks = vi.hoisted(() => ({
   initialize: vi.fn(),
   run: vi.fn(),
+  registerExternalDiagrams: vi.fn(),
 }));
 
 vi.mock('mermaid', () => ({
   default: {
     initialize: mermaidMocks.initialize,
     run: mermaidMocks.run,
+    registerExternalDiagrams: mermaidMocks.registerExternalDiagrams,
   },
 }));
 
@@ -55,6 +57,8 @@ describe('useMermaidRenderer', () => {
   beforeEach(() => {
     mermaidMocks.initialize.mockReset();
     mermaidMocks.run.mockReset();
+    mermaidMocks.registerExternalDiagrams.mockReset();
+    mermaidMocks.registerExternalDiagrams.mockResolvedValue(undefined);
     mermaidMocks.run.mockImplementation(
       async ({ nodes }: { nodes: Element[] }) => {
         const [element] = nodes;

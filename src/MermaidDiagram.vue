@@ -46,8 +46,8 @@
       :code="code"
       :is-fullscreen="isFullscreen"
       :toolbar="resolvedToolbar"
-      @zoom-in="zoomIn"
-      @zoom-out="zoomOut"
+      @zoom-in="handleZoomIn"
+      @zoom-out="handleZoomOut"
       @reset-view="handleResetView"
       @toggle-fullscreen="handleToggleFullscreen"
       @pan-up="panUp"
@@ -94,18 +94,24 @@
         {{ isRendered ? 'Diagram loaded' : 'Loading diagram…' }}
       </span>
       <div
-        :id="diagramId"
-        class="mermaid"
-        :aria-label="`Mermaid diagram: ${code.slice(0, 80)}`"
+        class="mermaid-viewport"
+        :class="{ 'mermaid-zooming': isZoomTransitionActive }"
         :style="{
-          opacity: isRendered ? 1 : 0,
+          transformOrigin,
           transform: isStatic
             ? undefined
-            : `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
+            : `scale(${fitScale * scale}) translate(${fitTranslateX + translateX}px, ${fitTranslateY + translateY}px)`,
           cursor: isStatic ? undefined : isPanning ? 'grabbing' : 'grab',
         }"
       >
-        {{ code }}
+        <div
+          :id="diagramId"
+          class="mermaid"
+          :aria-label="`Mermaid diagram: ${code.slice(0, 80)}`"
+          :style="{ opacity: isRendered ? 1 : 0 }"
+        >
+          {{ code }}
+        </div>
       </div>
     </div>
   </div>
@@ -124,7 +130,10 @@ import {
 import type { MermaidConfig } from 'mermaid';
 import MermaidControls from './components/MermaidControls.vue';
 import MermaidError from './components/MermaidError.vue';
-import { useMermaidNavigation } from './composables/useMermaidNavigation';
+import {
+  useMermaidNavigation,
+  type MermaidZoomChange,
+} from './composables/useMermaidNavigation';
 import { useMermaidRenderer } from './composables/useMermaidRenderer';
 import {
   onFullscreenChange,
@@ -189,9 +198,27 @@ const resolvedToolbar = ref<ResolvedToolbarConfig>(
   resolveIncomingToolbar(props.toolbar),
 );
 
-const navigation = useMermaidNavigation();
+type DiagramView = {
+  scale: number;
+  translateX: number;
+  translateY: number;
+};
+
+const navigation = useMermaidNavigation({
+  onGestureZoom: handleGestureZoom,
+});
 const renderer = useMermaidRenderer({
   config: props.config,
+  onBeforeRender: () => {
+    if (!viewToRestoreAfterThemeRender) return;
+
+    deactivateZoomTransition();
+    resetView();
+    fitScale.value = 1;
+    fitTranslateX.value = 0;
+    fitTranslateY.value = 0;
+    return nextTick();
+  },
   onRenderComplete: (payload) => emit('renderComplete', payload),
 });
 
@@ -236,6 +263,18 @@ const fullscreenWrapper = ref<HTMLElement | null>(null);
 
 /** Reference to the viewport that constrains the interactive diagram. */
 const diagramWrapper = ref<HTMLElement | null>(null);
+
+/** Transform origin expressed relative to the diagram viewport. */
+const transformOrigin = ref('center center');
+/** Base transform that fits the diagram without changing the user's zoom level. */
+const fitScale = ref(1);
+const fitTranslateX = ref(0);
+const fitTranslateY = ref(0);
+/** Enables the short zoom transition without affecting drag interactions. */
+const isZoomTransitionActive = ref(false);
+let zoomTransitionTimeout: ReturnType<typeof setTimeout> | null = null;
+let diagramResizeObserver: ResizeObserver | null = null;
+let viewToRestoreAfterThemeRender: DiagramView | null = null;
 
 /**
  * Component-instance UID used to generate a globally unique `id`
@@ -288,10 +327,13 @@ const handleStaticModeUpdated = (event: Event) => {
 };
 
 /** Applies the configured fit mode after Vue has committed the rendered SVG. */
-const applyFitToContainer = async () => {
+const applyFitToContainer = async (viewToRestore?: DiagramView) => {
   if (!fitToContainer.value || isStatic.value) return;
 
   resetView();
+  fitScale.value = 1;
+  fitTranslateX.value = 0;
+  fitTranslateY.value = 0;
   await nextTick();
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
@@ -300,6 +342,27 @@ const applyFitToContainer = async () => {
     diagramWrapper.value,
     document.getElementById(diagramId),
   );
+  fitScale.value = scale.value;
+  fitTranslateX.value = translateX.value;
+  fitTranslateY.value = translateY.value;
+
+  if (viewToRestore) {
+    scale.value = viewToRestore.scale;
+    translateX.value = viewToRestore.translateX;
+    translateY.value = viewToRestore.translateY;
+    return;
+  }
+
+  resetView();
+};
+
+/** Recalculates the fit base after a theme-driven Mermaid rerender. */
+const handleConfigUpdated = () => {
+  viewToRestoreAfterThemeRender = {
+    scale: scale.value,
+    translateX: translateX.value,
+    translateY: translateY.value,
+  };
 };
 
 /** Updates the fitting mode for already-mounted diagrams. */
@@ -309,12 +372,126 @@ const handleFitToContainerUpdated = (event: Event) => {
 
 /** Resets to the fitted view when automatic fitting is enabled. */
 const handleResetView = () => {
+  deactivateZoomTransition();
   if (fitToContainer.value && !isStatic.value) {
     void applyFitToContainer();
     return;
   }
 
   resetView();
+};
+
+/** Enables the zoom transition briefly for discrete zoom actions. */
+const activateZoomTransition = () => {
+  isZoomTransitionActive.value = true;
+  if (zoomTransitionTimeout) clearTimeout(zoomTransitionTimeout);
+  zoomTransitionTimeout = setTimeout(() => {
+    isZoomTransitionActive.value = false;
+    zoomTransitionTimeout = null;
+  }, 300);
+};
+
+/** Stops an active zoom transition before a view is measured or reset. */
+const deactivateZoomTransition = () => {
+  isZoomTransitionActive.value = false;
+  if (zoomTransitionTimeout) {
+    clearTimeout(zoomTransitionTimeout);
+    zoomTransitionTimeout = null;
+  }
+};
+
+/** Keeps a fullscreen gesture's focal point stationary while zooming. */
+function handleGestureZoom(change: MermaidZoomChange) {
+  preserveFullscreenZoomAnchor(
+    change.previousScale,
+    change.scale,
+    change.clientX,
+    change.clientY,
+  );
+}
+
+/** Preserves a client-space point while the total fit and user scale changes. */
+function preserveFullscreenZoomAnchor(
+  previousUserScale: number,
+  nextUserScale: number,
+  clientX: number,
+  clientY: number,
+) {
+  if (
+    !isFullscreen.value ||
+    !diagramWrapper.value ||
+    previousUserScale === nextUserScale
+  ) {
+    return;
+  }
+
+  const wrapperBounds = diagramWrapper.value.getBoundingClientRect();
+  const previousScale = fitScale.value * previousUserScale;
+  const nextScale = fitScale.value * nextUserScale;
+  if (previousScale <= 0 || nextScale <= 0) return;
+
+  const focalX = clientX - wrapperBounds.left;
+  const focalY = clientY - wrapperBounds.top;
+  const originX = wrapperBounds.width / 2;
+  const originY = wrapperBounds.height / 2;
+
+  translateX.value += (focalX - originX) * (1 / nextScale - 1 / previousScale);
+  translateY.value += (focalY - originY) * (1 / nextScale - 1 / previousScale);
+}
+
+/** Gets the current screen-space center of the rendered SVG. */
+function getSvgCenter() {
+  const svg = document.getElementById(diagramId)?.querySelector('svg');
+  if (!svg) return null;
+
+  const bounds = svg.getBoundingClientRect();
+  if (bounds.width <= 0 || bounds.height <= 0) return null;
+
+  return {
+    clientX: bounds.left + bounds.width / 2,
+    clientY: bounds.top + bounds.height / 2,
+  };
+}
+
+/** Zooms in with a short transition. */
+const handleZoomIn = () => {
+  const svgCenter = getSvgCenter();
+  const previousScale = scale.value;
+  activateZoomTransition();
+  zoomIn();
+  if (svgCenter) {
+    preserveFullscreenZoomAnchor(
+      previousScale,
+      scale.value,
+      svgCenter.clientX,
+      svgCenter.clientY,
+    );
+  }
+};
+
+/** Zooms out with a short transition. */
+const handleZoomOut = () => {
+  const svgCenter = getSvgCenter();
+  const previousScale = scale.value;
+  activateZoomTransition();
+  zoomOut();
+  if (svgCenter) {
+    preserveFullscreenZoomAnchor(
+      previousScale,
+      scale.value,
+      svgCenter.clientX,
+      svgCenter.clientY,
+    );
+  }
+};
+
+/** Keeps zooming centered on the visible diagram container. */
+const updateTransformOrigin = () => {
+  if (isStatic.value || !diagramWrapper.value) return;
+  const bounds = diagramWrapper.value.getBoundingClientRect();
+  if (bounds.width > 0 && bounds.height > 0) {
+    transformOrigin.value = `${bounds.width / 2}px ${bounds.height / 2}px`;
+  }
 };
 
 /**
@@ -349,7 +526,9 @@ const handleWheelEvent = (event: WheelEvent) => {
     requestAnimationFrame(() => {
       wheelRafPending = false;
       if (wheelEvent) {
+        const previousScale = scale.value;
         handleWheel(wheelEvent);
+        if (scale.value !== previousScale) activateZoomTransition();
         wheelEvent = null;
       }
     });
@@ -383,11 +562,11 @@ const handleKeyDown = (event: KeyboardEvent) => {
   switch (event.key) {
     case '+':
     case '=':
-      zoomIn();
+      handleZoomIn();
       event.preventDefault();
       break;
     case '-':
-      zoomOut();
+      handleZoomOut();
       event.preventDefault();
       break;
     case '0':
@@ -453,6 +632,12 @@ onMounted(async () => {
   try {
     await nextTick();
     await renderMermaidDiagram(diagramId, props.code);
+    updateTransformOrigin();
+    await applyFitToContainer();
+    if (typeof ResizeObserver !== 'undefined' && diagramWrapper.value) {
+      diagramResizeObserver = new ResizeObserver(updateTransformOrigin);
+      diagramResizeObserver.observe(diagramWrapper.value);
+    }
 
     if (!isStatic.value) {
       registerFullscreenChangeListener();
@@ -468,6 +653,10 @@ onMounted(async () => {
     document.addEventListener(
       'vitepress-mermaid:fit-to-container-updated',
       handleFitToContainerUpdated,
+    );
+    document.addEventListener(
+      'vitepress-mermaid:config-updated',
+      handleConfigUpdated,
     );
   } catch (error) {
     console.error('Error in component initialization:', error);
@@ -489,10 +678,30 @@ watch(isStatic, (staticMode) => {
   }
 });
 
+watch(isRendered, (rendered) => {
+  if (rendered && viewToRestoreAfterThemeRender) {
+    const viewToRestore = viewToRestoreAfterThemeRender;
+    viewToRestoreAfterThemeRender = null;
+    if (fitToContainer.value && !isStatic.value) {
+      void applyFitToContainer(viewToRestore);
+      return;
+    }
+
+    scale.value = viewToRestore.scale;
+    translateX.value = viewToRestore.translateX;
+    translateY.value = viewToRestore.translateY;
+  }
+});
+
 watch(
-  [isRendered, fitToContainer, isStatic],
-  ([rendered, enabled, staticMode]) => {
-    if (rendered && enabled && !staticMode) {
+  [fitToContainer, isStatic],
+  ([enabled, staticMode], [previousEnabled, previousStaticMode]) => {
+    if (
+      enabled &&
+      !staticMode &&
+      (enabled !== previousEnabled || staticMode !== previousStaticMode)
+    ) {
+      updateTransformOrigin();
       void applyFitToContainer();
     }
   },
@@ -503,6 +712,8 @@ onUnmounted(() => {
     document.body.classList.remove('mermaid-dialog-open');
   }
   unregisterFullscreenChangeListener();
+  if (zoomTransitionTimeout) clearTimeout(zoomTransitionTimeout);
+  diagramResizeObserver?.disconnect();
   document.removeEventListener(
     'vitepress-mermaid:toolbar-updated',
     handleToolbarUpdated,
@@ -514,6 +725,10 @@ onUnmounted(() => {
   document.removeEventListener(
     'vitepress-mermaid:fit-to-container-updated',
     handleFitToContainerUpdated,
+  );
+  document.removeEventListener(
+    'vitepress-mermaid:config-updated',
+    handleConfigUpdated,
   );
 });
 </script>

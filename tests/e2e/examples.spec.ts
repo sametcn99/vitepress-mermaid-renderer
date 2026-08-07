@@ -34,13 +34,32 @@ test.describe('examples pages', () => {
     }
   });
 
-  test('advanced examples page renders at least one diagram', async ({
+  test('advanced examples renders every supported diagram type', async ({
     page,
   }) => {
     await page.goto('/examples/advanced');
     const diagrams = page.locator('.mermaid-container');
     await expect(diagrams.first()).toBeVisible();
-    await expect(diagrams.first().locator('.mermaid > svg')).toBeVisible();
+
+    await page.evaluate(async () => {
+      const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+      const step = 500;
+      for (let y = 0; y < document.body.scrollHeight; y += step) {
+        window.scrollTo(0, y);
+        await delay(200);
+      }
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+
+    await expect
+      .poll(async () => diagrams.count(), { timeout: 30_000 })
+      .toBe(30);
+
+    for (let i = 0; i < 30; i += 1) {
+      await expect(diagrams.nth(i).locator('.mermaid > svg')).toBeVisible({
+        timeout: 30_000,
+      });
+    }
   });
 
   test('zooming one diagram does not affect sibling diagrams', async ({
@@ -61,7 +80,7 @@ test.describe('examples pages', () => {
     await expect(second.locator('.mermaid > svg')).toBeVisible();
 
     const secondInitial = await second
-      .locator('.mermaid')
+      .locator('.mermaid-viewport')
       .first()
       .evaluate((el) => (el as HTMLElement).style.transform);
 
@@ -73,11 +92,11 @@ test.describe('examples pages', () => {
       .click();
 
     const firstAfter = await first
-      .locator('.mermaid')
+      .locator('.mermaid-viewport')
       .first()
       .evaluate((el) => (el as HTMLElement).style.transform);
     const secondAfter = await second
-      .locator('.mermaid')
+      .locator('.mermaid-viewport')
       .first()
       .evaluate((el) => (el as HTMLElement).style.transform);
 

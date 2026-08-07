@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.1.31
+
+### Added
+
+- Added cursor-anchored wheel zoom and pinch-anchored gesture zoom in fullscreen
+  mode. Toolbar zoom controls now zoom around the rendered SVG center.
+- Added ZenUML external-diagram registration and a complete advanced example
+  catalog covering all 30 Mermaid diagram types supported by this package.
+
+### Fixed
+
+- Fixed theme changes re-rendering diagrams while a zoom or pan transform was
+  active. Mermaid now renders at an identity transform and restores the user's
+  fitted view, zoom level, and pan position afterward. Fixes #14.
+- Fixed `fitToContainer` so fitting is a base visual transform while the
+  toolbar's initial zoom level remains `100%`. User zoom and pan are preserved
+  across re-renders and fullscreen transitions. Fixes #15.
+- Fixed Reset View with `fitToContainer` so it restores the unscaled `100%` user
+  view instead of the fitted and centered position. Fixes #16.
+- Added a short zoom transition that does not interfere with reset or fit
+  measurement. Fixes #17.
+- Corrected the Requirement and Radar examples to use Mermaid's current syntax.
+
+### Changed
+
+- Optimized the smoke-test package setup to remove and reinstall only the local
+  `vitepress-mermaid-renderer` dependency instead of deleting all test-project
+  dependencies.
+- Expanded renderer, navigation, and end-to-end coverage for theme rerenders,
+  fit behavior, focal fullscreen zoom, and the advanced diagram catalog.
+
 ## 1.1.30
 
 ### Added in 1.1.30

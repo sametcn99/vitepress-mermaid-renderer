@@ -1,24 +1,25 @@
-# 高级 Mermaid 示例
+# Advanced Mermaid Examples
 
-本页展示更大、更接近真实场景的 Mermaid 图表。对于宽图表，全屏、重置和下载控件尤其有用。
+This page demonstrates more advanced Mermaid diagrams with advanced features and
+real-world use cases.
 
-## 带子图的高级流程图
+## Advanced Flowchart with Subgraphs
 
 ```mermaid
 flowchart TB
-    subgraph Backend["后端服务"]
+    subgraph Backend["Backend Services"]
         direction TB
-        API[API 网关] --> Auth[身份验证]
-        API --> Cache[Redis 缓存]
-        API --> DB[(数据库)]
+        API[API Gateway] --> Auth[Authentication]
+        API --> Cache[Redis Cache]
+        API --> DB[(Database)]
         Cache --> DB
     end
 
-    subgraph Frontend["前端应用"]
+    subgraph Frontend["Frontend Application"]
         direction TB
-        UI[用户界面] --> State[状态管理]
-        State --> APIClient[API 客户端]
-        APIClient --> Retry[重试逻辑]
+        UI[User Interface] --> State[State Management]
+        State --> APIClient[API Client]
+        APIClient --> Retry[Retry Logic]
     end
 
     Frontend ---> Backend
@@ -27,43 +28,43 @@ flowchart TB
     style Backend fill:#bbf,stroke:#333,stroke-width:2px
 ```
 
-## 带激活和注释的高级时序图
+## Advanced Sequence Diagram with Activation and Notes
 
 ```mermaid
 sequenceDiagram
-    participant User as 用户
-    participant Client as 客户端
-    participant LoadBalancer as 负载均衡器
-    participant ServiceA as 服务A
-    participant ServiceB as 服务B
-    participant Database as 数据库
+    participant User
+    participant Client
+    participant LoadBalancer
+    participant ServiceA
+    participant ServiceB
+    participant Database
 
     rect rgb(200, 220, 255)
-    note right of User: 身份验证流程
-    User->>+Client: 登录请求
+    note right of User: Authentication Flow
+    User->>+Client: Login Request
     Client->>+LoadBalancer: POST /auth
-    LoadBalancer->>+ServiceA: 路由请求
-    ServiceA->>+Database: 验证凭据
-    Database-->>-ServiceA: 找到用户
+    LoadBalancer->>+ServiceA: Route Request
+    ServiceA->>+Database: Validate Credentials
+    Database-->>-ServiceA: User Found
     ServiceA-->>-LoadBalancer: JWT Token
-    LoadBalancer-->>-Client: 成功响应
-    Client-->>-User: 登录成功
+    LoadBalancer-->>-Client: Success Response
+    Client-->>-User: Login Success
     end
 
     rect rgb(255, 220, 220)
-    note right of User: 数据请求流程
-    User->>+Client: 获取数据
+    note right of User: Data Request Flow
+    User->>+Client: Get Data
     Client->>+LoadBalancer: GET /data
-    LoadBalancer->>+ServiceB: 路由请求
-    ServiceB->>+Database: 查询数据
-    Database-->>-ServiceB: 返回结果
-    ServiceB-->>-LoadBalancer: 格式化响应
-    LoadBalancer-->>-Client: 发送数据
-    Client-->>-User: 展示数据
+    LoadBalancer->>+ServiceB: Route Request
+    ServiceB->>+Database: Query Data
+    Database-->>-ServiceB: Return Results
+    ServiceB-->>-LoadBalancer: Format Response
+    LoadBalancer-->>-Client: Send Data
+    Client-->>-User: Display Data
     end
 ```
 
-## 高级 Git 图
+## Advanced Git Graph
 
 ```mermaid
 gitGraph
@@ -86,18 +87,18 @@ gitGraph
     merge hotfix/security
     checkout develop
     merge main
-    branch release/stable
+    branch release/v1.0
     commit id: "version-bump"
     checkout main
-    merge release/stable tag: "stable-release"
+    merge release/v1.0 tag: "v1.0.0"
 ```
 
-## 高级状态机
+## Advanced State Machine
 
 ```mermaid
 stateDiagram-v2
     [*] --> Idle
-    state "支付流程" as Payment {
+    state "Payment Process" as Payment {
         [*] --> Initializing
         Initializing --> Processing: submit
         Processing --> ValidatingPayment: process
@@ -121,7 +122,7 @@ stateDiagram-v2
     }
 ```
 
-## 高级 ER 图
+## Advanced ER Diagram with Relationships
 
 ```mermaid
 erDiagram
@@ -168,26 +169,349 @@ erDiagram
     }
 ```
 
-## C4 图
+## Advanced C4 Diagram
 
 ```mermaid
 C4Context
-    title 互联网银行系统的系统上下文图
+    title System Context diagram for Internet Banking System
     Enterprise_Boundary(b0, "BankingCorp") {
-        Person(customer, "个人银行客户", "拥有个人银行账户的客户")
-        System(banking_system, "互联网银行系统", "允许客户查看账户信息并付款")
+        Person(customer, "Personal Banking Customer", "A customer of the bank with personal bank accounts")
+        System(banking_system, "Internet Banking System", "Allows customers to view information about their bank accounts and make payments")
 
-        System_Ext(mail_system, "电子邮件系统", "内部 Microsoft Exchange 电子邮件系统")
-        System_Ext(mainframe, "核心银行系统", "存储客户、账户、交易等核心银行信息")
+        System_Ext(mail_system, "E-mail system", "The internal Microsoft Exchange e-mail system")
+        System_Ext(mainframe, "Mainframe Banking System", "Stores all of the core banking information about customers, accounts, transactions, etc.")
     }
 
-    System_Ext(banking_app, "银行应用", "通过移动设备向客户提供部分互联网银行功能")
+    System_Ext(banking_app, "Banking App", "Provides a limited subset of the Internet banking functionality to customers via their mobile device")
 
-    Rel(customer, banking_system, "使用", "HTTPS")
-    Rel(customer, banking_app, "使用", "HTTPS")
-    Rel(banking_system, mail_system, "发送电子邮件", "SMTP")
-    Rel(banking_system, mainframe, "使用", "XML/HTTPS")
-    Rel(banking_app, banking_system, "使用", "JSON/HTTPS")
+    Rel(customer, banking_system, "Uses", "HTTPS")
+    Rel(customer, banking_app, "Uses", "HTTPS")
+    Rel(banking_system, mail_system, "Sends e-mails", "SMTP")
+    Rel(banking_system, mainframe, "Uses", "XML/HTTPS")
+    Rel(banking_app, banking_system, "Uses", "JSON/HTTPS")
 
     UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+```
+
+## Swimlane Diagram
+
+```mermaid
+swimlane-beta LR
+    subgraph Customer
+        request[Open request]
+        update[Receive update]
+    end
+
+    subgraph Support
+        triage[Triage request]
+        answer[Send answer]
+    end
+
+    request --> triage --> answer --> update
+```
+
+## Class Diagram
+
+```mermaid
+classDiagram
+    class Account {
+        +String id
+        +Decimal balance
+        +deposit(amount)
+    }
+    class Customer {
+        +String name
+    }
+    Customer "1" --> "*" Account : owns
+```
+
+## User Journey
+
+```mermaid
+journey
+    title Checkout journey
+    section Browse
+      Find a product: 5: Customer
+      Add to cart: 4: Customer
+    section Purchase
+      Enter payment details: 3: Customer
+      Receive confirmation: 5: Customer
+```
+
+## Gantt Chart
+
+```mermaid
+gantt
+    title Release plan
+    dateFormat YYYY-MM-DD
+    section Development
+    Design        :done, design, 2026-03-01, 3d
+    Implement     :active, implement, after design, 5d
+    section Release
+    Verify        :verify, after implement, 2d
+    Deploy        :milestone, deploy, after verify, 0d
+```
+
+## Pie Chart
+
+```mermaid
+pie showData
+    title Traffic by device
+    "Desktop" : 55
+    "Mobile" : 35
+    "Tablet" : 10
+```
+
+## Quadrant Chart
+
+```mermaid
+quadrantChart
+    title Feature prioritization
+    x-axis Low effort --> High effort
+    y-axis Low impact --> High impact
+    quadrant-1 Invest
+    quadrant-2 Quick wins
+    quadrant-3 Avoid
+    quadrant-4 Consider
+    Improve search: [0.25, 0.8]
+    Redesign dashboard: [0.8, 0.7]
+    Update copy: [0.2, 0.3]
+```
+
+## Requirement Diagram
+
+```mermaid
+requirementDiagram
+    requirement user_login {
+        id: 1
+        text: the login requirement
+        risk: high
+        verifymethod: test
+    }
+
+    element authentication_service {
+        type: simulation
+    }
+
+    authentication_service - satisfies -> user_login
+```
+
+## Mindmap
+
+```mermaid
+mindmap
+    root((Release))
+        Planning
+            Scope
+            Schedule
+        Delivery
+            Build
+            Test
+        Operations
+            Monitor
+```
+
+## Timeline
+
+```mermaid
+timeline
+    title Product milestones
+    2024 : Research
+         : Prototype
+    2025 : Public beta
+         : General availability
+    2026 : Expansion
+```
+
+## ZenUML Sequence Diagram
+
+```mermaid
+zenuml
+    title Order processing
+    Customer->Service: Place order
+    Service->Inventory: Reserve items
+    Inventory->Service: Items reserved
+    Service->Customer: Confirm order
+```
+
+## Sankey Diagram
+
+```mermaid
+sankey-beta
+Visitors,Documentation,700
+Visitors,Examples,300
+Documentation,Installation,420
+Documentation,Configuration,280
+Examples,Advanced examples,180
+Examples,Basic examples,120
+```
+
+## XY Chart
+
+```mermaid
+xychart
+    title "Monthly signups"
+    x-axis [Jan, Feb, Mar, Apr]
+    y-axis "Users" 0 --> 100
+    bar [35, 52, 76, 90]
+    line [30, 50, 72, 85]
+```
+
+## Block Diagram
+
+```mermaid
+block
+    columns 3
+    Browser space API
+    space:3
+    Cache space Database
+    Browser --> API
+    API --> Cache
+    API --> Database
+```
+
+## Packet Diagram
+
+```mermaid
+packet
+    title UDP Packet
+    +16: "Source Port"
+    +16: "Destination Port"
+    +16: "Length"
+    +16: "Checksum"
+    +32: "Payload"
+```
+
+## Kanban Board
+
+```mermaid
+kanban
+    backlog[Backlog]
+        research[Research requirements]
+    progress[In progress]
+        implement[Implement renderer]@{ assigned: "Developer", priority: "High" }
+    done[Done]
+        tests[Add browser tests]
+```
+
+## Architecture Diagram
+
+```mermaid
+architecture-beta
+    group platform(cloud)[Platform]
+
+    service web(server)[Web app] in platform
+    service api(server)[API] in platform
+    service data(database)[Database] in platform
+
+    web:R --> L:api
+    api:B --> T:data
+```
+
+## Radar Chart
+
+```mermaid
+radar-beta
+    title Engineering metrics
+    axis quality["Quality"], delivery["Delivery"], reliability["Reliability"]
+    curve current["Current"]{80, 70, 75}
+    curve target["Target"]{90, 85, 90}
+    max 100
+```
+
+## Event Modeling Diagram
+
+```mermaid
+eventmodeling
+
+    tf 01 ui CheckoutUI
+    tf 02 cmd SubmitOrder
+    tf 03 evt OrderSubmitted
+```
+
+## Treemap
+
+```mermaid
+treemap-beta
+    "Documentation"
+        "Guides": 45
+        "Examples": 30
+    "Source"
+        "Components": 35
+        "Composables": 20
+```
+
+## Venn Diagram
+
+```mermaid
+venn-beta
+    title "Team skills"
+    set frontend[Frontend]
+    set backend[Backend]
+    union frontend,backend[Full stack]
+```
+
+## Ishikawa Diagram
+
+```mermaid
+ishikawa-beta
+    Slow page load
+    Network
+        High latency
+        Large payloads
+    Application
+        Expensive queries
+        Uncached responses
+    Browser
+        Blocking scripts
+```
+
+## Wardley Map
+
+```mermaid
+wardley-beta
+    title Delivery platform
+
+    anchor User [0.9, 0.9]
+    component WebApp [0.75, 0.6]
+    component API [0.6, 0.7]
+    component Cloud [0.3, 0.9]
+
+    User -> WebApp
+    WebApp -> API
+    API -> Cloud
+```
+
+## Cynefin Framework
+
+```mermaid
+cynefin-beta
+    title Delivery decisions
+
+    complex
+        "Explore a new product"
+    complicated
+        "Tune a database"
+    clear
+        "Apply a routine update"
+    chaotic
+        "Restore an unavailable service"
+    confusion
+        "Classify an incident"
+
+    complex --> complicated : "Pattern identified"
+    clear --> chaotic : "Complacency"
+```
+
+## TreeView Diagram
+
+```mermaid
+treeView-beta
+    vitepress-mermaid-renderer/
+        src/
+            MermaidDiagram.vue
+            index.ts
+        tests/
+            e2e/
+        package.json
 ```
