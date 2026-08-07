@@ -42,6 +42,9 @@ test.describe('toolbar interactions', () => {
   test('reset view restores the original transform', async ({ page }) => {
     const diagram = page.locator('.mermaid-container').first();
     const inner = diagram.locator('.mermaid').first();
+    const initialTransform = await inner.evaluate(
+      (el) => (el as HTMLElement).style.transform,
+    );
 
     await diagram
       .locator('.desktop-controls [data-mermaid-control="zoomIn"]')
@@ -57,7 +60,7 @@ test.describe('toolbar interactions', () => {
       .poll(async () =>
         inner.evaluate((el) => (el as HTMLElement).style.transform),
       )
-      .toMatch(/scale\(1\)/);
+      .toEqual(initialTransform);
   });
 
   test('copy button writes mermaid source to the clipboard', async ({
@@ -162,6 +165,9 @@ test.describe('toolbar interactions', () => {
   }) => {
     const diagram = page.locator('.mermaid-container').first();
     const inner = diagram.locator('.mermaid').first();
+    const initialTransform = await inner.evaluate(
+      (el) => (el as HTMLElement).style.transform,
+    );
     const zoomIn = diagram.locator(
       '.desktop-controls [data-mermaid-control="zoomIn"]',
     );
@@ -188,11 +194,6 @@ test.describe('toolbar interactions', () => {
       .poll(async () =>
         inner.evaluate((el) => (el as HTMLElement).style.transform),
       )
-      .toMatch(/scale\(1\)/);
-
-    const finalTransform = await inner.evaluate(
-      (el) => (el as HTMLElement).style.transform,
-    );
-    expect(finalTransform).toMatch(/translate\(0px,\s?0px\)|matrix\(1,/);
+      .toEqual(initialTransform);
   });
 });

@@ -46,12 +46,10 @@ test.describe('examples pages', () => {
   test('zooming one diagram does not affect sibling diagrams', async ({
     page,
   }) => {
+    await page.setViewportSize({ width: 1280, height: 2400 });
     await page.goto('/examples/basic');
     const diagrams = page.locator('.mermaid-container');
     await expect(diagrams.first()).toBeVisible();
-
-    // Scroll the page to trigger IntersectionObserver for offscreen diagrams.
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
     await expect
       .poll(async () => diagrams.count(), { timeout: 15_000 })
