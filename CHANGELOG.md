@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.32
+
+### Changed
+
+- Changed `fitToContainer` to default to `true`, so interactive diagrams fit and
+  center themselves after rendering unless explicitly disabled with
+  `fitToContainer: false`.
+- Updated the English, Turkish, and Chinese configuration and type documentation
+  to describe the new default.
+
 ## 1.1.31
 
 ### Added

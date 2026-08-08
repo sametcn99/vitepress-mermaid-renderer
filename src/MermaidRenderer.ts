@@ -153,7 +153,7 @@ export class MermaidRenderer {
   private constructor(options?: MermaidRendererOptions) {
     const {
       static: staticMode = false,
-      fitToContainer = false,
+      fitToContainer = true,
       ...config
     } = options ?? {};
     this.config = this.deepMerge({}, config);

@@ -166,7 +166,7 @@ const props = defineProps<{
 const isStatic = ref(props.static ?? false);
 
 /** Whether this instance fits and centers its interactive diagram after rendering. */
-const fitToContainer = ref(props.fitToContainer ?? false);
+const fitToContainer = ref(props.fitToContainer ?? true);
 
 /**
  * Normalises the incoming `toolbar` prop, which may be either raw
@@ -485,13 +485,10 @@ const handleZoomOut = () => {
   }
 };
 
-/** Keeps zooming centered on the visible diagram container. */
+/** Keeps the transform origin aligned with the element being transformed. */
 const updateTransformOrigin = () => {
   if (isStatic.value || !diagramWrapper.value) return;
-  const bounds = diagramWrapper.value.getBoundingClientRect();
-  if (bounds.width > 0 && bounds.height > 0) {
-    transformOrigin.value = `${bounds.width / 2}px ${bounds.height / 2}px`;
-  }
+  transformOrigin.value = 'center center';
 };
 
 /**

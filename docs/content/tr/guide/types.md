@@ -11,7 +11,7 @@ Renderer'a özel aşağıdaki seçenekleri de destekler.
 | Seçenek          | Tip       | Varsayılan | Açıklama                                                                                     |
 | :--------------- | :-------- | :--------- | :------------------------------------------------------------------------------------------- |
 | `static`         | `boolean` | `false`    | Kontrol ve etkileşimli gezinme olmadan tema uyumlu SVG üretir.                               |
-| `fitToContainer` | `boolean` | `false`    | Her Mermaid render işleminden sonra etkileşimli diyagramı kapsayıcısına sığdırır ve ortalar. |
+| `fitToContainer` | `boolean` | `true`     | Her Mermaid render işleminden sonra etkileşimli diyagramı kapsayıcısına sığdırır ve ortalar. |
 
 `theme`, `flowchart` ve `securityLevel` gibi diğer seçenekler
 [Mermaid yapılandırma şemasını](https://mermaid.js.org/config/configuration.html)

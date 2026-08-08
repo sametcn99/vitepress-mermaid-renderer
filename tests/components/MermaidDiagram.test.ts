@@ -234,6 +234,26 @@ describe('MermaidDiagram', () => {
     wrapper.unmount();
   });
 
+  it('keeps the viewport transform origin on the rendered diagram', async () => {
+    const wrapper = mount(MermaidDiagram, {
+      attachTo: document.body,
+      props: {
+        code: 'flowchart LR\nA-->B',
+        toolbar: resolveToolbarConfig({ fullscreenMode: 'dialog' }),
+      },
+    });
+    await flushDiagramRender();
+
+    await wrapper
+      .get('[data-mermaid-control="toggleFullscreen"]')
+      .trigger('click');
+
+    expect(wrapper.get('.mermaid-viewport').attributes('style')).toContain(
+      'transform-origin: center center',
+    );
+    wrapper.unmount();
+  });
+
   it('preserves the fitted zoom level when the theme rerenders the diagram', async () => {
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
       function (this: HTMLElement) {

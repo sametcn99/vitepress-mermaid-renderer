@@ -38,7 +38,7 @@ const mermaidRenderer = createMermaidRenderer({
 | `gantt`                  | Customize date formatting or axis visibility when embedding project timelines.                                                                                                                                                                                                  |
 | `securityLevel`          | Mermaid security mode passed through to `mermaid.initialize()`. Use the strictness level that matches your content policy. **Changed:** the default is now `'strict'`, which disables inline HTML inside diagrams. Use `'loose'` only when you fully trust all diagram sources. |
 | `static`                 | When `true`, renders a plain SVG without the toolbar, zoom, pan, fullscreen, download, or keyboard controls. Theme updates continue to re-render the SVG.                                                                                                                       |
-| `fitToContainer`         | When `true`, scales each interactive diagram to fit the available width and height, then centers it after rendering. Defaults to `false`.                                                                                                                                       |
+| `fitToContainer`         | When `true`, scales each interactive diagram to fit the available width and height, then centers it after rendering. Defaults to `true`.                                                                                                                                        |
 
 Calling `createMermaidRenderer()` again with a new Mermaid config
 **deep-merges** the config into the existing singleton (nested objects like
@@ -47,10 +47,10 @@ mounted diagrams.
 
 ## Fit and center diagrams
 
-Enable `fitToContainer` to size each interactive diagram to the largest scale
-that fits inside its `.diagram-wrapper`, preserving its aspect ratio and
-centering it in both directions. This is useful for diagrams that would
-otherwise open at 100% scale in the upper-left corner.
+`fitToContainer` is enabled by default and sizes each interactive diagram to the
+largest scale that fits inside its `.diagram-wrapper`, preserving its aspect
+ratio and centering it in both directions. Set it to `false` to keep the
+unscaled 100% view.
 
 ```typescript
 createMermaidRenderer({

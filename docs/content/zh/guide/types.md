@@ -10,7 +10,7 @@
 | 选项             | 类型      | 默认值  | 说明                                                  |
 | :--------------- | :-------- | :------ | :---------------------------------------------------- |
 | `static`         | `boolean` | `false` | 生成没有控件和交互式导航的主题感知 SVG。              |
-| `fitToContainer` | `boolean` | `false` | 在每次 Mermaid 渲染后将交互式图表适配并居中到其容器。 |
+| `fitToContainer` | `boolean` | `true`  | 在每次 Mermaid 渲染后将交互式图表适配并居中到其容器。 |
 
 其他 renderer 选项（如 `theme`、`flowchart` 和 `securityLevel`）遵循
 [Mermaid 配置 schema](https://mermaid.js.org/config/configuration.html)。

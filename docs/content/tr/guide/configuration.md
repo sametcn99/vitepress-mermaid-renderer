@@ -39,7 +39,7 @@ const mermaidRenderer = createMermaidRenderer({
 | `gantt`                  | Proje zaman çizelgelerinde tarih biçimlendirme veya eksen görünürlüğünü özelleştirir.                                                                                                                                                 |
 | `securityLevel`          | `mermaid.initialize()` içine geçirilen Mermaid güvenlik modudur. **Değişiklik:** varsayılan artık `'strict'`; diyagramlardaki inline HTML devre dışı bırakılır. Yalnızca tüm diyagram kaynaklarına güveniyorsanız `'loose'` kullanın. |
 | `static`                 | `true` olduğunda araç çubuğu, yakınlaştırma, sürükleme, tam ekran, indirme ve klavye kontrolleri olmayan düz bir SVG oluşturur. Tema güncellemeleri SVG'yi yeniden render etmeye devam eder.                                          |
-| `fitToContainer`         | `true` olduğunda her etkileşimli diyagramı kullanılabilir genişlik ve yüksekliğe sığacak şekilde ölçekler, ardından render sonrasında ortalar. Varsayılanı `false` değeridir.                                                         |
+| `fitToContainer`         | `true` olduğunda her etkileşimli diyagramı kullanılabilir genişlik ve yüksekliğe sığacak şekilde ölçekler, ardından render sonrasında ortalar. Varsayılanı `true` değeridir.                                                          |
 
 `createMermaidRenderer()` yeni bir Mermaid config ile tekrar çağrıldığında
 mevcut singleton config'i **derin birleştirilir** (iç içe nesneler `flowchart`
@@ -48,10 +48,10 @@ gönderilir.
 
 ## Diyagramları kapsayıcıya sığdırma ve ortalama
 
-`fitToContainer` seçeneğini etkinleştirdiğinizde her etkileşimli diyagram,
-en-boy oranı korunarak `.diagram-wrapper` içine sığacak en büyük ölçekte render
-edilir ve her iki eksende ortalanır. Bu seçenek, normalde %100 ölçekte sol üst
-köşede açılan diyagramlar için kullanışlıdır.
+`fitToContainer` varsayılan olarak etkindir ve her etkileşimli diyagramı en-boy
+oranı korunarak `.diagram-wrapper` içine sığacak en büyük ölçekte render eder ve
+her iki eksende ortalar. Ölçeklenmemiş %100 görünümünü korumak için `false`
+olarak ayarlayın.
 
 ```typescript
 createMermaidRenderer({
