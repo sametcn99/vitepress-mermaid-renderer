@@ -75,6 +75,8 @@ export interface MermaidNavigationOptions {
   zoomStep?: number;
   /** Receives pointer coordinates whenever wheel or pinch zoom changes scale. */
   onGestureZoom?: (change: MermaidZoomChange) => void;
+  /** Returns the fitted base scale applied before the user zoom. */
+  getBaseScale?: () => number;
 }
 
 /**
@@ -250,6 +252,10 @@ export function useMermaidNavigation(
    */
   const PAN_STEP = 50;
 
+  /** Returns the total visual scale applied to translation distances. */
+  const getTotalScale = () =>
+    Math.max(Number.EPSILON, (options.getBaseScale?.() ?? 1) * scale.value);
+
   /** Applies a gesture scale change and reports the gesture focal point. */
   const applyGestureZoom = (
     newScale: number,
@@ -325,6 +331,25 @@ export function useMermaidNavigation(
     if (!Number.isFinite(fittedScale) || fittedScale <= 0) return;
 
     scale.value = fittedScale;
+    const viewportBounds = diagram.parentElement?.getBoundingClientRect();
+    if (
+      viewportBounds &&
+      viewportBounds.width > 0 &&
+      viewportBounds.height > 0
+    ) {
+      translateX.value =
+        (containerBounds.left +
+          containerBounds.width / 2 -
+          (viewportBounds.left + viewportBounds.width / 2)) /
+        fittedScale;
+      translateY.value =
+        (containerBounds.top +
+          containerBounds.height / 2 -
+          (viewportBounds.top + viewportBounds.height / 2)) /
+        fittedScale;
+      return;
+    }
+
     translateX.value = (containerBounds.width - diagramBounds.width) / 2;
     translateY.value = (containerBounds.height - diagramBounds.height) / 2;
   };
@@ -444,8 +469,9 @@ export function useMermaidNavigation(
     const deltaX = e.clientX - lastX.value;
     const deltaY = e.clientY - lastY.value;
 
-    translateX.value += deltaX / scale.value;
-    translateY.value += deltaY / scale.value;
+    const totalScale = getTotalScale();
+    translateX.value += deltaX / totalScale;
+    translateY.value += deltaY / totalScale;
 
     lastX.value = e.clientX;
     lastY.value = e.clientY;
@@ -579,8 +605,9 @@ export function useMermaidNavigation(
         }
 
         // Two-finger pan (midpoint tracking)
-        translateX.value += (midX - lastTouchX.value) / scale.value;
-        translateY.value += (midY - lastTouchY.value) / scale.value;
+        const totalScale = getTotalScale();
+        translateX.value += (midX - lastTouchX.value) / totalScale;
+        translateY.value += (midY - lastTouchY.value) / totalScale;
         lastTouchX.value = midX;
         lastTouchY.value = midY;
       }
@@ -595,8 +622,9 @@ export function useMermaidNavigation(
       const deltaX = touch.clientX - lastTouchX.value;
       const deltaY = touch.clientY - lastTouchY.value;
 
-      translateX.value += deltaX / scale.value;
-      translateY.value += deltaY / scale.value;
+      const totalScale = getTotalScale();
+      translateX.value += deltaX / totalScale;
+      translateY.value += deltaY / totalScale;
 
       lastTouchX.value = touch.clientX;
       lastTouchY.value = touch.clientY;
@@ -633,22 +661,22 @@ export function useMermaidNavigation(
 
   /** Pans the diagram upward by `PAN_STEP / scale` pixels. */
   const panUp = () => {
-    translateY.value -= PAN_STEP / scale.value;
+    translateY.value -= PAN_STEP / getTotalScale();
   };
 
   /** Pans the diagram downward by `PAN_STEP / scale` pixels. */
   const panDown = () => {
-    translateY.value += PAN_STEP / scale.value;
+    translateY.value += PAN_STEP / getTotalScale();
   };
 
   /** Pans the diagram to the left by `PAN_STEP / scale` pixels. */
   const panLeft = () => {
-    translateX.value -= PAN_STEP / scale.value;
+    translateX.value -= PAN_STEP / getTotalScale();
   };
 
   /** Pans the diagram to the right by `PAN_STEP / scale` pixels. */
   const panRight = () => {
-    translateX.value += PAN_STEP / scale.value;
+    translateX.value += PAN_STEP / getTotalScale();
   };
 
   /**

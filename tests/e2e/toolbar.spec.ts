@@ -12,6 +12,85 @@ test.describe('toolbar interactions', () => {
     ).toBeVisible();
   });
 
+  test('automatic fitting keeps the diagram centered inside its viewport', async ({
+    page,
+  }) => {
+    const diagram = page.locator('.mermaid-container').first();
+    const wrapper = diagram.locator('.diagram-wrapper');
+    const viewport = diagram.locator('.mermaid-viewport');
+
+    await expect
+      .poll(async () => {
+        const wrapperBounds = await wrapper.boundingBox();
+        const viewportBounds = await viewport.boundingBox();
+        if (!wrapperBounds || !viewportBounds) return Number.POSITIVE_INFINITY;
+        return Math.abs(
+          viewportBounds.x +
+            viewportBounds.width / 2 -
+            (wrapperBounds.x + wrapperBounds.width / 2),
+        );
+      })
+      .toBeLessThanOrEqual(1);
+
+    const wrapperBounds = await wrapper.boundingBox();
+    const viewportBounds = await viewport.boundingBox();
+
+    expect(wrapperBounds).not.toBeNull();
+    expect(viewportBounds).not.toBeNull();
+    expect(viewportBounds!.width).toBeLessThanOrEqual(wrapperBounds!.width + 1);
+    expect(viewportBounds!.height).toBeLessThanOrEqual(
+      wrapperBounds!.height + 1,
+    );
+    expect(viewportBounds!.x + viewportBounds!.width / 2).toBeCloseTo(
+      wrapperBounds!.x + wrapperBounds!.width / 2,
+      0,
+    );
+    expect(viewportBounds!.y + viewportBounds!.height / 2).toBeCloseTo(
+      wrapperBounds!.y + wrapperBounds!.height / 2,
+      0,
+    );
+  });
+
+  test('dragging follows the pointer at the fitted scale', async ({ page }) => {
+    const diagram = page.locator('.mermaid-container').first();
+    const wrapper = diagram.locator('.diagram-wrapper');
+    const viewport = diagram.locator('.mermaid-viewport');
+    await viewport.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        }),
+    );
+
+    const wrapperBounds = await wrapper.boundingBox();
+    const initialBounds = await viewport.boundingBox();
+    if (!wrapperBounds || !initialBounds) {
+      throw new Error('diagram bounds unavailable');
+    }
+
+    const startX = wrapperBounds.x + wrapperBounds.width / 2;
+    const startY = wrapperBounds.y + wrapperBounds.height / 2;
+    await wrapper.dispatchEvent('mousedown', {
+      clientX: startX,
+      clientY: startY,
+      buttons: 1,
+    });
+    await wrapper.dispatchEvent('mousemove', {
+      clientX: startX + 100,
+      clientY: startY + 50,
+      buttons: 1,
+    });
+    await wrapper.dispatchEvent('mouseup', {
+      clientX: startX + 100,
+      clientY: startY + 50,
+    });
+
+    const movedBounds = await viewport.boundingBox();
+    expect(movedBounds).not.toBeNull();
+    expect(movedBounds!.x - initialBounds.x).toBeCloseTo(100, 0);
+    expect(movedBounds!.y - initialBounds.y).toBeCloseTo(50, 0);
+  });
+
   test('zoom in increases the SVG transform scale', async ({ page }) => {
     const diagram = page.locator('.mermaid-container').first();
     const viewport = diagram.locator('.mermaid-viewport').first();

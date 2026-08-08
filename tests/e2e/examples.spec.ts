@@ -78,6 +78,12 @@ test.describe('examples pages', () => {
     const second = diagrams.nth(1);
     await expect(first.locator('.mermaid > svg')).toBeVisible();
     await expect(second.locator('.mermaid > svg')).toBeVisible();
+    await second.locator('.mermaid-viewport').evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        }),
+    );
 
     const secondInitial = await second
       .locator('.mermaid-viewport')

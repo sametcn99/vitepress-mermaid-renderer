@@ -8,10 +8,9 @@ in **VitePress Mermaid Renderer**.
 `createMermaidRenderer()` accepts Mermaid configuration options directly. It
 also accepts the renderer-specific options shown below.
 
-| Option           | Type      | Default | Description                                                                         |
-| :--------------- | :-------- | :------ | :---------------------------------------------------------------------------------- |
-| `static`         | `boolean` | `false` | Renders a plain theme-aware SVG without controls or interactive navigation.         |
-| `fitToContainer` | `boolean` | `true`  | Fits and centers an interactive diagram in its container after each Mermaid render. |
+| Option   | Type      | Default | Description                                                                 |
+| :------- | :-------- | :------ | :-------------------------------------------------------------------------- |
+| `static` | `boolean` | `false` | Renders a plain theme-aware SVG without controls or interactive navigation. |
 
 All other renderer options, such as `theme`, `flowchart`, and `securityLevel`,
 follow the

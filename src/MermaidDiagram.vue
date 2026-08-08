@@ -94,6 +94,7 @@
         {{ isRendered ? 'Diagram loaded' : 'Loading diagram…' }}
       </span>
       <div
+        ref="viewportRef"
         class="mermaid-viewport"
         :class="{ 'mermaid-zooming': isZoomTransitionActive }"
         :style="{
@@ -159,14 +160,10 @@ const props = defineProps<{
   config?: MermaidConfig;
   toolbar?: MermaidToolbarOptions | ResolvedToolbarConfig;
   static?: boolean;
-  fitToContainer?: boolean;
 }>();
 
 /** Whether this instance renders a plain, non-interactive SVG. */
 const isStatic = ref(props.static ?? false);
-
-/** Whether this instance fits and centers its interactive diagram after rendering. */
-const fitToContainer = ref(props.fitToContainer ?? true);
 
 /**
  * Normalises the incoming `toolbar` prop, which may be either raw
@@ -204,8 +201,14 @@ type DiagramView = {
   translateY: number;
 };
 
+/** Base transform that fits the diagram without changing the user's zoom level. */
+const fitScale = ref(1);
+const fitTranslateX = ref(0);
+const fitTranslateY = ref(0);
+
 const navigation = useMermaidNavigation({
   onGestureZoom: handleGestureZoom,
+  getBaseScale: () => fitScale.value,
 });
 const renderer = useMermaidRenderer({
   config: props.config,
@@ -263,18 +266,21 @@ const fullscreenWrapper = ref<HTMLElement | null>(null);
 
 /** Reference to the viewport that constrains the interactive diagram. */
 const diagramWrapper = ref<HTMLElement | null>(null);
+/** Reference to the element that owns the zoom transform. */
+const viewportRef = ref<HTMLElement | null>(null);
 
 /** Transform origin expressed relative to the diagram viewport. */
 const transformOrigin = ref('center center');
-/** Base transform that fits the diagram without changing the user's zoom level. */
-const fitScale = ref(1);
-const fitTranslateX = ref(0);
-const fitTranslateY = ref(0);
 /** Enables the short zoom transition without affecting drag interactions. */
 const isZoomTransitionActive = ref(false);
 let zoomTransitionTimeout: ReturnType<typeof setTimeout> | null = null;
 let diagramResizeObserver: ResizeObserver | null = null;
 let viewToRestoreAfterThemeRender: DiagramView | null = null;
+let fullscreenFitToRestore: {
+  fitScale: number;
+  fitTranslateX: number;
+  fitTranslateY: number;
+} | null = null;
 
 /**
  * Component-instance UID used to generate a globally unique `id`
@@ -327,8 +333,8 @@ const handleStaticModeUpdated = (event: Event) => {
 };
 
 /** Applies the configured fit mode after Vue has committed the rendered SVG. */
-const applyFitToContainer = async (viewToRestore?: DiagramView) => {
-  if (!fitToContainer.value || isStatic.value) return;
+const applyFittedView = async (viewToRestore?: DiagramView) => {
+  if (isStatic.value) return;
 
   resetView();
   fitScale.value = 1;
@@ -337,7 +343,7 @@ const applyFitToContainer = async (viewToRestore?: DiagramView) => {
   await nextTick();
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
-  if (!fitToContainer.value || isStatic.value) return;
+  if (isStatic.value) return;
   fitDiagramToContainer(
     diagramWrapper.value,
     document.getElementById(diagramId),
@@ -356,6 +362,33 @@ const applyFitToContainer = async (viewToRestore?: DiagramView) => {
   resetView();
 };
 
+/** Re-fits the diagram after fullscreen changes its available layout space. */
+const updateFullscreenFit = async (active: boolean) => {
+  if (isStatic.value) return;
+
+  if (active) {
+    fullscreenFitToRestore = {
+      fitScale: fitScale.value,
+      fitTranslateX: fitTranslateX.value,
+      fitTranslateY: fitTranslateY.value,
+    };
+
+    await nextTick();
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+    await applyFittedView();
+    return;
+  }
+
+  if (!fullscreenFitToRestore) return;
+
+  fitScale.value = fullscreenFitToRestore.fitScale;
+  fitTranslateX.value = fullscreenFitToRestore.fitTranslateX;
+  fitTranslateY.value = fullscreenFitToRestore.fitTranslateY;
+  fullscreenFitToRestore = null;
+};
+
 /** Recalculates the fit base after a theme-driven Mermaid rerender. */
 const handleConfigUpdated = () => {
   viewToRestoreAfterThemeRender = {
@@ -365,19 +398,9 @@ const handleConfigUpdated = () => {
   };
 };
 
-/** Updates the fitting mode for already-mounted diagrams. */
-const handleFitToContainerUpdated = (event: Event) => {
-  fitToContainer.value = (event as CustomEvent<boolean>).detail;
-};
-
-/** Resets to the fitted view when automatic fitting is enabled. */
+/** Resets an interactive diagram to its fitted view. */
 const handleResetView = () => {
-  deactivateZoomTransition();
-  if (fitToContainer.value && !isStatic.value) {
-    void applyFitToContainer();
-    return;
-  }
-
+  activateZoomTransition();
   resetView();
 };
 
@@ -400,9 +423,9 @@ const deactivateZoomTransition = () => {
   }
 };
 
-/** Keeps a fullscreen gesture's focal point stationary while zooming. */
+/** Keeps a zoom focal point stationary while zooming. */
 function handleGestureZoom(change: MermaidZoomChange) {
-  preserveFullscreenZoomAnchor(
+  preserveZoomAnchor(
     change.previousScale,
     change.scale,
     change.clientX,
@@ -411,32 +434,37 @@ function handleGestureZoom(change: MermaidZoomChange) {
 }
 
 /** Preserves a client-space point while the total fit and user scale changes. */
-function preserveFullscreenZoomAnchor(
+function preserveZoomAnchor(
   previousUserScale: number,
   nextUserScale: number,
   clientX: number,
   clientY: number,
+  allowOutsideFullscreen = false,
 ) {
   if (
-    !isFullscreen.value ||
-    !diagramWrapper.value ||
+    (!isFullscreen.value && !allowOutsideFullscreen) ||
+    !viewportRef.value ||
     previousUserScale === nextUserScale
   ) {
     return;
   }
 
-  const wrapperBounds = diagramWrapper.value.getBoundingClientRect();
   const previousScale = fitScale.value * previousUserScale;
   const nextScale = fitScale.value * nextUserScale;
   if (previousScale <= 0 || nextScale <= 0) return;
 
-  const focalX = clientX - wrapperBounds.left;
-  const focalY = clientY - wrapperBounds.top;
-  const originX = wrapperBounds.width / 2;
-  const originY = wrapperBounds.height / 2;
+  const viewportBounds = viewportRef.value.getBoundingClientRect();
+  if (viewportBounds.width <= 0 || viewportBounds.height <= 0) return;
 
-  translateX.value += (focalX - originX) * (1 / nextScale - 1 / previousScale);
-  translateY.value += (focalY - originY) * (1 / nextScale - 1 / previousScale);
+  const currentCenterX = viewportBounds.left + viewportBounds.width / 2;
+  const currentCenterY = viewportBounds.top + viewportBounds.height / 2;
+  const totalTranslateX = fitTranslateX.value + translateX.value;
+  const totalTranslateY = fitTranslateY.value + translateY.value;
+  const originX = currentCenterX - previousScale * totalTranslateX;
+  const originY = currentCenterY - previousScale * totalTranslateY;
+
+  translateX.value += (clientX - originX) * (1 / nextScale - 1 / previousScale);
+  translateY.value += (clientY - originY) * (1 / nextScale - 1 / previousScale);
 }
 
 /** Gets the current screen-space center of the rendered SVG. */
@@ -460,11 +488,12 @@ const handleZoomIn = () => {
   activateZoomTransition();
   zoomIn();
   if (svgCenter) {
-    preserveFullscreenZoomAnchor(
+    preserveZoomAnchor(
       previousScale,
       scale.value,
       svgCenter.clientX,
       svgCenter.clientY,
+      true,
     );
   }
 };
@@ -476,19 +505,24 @@ const handleZoomOut = () => {
   activateZoomTransition();
   zoomOut();
   if (svgCenter) {
-    preserveFullscreenZoomAnchor(
+    preserveZoomAnchor(
       previousScale,
       scale.value,
       svgCenter.clientX,
       svgCenter.clientY,
+      true,
     );
   }
 };
 
-/** Keeps the transform origin aligned with the element being transformed. */
+/** Keeps zooming centered on the visible diagram container. */
 const updateTransformOrigin = () => {
-  if (isStatic.value || !diagramWrapper.value) return;
-  transformOrigin.value = 'center center';
+  if (isStatic.value || !viewportRef.value) return;
+  const bounds = viewportRef.value.getBoundingClientRect();
+  const totalScale = Math.max(Number.EPSILON, fitScale.value * scale.value);
+  if (bounds.width > 0 && bounds.height > 0 && totalScale > 0) {
+    transformOrigin.value = `${bounds.width / totalScale / 2}px ${bounds.height / totalScale / 2}px`;
+  }
 };
 
 /**
@@ -500,9 +534,12 @@ const handleToggleFullscreen = () => {
 };
 
 /** @internal Thin wrappers forwarding DOM events to composable actions. */
-const handleMouseDown = (event: MouseEvent) => startPan(event);
+const handleMouseDown = (event: MouseEvent) => {
+  deactivateZoomTransition();
+  startPan(event);
+};
 const handleMouseUp = () => endPan();
-const handleMouseLeave = () => endPan();
+const handleMouseLeave = () => handleMouseUp();
 const handleTouchStartEvent = (event: TouchEvent) => handleTouchStart(event);
 const handleTouchEndEvent = () => handleTouchEnd();
 
@@ -511,9 +548,7 @@ const handleTouchEndEvent = () => handleTouchEnd();
  * Prevents reactive style updates from firing more than once per frame.
  */
 let wheelRafPending = false;
-let moveRafPending = false;
 let wheelEvent: WheelEvent | null = null;
-let moveEvent: MouseEvent | null = null;
 
 /** @internal rAF-throttled wheel handler — coalesces rapid wheel events. */
 const handleWheelEvent = (event: WheelEvent) => {
@@ -532,20 +567,10 @@ const handleWheelEvent = (event: WheelEvent) => {
   }
 };
 
-/** @internal rAF-throttled mousemove handler — coalesces rapid mouse moves during pan. */
+/** @internal Mousemove handler that keeps dragging synchronized with the pointer. */
 const handleMouseMove = (event: MouseEvent) => {
   if (!isPanning.value) return;
-  moveEvent = event;
-  if (!moveRafPending) {
-    moveRafPending = true;
-    requestAnimationFrame(() => {
-      moveRafPending = false;
-      if (moveEvent) {
-        pan(moveEvent);
-        moveEvent = null;
-      }
-    });
-  }
+  pan(event);
 };
 
 /** @internal rAF-throttled touchmove handler — keeps composable's logic but coalesces frames. */
@@ -630,7 +655,7 @@ onMounted(async () => {
     await nextTick();
     await renderMermaidDiagram(diagramId, props.code);
     updateTransformOrigin();
-    await applyFitToContainer();
+    await applyFittedView();
     if (typeof ResizeObserver !== 'undefined' && diagramWrapper.value) {
       diagramResizeObserver = new ResizeObserver(updateTransformOrigin);
       diagramResizeObserver.observe(diagramWrapper.value);
@@ -648,10 +673,6 @@ onMounted(async () => {
       handleStaticModeUpdated,
     );
     document.addEventListener(
-      'vitepress-mermaid:fit-to-container-updated',
-      handleFitToContainerUpdated,
-    );
-    document.addEventListener(
       'vitepress-mermaid:config-updated',
       handleConfigUpdated,
     );
@@ -667,6 +688,10 @@ watch(isDialogFullscreenActive, (active) => {
   document.body.classList.toggle('mermaid-dialog-open', active);
 });
 
+watch(isFullscreen, (active) => {
+  void updateFullscreenFit(active);
+});
+
 watch(isStatic, (staticMode) => {
   if (staticMode) {
     unregisterFullscreenChangeListener();
@@ -679,8 +704,8 @@ watch(isRendered, (rendered) => {
   if (rendered && viewToRestoreAfterThemeRender) {
     const viewToRestore = viewToRestoreAfterThemeRender;
     viewToRestoreAfterThemeRender = null;
-    if (fitToContainer.value && !isStatic.value) {
-      void applyFitToContainer(viewToRestore);
+    if (!isStatic.value) {
+      void applyFittedView(viewToRestore);
       return;
     }
 
@@ -690,19 +715,12 @@ watch(isRendered, (rendered) => {
   }
 });
 
-watch(
-  [fitToContainer, isStatic],
-  ([enabled, staticMode], [previousEnabled, previousStaticMode]) => {
-    if (
-      enabled &&
-      !staticMode &&
-      (enabled !== previousEnabled || staticMode !== previousStaticMode)
-    ) {
-      updateTransformOrigin();
-      void applyFitToContainer();
-    }
-  },
-);
+watch(isStatic, (staticMode, previousStaticMode) => {
+  if (!staticMode && staticMode !== previousStaticMode) {
+    updateTransformOrigin();
+    void applyFittedView();
+  }
+});
 
 onUnmounted(() => {
   if (typeof document !== 'undefined') {
@@ -710,6 +728,7 @@ onUnmounted(() => {
   }
   unregisterFullscreenChangeListener();
   if (zoomTransitionTimeout) clearTimeout(zoomTransitionTimeout);
+  fullscreenFitToRestore = null;
   diagramResizeObserver?.disconnect();
   document.removeEventListener(
     'vitepress-mermaid:toolbar-updated',
@@ -718,10 +737,6 @@ onUnmounted(() => {
   document.removeEventListener(
     'vitepress-mermaid:static-mode-updated',
     handleStaticModeUpdated,
-  );
-  document.removeEventListener(
-    'vitepress-mermaid:fit-to-container-updated',
-    handleFitToContainerUpdated,
   );
   document.removeEventListener(
     'vitepress-mermaid:config-updated',

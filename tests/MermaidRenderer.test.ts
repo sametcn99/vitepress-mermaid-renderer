@@ -44,25 +44,22 @@ describe('MermaidRenderer', () => {
       expect(detail).toMatchObject({ theme: 'forest' });
     });
 
-    it('updates fitting mode without passing it to Mermaid configuration', async () => {
+    it('updates static mode without passing it to Mermaid configuration', async () => {
       const mod = await importFresh();
       const renderer = mod.MermaidRenderer.getInstance({
-        fitToContainer: false,
+        static: false,
       });
       const spy = vi.fn();
-      document.addEventListener(
-        'vitepress-mermaid:fit-to-container-updated',
-        spy,
-      );
+      document.addEventListener('vitepress-mermaid:static-mode-updated', spy);
 
-      mod.MermaidRenderer.getInstance({ fitToContainer: true });
+      mod.MermaidRenderer.getInstance({ static: true });
 
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({ detail: true }),
       );
       expect(
         (renderer as unknown as { config: Record<string, unknown> }).config,
-      ).not.toHaveProperty('fitToContainer');
+      ).not.toHaveProperty('static');
     });
   });
 

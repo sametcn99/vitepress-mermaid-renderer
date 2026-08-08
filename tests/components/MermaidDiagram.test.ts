@@ -161,6 +161,12 @@ describe('MermaidDiagram', () => {
         if (this.classList.contains('diagram-wrapper')) {
           return new DOMRect(0, 0, 400, 200);
         }
+        if (this.classList.contains('mermaid-viewport')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        if (this.classList.contains('mermaid')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
         return new DOMRect(20, 30, 100, 40);
       },
     );
@@ -177,6 +183,7 @@ describe('MermaidDiagram', () => {
     await wrapper
       .get('[data-mermaid-control="toggleFullscreen"]')
       .trigger('click');
+    await vi.runAllTimersAsync();
     await wrapper.get('.diagram-wrapper').trigger('wheel', {
       deltaY: -120,
       clientX: 50,
@@ -198,6 +205,12 @@ describe('MermaidDiagram', () => {
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
       function (this: HTMLElement) {
         if (this.classList.contains('diagram-wrapper')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        if (this.classList.contains('mermaid-viewport')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        if (this.classList.contains('mermaid')) {
           return new DOMRect(0, 0, 400, 200);
         }
         return new DOMRect(20, 30, 100, 40);
@@ -222,6 +235,7 @@ describe('MermaidDiagram', () => {
     await wrapper
       .get('[data-mermaid-control="toggleFullscreen"]')
       .trigger('click');
+    await vi.runAllTimersAsync();
     await wrapper.get('[data-mermaid-control="zoomIn"]').trigger('click');
 
     const transform =
@@ -234,7 +248,56 @@ describe('MermaidDiagram', () => {
     wrapper.unmount();
   });
 
-  it('keeps the viewport transform origin on the rendered diagram', async () => {
+  it('anchors normal toolbar zoom to the SVG center', async () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        if (this.classList.contains('diagram-wrapper')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        if (this.classList.contains('mermaid-viewport')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        if (this.classList.contains('mermaid')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        return new DOMRect(20, 30, 100, 40);
+      },
+    );
+    vi.spyOn(SVGElement.prototype, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(20, 30, 100, 40),
+    );
+
+    const wrapper = mount(MermaidDiagram, {
+      attachTo: document.body,
+      props: { code: 'flowchart LR\nA-->B' },
+    });
+    await flushDiagramRender();
+
+    await wrapper.get('[data-mermaid-control="zoomIn"]').trigger('click');
+
+    const transform =
+      wrapper.get('.mermaid-viewport').attributes('style') ?? '';
+    const translate = transform.match(/translate\(([-\d.]+)px, ([-\d.]+)px\)/);
+    expect(transform).toContain('scale(1.2)');
+    expect(translate).not.toBeNull();
+    expect(Number(translate?.[1])).toBeCloseTo(21.666666666666668);
+    expect(Number(translate?.[2])).toBeCloseTo(8.333333333333334);
+    wrapper.unmount();
+  });
+
+  it('keeps the transform origin aligned with the container center', async () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        if (this.classList.contains('diagram-wrapper')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        if (this.classList.contains('mermaid-viewport')) {
+          return new DOMRect(0, 0, 400, 200);
+        }
+        return new DOMRect(20, 30, 100, 40);
+      },
+    );
+
     const wrapper = mount(MermaidDiagram, {
       attachTo: document.body,
       props: {
@@ -249,7 +312,7 @@ describe('MermaidDiagram', () => {
       .trigger('click');
 
     expect(wrapper.get('.mermaid-viewport').attributes('style')).toContain(
-      'transform-origin: center center',
+      'transform-origin: 200px 100px',
     );
     wrapper.unmount();
   });
@@ -271,7 +334,6 @@ describe('MermaidDiagram', () => {
       attachTo: document.body,
       props: {
         code: 'flowchart LR\nA-->B',
-        fitToContainer: true,
       },
     });
 
@@ -302,7 +364,7 @@ describe('MermaidDiagram', () => {
     wrapper.unmount();
   });
 
-  it('fits and centers the diagram when fitToContainer is enabled', async () => {
+  it('fits and centers every interactive diagram', async () => {
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
       function (this: HTMLElement) {
         if (this.classList.contains('diagram-wrapper')) {
@@ -319,7 +381,6 @@ describe('MermaidDiagram', () => {
       attachTo: document.body,
       props: {
         code: 'flowchart LR\nA-->B',
-        fitToContainer: true,
       },
     });
     await flushDiagramRender();
@@ -336,11 +397,13 @@ describe('MermaidDiagram', () => {
     expect(wrapper.get('.zoom-level').text()).toBe('120%');
 
     await wrapper.get('[data-mermaid-control="resetView"]').trigger('click');
+    expect(diagram.classList.contains('mermaid-zooming')).toBe(true);
     await vi.runAllTimersAsync();
     await nextTick();
 
     expect(diagram.style.transform).toContain('scale(0.6666666666666666)');
     expect(diagram.style.transform).toContain('translate(-100px, 50px)');
+    expect(diagram.classList.contains('mermaid-zooming')).toBe(false);
     wrapper.unmount();
   });
 

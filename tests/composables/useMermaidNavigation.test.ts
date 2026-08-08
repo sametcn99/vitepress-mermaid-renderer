@@ -118,6 +118,15 @@ describe('useMermaidNavigation', () => {
       nav.endPan();
       expect(nav.isPanning.value).toBe(false);
     });
+
+    it('accounts for the fitted base scale during panning', () => {
+      const nav = useMermaidNavigation({ getBaseScale: () => 0.5 });
+      nav.startPan({ clientX: 0, clientY: 0 } as MouseEvent);
+      nav.pan({ clientX: 60, clientY: 30 } as MouseEvent);
+
+      expect(nav.translateX.value).toBeCloseTo(120);
+      expect(nav.translateY.value).toBeCloseTo(60);
+    });
   });
 
   describe('directional pan', () => {

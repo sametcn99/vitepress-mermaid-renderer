@@ -43,7 +43,6 @@ export default {
         theme: isDark.value ? 'dark' : 'forest',
         startOnLoad: false,
         securityLevel: 'strict',
-        fitToContainer: true,
       });
       mermaidRenderer.setToolbar({
         showLanguageLabel: false,
