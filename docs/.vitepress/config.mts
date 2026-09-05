@@ -69,6 +69,8 @@ export default defineConfig({
     ],
     ['meta', { name: 'author', content: 'sametcn99' }],
     ['link', { rel: 'icon', type: 'image/png', href: '/vitepress-logo.png' }],
+    ['link', { rel: 'ai-catalog', href: '/.well-known/ai-catalog.json' }],
+    ['link', { rel: 'api-catalog', href: '/.well-known/api-catalog' }],
     [
       'script',
       {
@@ -77,6 +79,7 @@ export default defineConfig({
         'data-website-id': '19cf72d9-ab3b-4ea1-84f5-1a787217ea7e',
       },
     ],
+    ['script', { defer: '', src: '/webmcp.js' }],
   ],
 
   themeConfig: commonThemeConfig,

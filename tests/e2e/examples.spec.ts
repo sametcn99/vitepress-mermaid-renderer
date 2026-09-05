@@ -37,6 +37,10 @@ test.describe('examples pages', () => {
   test('advanced examples renders every supported diagram type', async ({
     page,
   }) => {
+    // Rendering 30 diagrams takes ~21s on its own and overruns the suite's
+    // 30s default once the other workers compete for CPU.
+    test.slow();
+
     await page.goto('/examples/advanced');
     const diagrams = page.locator('.mermaid-container');
     await expect(diagrams.first()).toBeVisible();

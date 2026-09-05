@@ -20,6 +20,8 @@ mermaidRenderer.setToolbar({
     zoomIn: 'enabled',
     zoomOut: 'enabled',
     resetView: 'enabled',
+    toggleToolbar: 'enabled',
+    collapsed: 'expanded',
     download: 'enabled',
     positions: { vertical: 'top', horizontal: 'right' },
   },
@@ -28,6 +30,8 @@ mermaidRenderer.setToolbar({
     zoomOut: 'disabled',
     resetView: 'enabled',
     copyCode: 'enabled',
+    toggleToolbar: 'enabled',
+    collapsed: 'collapsed',
     positions: { vertical: 'bottom', horizontal: 'left' },
   },
   fullscreen: {
@@ -44,6 +48,30 @@ mermaidRenderer.setToolbar({
 - **Mobile** genellikle yakınlaştırma düğmelerini gizler, sıfırlama ve kopyalama
   aksiyonlarını tutar.
 - **Fullscreen** odak dostu kontrolleri ve zoom seviyesi bilgisini ayrı yönetir.
+
+## Araç çubuğunu katlama
+
+`toggleToolbar` düğmesi varsayılan olarak kapalıdır; böylece mevcut
+yerleşimlerin görünümü değişmez. Diğer kontrolleri katlamak için bunu her modda
+ayrı ayrı etkinleştirebilirsiniz:
+
+```typescript
+mermaidRenderer.setToolbar({
+  desktop: {
+    toggleToolbar: 'enabled',
+    collapsed: 'expanded', // 'expanded' (varsayılan) | 'collapsed'
+  },
+  mobile: {
+    toggleToolbar: 'enabled',
+    collapsed: 'collapsed',
+  },
+});
+```
+
+Katlama durumu her diyagram için bağımsızdır ve sayfa yenileme ya da gezinme
+arasında saklanmaz. `collapsed` seçiliyse başlangıçta yalnızca katlama düğmesi
+görünür. Katlama düğmesi devre dışıysa diğer kontroller erişilebilir kalsın diye
+araç çubuğu açık başlar.
 
 ## Araç çubuğunu konumlandırma
 
@@ -75,6 +103,8 @@ mermaidRenderer.setToolbar({
           copyCodeCopied: 'Kopyalandı',
           download: 'Diyagramı indir',
           toggleFullscreen: 'Tam ekranı aç/kapa',
+          toggleToolbarExpand: 'Araç çubuğunu aç',
+          toggleToolbarCollapse: 'Araç çubuğunu katla',
           renderErrorText: 'Diyagram render edilemedi',
           toggleErrorDetailsText: 'Detayları göster',
           toggleErrorDetailsHideText: 'Detayları gizle',
@@ -89,6 +119,8 @@ mermaidRenderer.setToolbar({
           copyCodeCopied: '已复制',
           download: '下载图表',
           toggleFullscreen: '切换全屏',
+          toggleToolbarExpand: '展开工具栏',
+          toggleToolbarCollapse: '折叠工具栏',
           renderErrorText: '图表渲染失败',
           toggleErrorDetailsText: '显示详情',
           toggleErrorDetailsHideText: '隐藏详情',
@@ -128,6 +160,8 @@ etmeden yeni araç çubuğu metinlerini uygular.
 - Görsel olarak gizlenmiş bir durum duyurucusu (`role="status"`,
   `aria-live="polite"`) "Diyagram yükleniyor…" ve "Diyagram yüklendi"
   durumlarını okur.
+- Etkinleştirildiğinde katlama düğmesi `aria-expanded` ve `aria-controls`
+  özniteliklerini sunar; yardımcı teknolojiler açık/katlı durumu duyurabilir.
 - Hata konteyneri `role="alert"` kullanır; ekran okuyucular render hatalarını
   hemen duyurur.
 - `prefers-reduced-motion` ayarına otomatik olarak saygı duyulur; azaltılmış

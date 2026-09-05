@@ -51,8 +51,10 @@ inside its `.diagram-wrapper`, preserving its aspect ratio and centering it in
 both directions.
 
 Fitting is applied after every Mermaid render, including theme-driven re-renders
-and runtime updates. It does not affect `static: true` diagrams. The toolbar's
-**Reset View** action restores the fitted and centered view.
+and runtime updates. When the browser or a surrounding layout changes the
+container size, the diagram is re-fitted on the next animation frame without
+resetting the user's zoom or pan. It does not affect `static: true` diagrams.
+The toolbar's **Reset View** action restores the fitted and centered view.
 
 ## Static SVG mode
 
@@ -166,20 +168,57 @@ All visual constants in the renderer stylesheet are exposed as CSS custom
 properties on `.mermaid-container`. Override them to customise the look without
 editing the source stylesheet:
 
-| Variable                          | Default                     | Purpose                      |
-| :-------------------------------- | :-------------------------- | :--------------------------- |
-| `--mermaid-control-bg`            | `var(--vp-c-bg)`            | Toolbar button background    |
-| `--mermaid-control-text`          | `var(--vp-c-text-1)`        | Toolbar button text colour   |
-| `--mermaid-control-border`        | `var(--vp-c-divider)`       | Toolbar button border        |
-| `--mermaid-control-shadow`        | `0 2px 4px rgba(0,0,0,0.1)` | Toolbar button shadow        |
-| `--mermaid-control-radius`        | `0.375rem`                  | Toolbar button border radius |
-| `--mermaid-control-padding`       | `0.375rem`                  | Toolbar button padding       |
-| `--mermaid-control-gap`           | `0.25rem`                   | Toolbar button gap           |
-| `--mermaid-spinner-duration`      | `1s`                        | Loading spinner cycle time   |
-| `--mermaid-notification-duration` | `2s`                        | "Copied" notification time   |
-| `--mermaid-error-bg`              | `var(--vp-c-danger-soft)`   | Error container background   |
-| `--mermaid-error-border`          | `var(--vp-c-danger-1)`      | Error container border       |
-| `--mermaid-error-text`            | `var(--vp-c-danger-1)`      | Error container text         |
+| Variable                            | Default                     | Purpose                         |
+| :---------------------------------- | :-------------------------- | :------------------------------ |
+| `--mermaid-control-bg`              | `var(--vp-c-bg)`            | Toolbar and button background   |
+| `--mermaid-control-text`            | `var(--vp-c-text-1)`        | Toolbar icon and text colour    |
+| `--mermaid-control-text-active`     | `var(--vp-c-brand)`         | Button colour on hover          |
+| `--mermaid-control-border`          | `transparent`               | Button border colour            |
+| `--mermaid-control-shadow`          | `0 2px 4px rgba(0,0,0,0.1)` | Toolbar shadow                  |
+| `--mermaid-control-radius`          | `0.375rem`                  | Toolbar container border radius |
+| `--mermaid-control-padding`         | `0.375rem`                  | Toolbar container padding       |
+| `--mermaid-control-gap`             | `0.375rem`                  | Gap between toolbar items       |
+| `--mermaid-control-button-radius`   | `0.25rem`                   | Button border radius            |
+| `--mermaid-control-button-padding`  | `0.375rem`                  | Button padding                  |
+| `--mermaid-control-button-min-size` | `auto`                      | Minimum button width and height |
+| `--mermaid-control-icon-size`       | `18px`                      | Button icon width and height    |
+| `--mermaid-spinner-duration`        | `0.8s`                      | Loading spinner cycle time      |
+| `--mermaid-notification-duration`   | `2s`                        | "Copied" notification time      |
+| `--mermaid-error-bg`                | `var(--vp-c-bg-soft)`       | Error container background      |
+| `--mermaid-error-border`            | `var(--vp-c-border)`        | Error container border          |
+| `--mermaid-error-text`              | `var(--vp-c-danger)`        | Error container text            |
+
+### Desktop and mobile share one design
+
+The desktop and mobile toolbars are rendered from the same CSS rules. Mobile
+does not restyle anything — it only raises four of the tokens above so the
+controls stay comfortable to tap:
+
+| Variable                            | Desktop    | Mobile    |
+| :---------------------------------- | :--------- | :-------- |
+| `--mermaid-control-padding`         | `0.375rem` | `0.5rem`  |
+| `--mermaid-control-gap`             | `0.375rem` | `0.5rem`  |
+| `--mermaid-control-button-min-size` | `auto`     | `2.75rem` |
+| `--mermaid-control-icon-size`       | `18px`     | `20px`    |
+
+Overriding a token on `.mermaid-container` therefore changes both toolbars at
+once. To retune only the mobile toolbar, override the token on
+`.mobile-controls` instead:
+
+```css
+.mobile-controls {
+  --mermaid-control-button-min-size: 3rem;
+}
+```
+
+Buttons are borderless by default. Set `--mermaid-control-border` to a visible
+colour to get outlined buttons in both modes:
+
+```css
+.mermaid-container {
+  --mermaid-control-border: var(--vp-c-divider);
+}
+```
 
 ## Configurable zoom limits
 

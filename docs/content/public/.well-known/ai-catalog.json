@@ -1,0 +1,51 @@
+{
+  "$schema": "https://agenticresourcediscovery.org/schemas/ai-catalog.json",
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "VitePress Mermaid Renderer",
+    "identifier": "https://vitepress-mermaid-renderer.vercel.app/"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:vitepress-mermaid-renderer.vercel.app:documentation:getting-started",
+      "displayName": "VitePress Mermaid Renderer documentation",
+      "type": "text/html",
+      "url": "https://vitepress-mermaid-renderer.vercel.app/guide/getting-started",
+      "representativeQueries": [
+        "How do I install VitePress Mermaid Renderer?",
+        "How do I configure the Mermaid renderer?",
+        "How do I add interactive Mermaid diagrams to VitePress?"
+      ]
+    },
+    {
+      "identifier": "urn:air:vitepress-mermaid-renderer.vercel.app:discovery:api-catalog",
+      "displayName": "API catalog",
+      "type": "application/linkset+json",
+      "url": "https://vitepress-mermaid-renderer.vercel.app/.well-known/api-catalog",
+      "representativeQueries": [
+        "What machine-readable APIs and resources does this site publish?",
+        "Where can I find the site's service documentation?"
+      ]
+    },
+    {
+      "identifier": "urn:air:vitepress-mermaid-renderer.vercel.app:discovery:agent-skills",
+      "displayName": "Agent Skills discovery index",
+      "type": "application/json",
+      "url": "https://vitepress-mermaid-renderer.vercel.app/.well-known/agent-skills/index.json",
+      "representativeQueries": [
+        "Which agent skills are available for this site?",
+        "Where is the site's agent skill artifact?"
+      ]
+    },
+    {
+      "identifier": "urn:air:vitepress-mermaid-renderer.vercel.app:discovery:webmcp",
+      "displayName": "Browser documentation tools",
+      "type": "application/javascript",
+      "url": "https://vitepress-mermaid-renderer.vercel.app/webmcp.js",
+      "representativeQueries": [
+        "Can I search this documentation from a browser agent?",
+        "Can a browser agent navigate to a documentation page?"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "resource": "https://vitepress-mermaid-renderer.vercel.app",
+  "authorization_servers": [
+    "https://vitepress-mermaid-renderer.vercel.app"
+  ],
+  "scopes_supported": [],
+  "bearer_methods_supported": ["header"]
+}

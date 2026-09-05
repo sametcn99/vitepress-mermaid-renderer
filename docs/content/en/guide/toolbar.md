@@ -19,6 +19,8 @@ mermaidRenderer.setToolbar({
     zoomIn: 'enabled',
     zoomOut: 'enabled',
     resetView: 'enabled',
+    toggleToolbar: 'enabled',
+    collapsed: 'expanded',
     download: 'enabled',
     positions: { vertical: 'top', horizontal: 'right' },
   },
@@ -27,6 +29,8 @@ mermaidRenderer.setToolbar({
     zoomOut: 'disabled',
     resetView: 'enabled',
     copyCode: 'enabled',
+    toggleToolbar: 'enabled',
+    collapsed: 'collapsed',
     positions: { vertical: 'bottom', horizontal: 'left' },
   },
   fullscreen: {
@@ -45,6 +49,30 @@ mermaidRenderer.setToolbar({
 - **Mobile** hides zoom buttons but keeps reset/copy so thumbs stay clear of the
   diagram area.
 - **Fullscreen** mode reinjects zoom level readouts and focus-friendly switches.
+
+## Collapsing the toolbar
+
+The `toggleToolbar` button is disabled by default so existing layouts keep their
+current appearance. Enable it per mode when you want readers to be able to
+collapse the other controls:
+
+```typescript
+mermaidRenderer.setToolbar({
+  desktop: {
+    toggleToolbar: 'enabled',
+    collapsed: 'expanded', // 'expanded' (default) | 'collapsed'
+  },
+  mobile: {
+    toggleToolbar: 'enabled',
+    collapsed: 'collapsed',
+  },
+});
+```
+
+The collapse state belongs to each diagram instance and is not persisted across
+page reloads or navigation. A mode configured as `collapsed` starts with only
+the toggle button visible; it is treated as expanded if the toggle itself is
+disabled so the other controls remain reachable.
 
 ## Positioning the toolbar
 
@@ -82,6 +110,8 @@ mermaidRenderer.setToolbar({
           copyCodeCopied: 'Kopyalandı',
           download: 'Diyagramı indir',
           toggleFullscreen: 'Tam ekranı aç/kapa',
+          toggleToolbarExpand: 'Araç çubuğunu aç',
+          toggleToolbarCollapse: 'Araç çubuğunu katla',
           renderErrorText: 'Diyagram render edilemedi',
           toggleErrorDetailsText: 'Detayları göster',
           toggleErrorDetailsHideText: 'Detayları gizle',
@@ -96,6 +126,8 @@ mermaidRenderer.setToolbar({
           copyCodeCopied: '已复制',
           download: '下载图表',
           toggleFullscreen: '切换全屏',
+          toggleToolbarExpand: '展开工具栏',
+          toggleToolbarCollapse: '折叠工具栏',
           renderErrorText: '图表渲染失败',
           toggleErrorDetailsText: '显示详情',
           toggleErrorDetailsHideText: '隐藏详情',
@@ -167,6 +199,8 @@ remounting the SVG.
   `+`/`-` for zoom, `0` for reset, arrow keys for panning, `f` for fullscreen.
 - A visually-hidden status announcer (`role="status"`, `aria-live="polite"`)
   reads "Loading diagram…" and "Diagram loaded" states.
+- When enabled, the toolbar toggle exposes `aria-expanded` and `aria-controls`
+  so its collapsed state is announced to assistive technology.
 - The error container uses `role="alert"` so screen readers immediately announce
   rendering failures.
 - `prefers-reduced-motion` is respected — animations and transitions are

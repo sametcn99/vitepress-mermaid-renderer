@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "vitepress-mermaid-documentation",
+      "type": "skill-md",
+      "description": "Answer installation, configuration, and usage questions for VitePress Mermaid Renderer.",
+      "url": "https://vitepress-mermaid-renderer.vercel.app/.well-known/agent-skills/vitepress-mermaid-documentation.md",
+      "digest": "sha256:53ad5a6bcecfa6651404bec9406daa8e31b1112e70c1a44f2cf015e8b3faba19"
+    }
+  ]
+}

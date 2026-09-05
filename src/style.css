@@ -1,11 +1,16 @@
 .mermaid-container {
   --mermaid-control-bg: var(--vp-c-bg);
   --mermaid-control-text: var(--vp-c-text-1);
-  --mermaid-control-border: var(--vp-c-border);
+  --mermaid-control-text-active: var(--vp-c-brand);
+  --mermaid-control-border: transparent;
   --mermaid-control-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   --mermaid-control-radius: 0.375rem;
   --mermaid-control-padding: 0.375rem;
-  --mermaid-control-gap: 0.25rem;
+  --mermaid-control-gap: 0.375rem;
+  --mermaid-control-button-radius: 0.25rem;
+  --mermaid-control-button-padding: 0.375rem;
+  --mermaid-control-button-min-size: auto;
+  --mermaid-control-icon-size: 18px;
   --mermaid-spinner-duration: 0.8s;
   --mermaid-notification-duration: 2s;
   --mermaid-error-bg: var(--vp-c-bg-soft);
@@ -60,7 +65,14 @@ body.mermaid-dialog-open {
   overflow: hidden;
 }
 
-/* Base controls styles */
+/*
+  Base controls styles.
+
+  This block is the single source of truth for how a toolbar looks. Desktop
+  and mobile share every rule below and differ only in the *values* of the
+  `--mermaid-control-*` tokens (see `.mobile-controls`), so a change to the
+  toolbar's design never has to be made twice.
+*/
 .controls {
   position: absolute;
   bottom: 0.75rem;
@@ -68,6 +80,16 @@ body.mermaid-dialog-open {
   top: auto;
   left: auto;
   z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  /*
+    A full button set at the mobile touch size is wider than a phone
+    viewport, and `.mermaid-container` clips its overflow — so the toolbar
+    wraps instead of pushing controls outside the diagram.
+  */
+  flex-wrap: wrap;
+  max-width: calc(100% - 1.5rem);
+  gap: var(--mermaid-control-gap);
   padding: var(--mermaid-control-padding);
   border-radius: var(--mermaid-control-radius);
   box-shadow: var(--mermaid-control-shadow);
@@ -76,6 +98,7 @@ body.mermaid-dialog-open {
   pointer-events: auto;
   transition: all 0.2s ease;
   background: var(--mermaid-control-bg);
+  color: var(--mermaid-control-text);
 }
 
 .controls.toolbar-vertical-top {
@@ -98,93 +121,91 @@ body.mermaid-dialog-open {
   left: auto;
 }
 
-/* Desktop Controls */
-.desktop-controls {
+/* Toolbar button group, shared by both modes */
+.controls .toolbar-items {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
+  flex-wrap: wrap;
+  gap: var(--mermaid-control-gap);
 }
 
-.desktop-controls button {
-  position: relative;
-  padding: 0.375rem;
-  border: none;
-  background: var(--mermaid-control-bg);
-  border-radius: 0.25rem;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  color: var(--mermaid-control-text);
-  transition: all 0.2s ease;
-}
-
-.desktop-controls button:hover {
-  background: var(--vp-c-bg-soft);
-  transform: translateY(-1px);
-  color: var(--vp-c-brand);
-}
-
-.desktop-controls button:active {
-  transform: translateY(0);
-}
-
-.desktop-controls button svg {
-  width: 18px;
-  height: 18px;
-  transition: transform 0.2s ease;
-}
-
-.desktop-controls button:hover svg {
-  transform: scale(1.1);
-}
-
-/* Mobile Controls */
-.mobile-controls {
-  display: none;
-  flex-direction: row;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  width: auto;
-  z-index: 8;
-}
-
+/* Extra wrapper the mobile toolbar puts around toggle + button group */
 .mobile-utility-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: var(--mermaid-control-gap);
 }
 
-.mobile-controls button {
-  width: 40px;
-  height: 40px;
-  background: var(--mermaid-control-bg);
-  border: 1px solid var(--mermaid-control-border);
-  border-radius: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+/*
+  Toolbar buttons.
+
+  Geometry comes entirely from tokens: `--mermaid-control-button-min-size`
+  guarantees a touch target on mobile without hard-coding a square, while
+  padding keeps the desktop buttons compact. Icons inherit `currentColor`
+  so a single `color` change drives both idle and hover states.
+*/
+.controls button {
   position: relative;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
+  display: grid;
+  place-items: center;
+  min-width: var(--mermaid-control-button-min-size);
+  min-height: var(--mermaid-control-button-min-size);
+  padding: var(--mermaid-control-button-padding);
+  border: 1px solid var(--mermaid-control-border);
+  border-radius: var(--mermaid-control-button-radius);
+  background: var(--mermaid-control-bg);
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.mobile-controls button:hover {
+.controls button:hover {
   background: var(--vp-c-bg-soft);
+  color: var(--mermaid-control-text-active);
   transform: translateY(-1px);
 }
 
-.mobile-controls button:active {
+.controls button:active {
   transform: translateY(0);
 }
 
-.mobile-controls button svg {
-  width: 20px;
-  height: 20px;
-  stroke: var(--vp-c-text-1);
+.controls button svg {
+  width: var(--mermaid-control-icon-size);
+  height: var(--mermaid-control-icon-size);
+  transition: transform 0.2s ease;
+}
+
+.controls button:hover svg {
+  transform: scale(1.1);
+}
+
+/* Collapsible toolbar */
+.controls.is-collapsed .toolbar-toggle svg {
+  transform: rotate(180deg);
+}
+
+/*
+  The collapsed rotation is more specific than `button:hover svg`, so the
+  hover scale has to be restated here or it would be dropped while collapsed.
+*/
+.controls.is-collapsed .toolbar-toggle:hover svg {
+  transform: rotate(180deg) scale(1.1);
+}
+
+/*
+  Mobile Controls
+
+  Only token values are overridden — every rule above still applies, so the
+  mobile toolbar is the same design at a touch-friendly scale rather than a
+  second, separately maintained one.
+*/
+.mobile-controls {
+  display: none;
+  --mermaid-control-padding: 0.5rem;
+  --mermaid-control-gap: 0.5rem;
+  --mermaid-control-button-min-size: 2.75rem;
+  --mermaid-control-icon-size: 20px;
 }
 
 /* Common styles */
@@ -198,16 +219,7 @@ body.mermaid-dialog-open {
   user-select: none;
   padding: 0.25rem 0.375rem;
   background: var(--mermaid-control-bg);
-  border-radius: 0.25rem;
-}
-
-.mobile-controls .zoom-level {
-  margin-right: 0.5rem;
-  min-width: 3rem;
-}
-
-.mobile-controls .mobile-zoom-level {
-  order: -1;
+  border-radius: var(--mermaid-control-button-radius);
 }
 
 /* Responsive behavior */
@@ -217,7 +229,7 @@ body.mermaid-dialog-open {
   }
 
   .mobile-controls {
-    display: flex;
+    display: inline-flex;
   }
 }
 
@@ -229,11 +241,6 @@ body.mermaid-dialog-open {
   .desktop-controls {
     display: inline-flex;
   }
-}
-
-.mermaid-container:hover .controls:not(.force-show) {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .mermaid-container:fullscreen .controls {
@@ -395,25 +402,6 @@ body.mermaid-dialog-open {
   pointer-events: auto !important;
 }
 
-.mobile-only {
-  display: none !important;
-}
-
-@media (max-width: 768px) {
-  .mobile-only {
-    display: grid !important;
-  }
-
-  .controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .zoom-level {
-    text-align: center;
-  }
-}
-
 /* Error display styles */
 .diagram-error {
   position: absolute;
@@ -508,8 +496,10 @@ body.mermaid-dialog-open {
   .controls {
     transition: none !important;
   }
-  .desktop-controls button,
-  .mobile-controls button {
+  .controls button {
+    transition: none !important;
+  }
+  .controls button svg {
     transition: none !important;
   }
 }

@@ -48,7 +48,7 @@ config，现有 singleton 会**深度合并**配置（嵌套对象如 `flowchart
 每个交互式图表都会在保持宽高比的同时，以能够放入 `.diagram-wrapper`
 的最大比例自动渲染，并在水平和垂直方向居中。
 
-自动适配会在每次 Mermaid 渲染后生效，包括主题触发的重新渲染和运行时更新。它不会影响
+自动适配会在每次 Mermaid 渲染后生效，包括主题触发的重新渲染和运行时更新。当浏览器或周围布局改变容器大小时，图表会在下一动画帧重新适配，同时保留用户的缩放和平移状态。它不会影响
 `static: true` 图表。工具栏中的**重置视图**操作会恢复适配并居中的视图。
 
 ## 主题感知
@@ -144,20 +144,55 @@ SVG 下载无论 `securityLevel` 设置如何都会进行消毒：`<script>`、`
 渲染器样式表中的所有视觉常量都以 CSS 自定义属性的形式暴露在 `.mermaid-container`
 上。覆盖这些属性即可自定义外观，无需编辑源样式表：
 
-| 变量                              | 默认值                      | 用途               |
-| :-------------------------------- | :-------------------------- | :----------------- |
-| `--mermaid-control-bg`            | `var(--vp-c-bg)`            | 工具栏按钮背景     |
-| `--mermaid-control-text`          | `var(--vp-c-text-1)`        | 工具栏按钮文字颜色 |
-| `--mermaid-control-border`        | `var(--vp-c-divider)`       | 工具栏按钮边框     |
-| `--mermaid-control-shadow`        | `0 2px 4px rgba(0,0,0,0.1)` | 工具栏按钮阴影     |
-| `--mermaid-control-radius`        | `0.375rem`                  | 工具栏按钮圆角     |
-| `--mermaid-control-padding`       | `0.375rem`                  | 工具栏按钮内边距   |
-| `--mermaid-control-gap`           | `0.25rem`                   | 工具栏按钮间距     |
-| `--mermaid-spinner-duration`      | `1s`                        | 加载动画周期       |
-| `--mermaid-notification-duration` | `2s`                        | "已复制"通知时长   |
-| `--mermaid-error-bg`              | `var(--vp-c-danger-soft)`   | 错误容器背景       |
-| `--mermaid-error-border`          | `var(--vp-c-danger-1)`      | 错误容器边框       |
-| `--mermaid-error-text`            | `var(--vp-c-danger-1)`      | 错误容器文字颜色   |
+| 变量                                | 默认值                      | 用途                 |
+| :---------------------------------- | :-------------------------- | :------------------- |
+| `--mermaid-control-bg`              | `var(--vp-c-bg)`            | 工具栏与按钮背景     |
+| `--mermaid-control-text`            | `var(--vp-c-text-1)`        | 工具栏图标与文字颜色 |
+| `--mermaid-control-text-active`     | `var(--vp-c-brand)`         | 悬停时的按钮颜色     |
+| `--mermaid-control-border`          | `transparent`               | 按钮边框颜色         |
+| `--mermaid-control-shadow`          | `0 2px 4px rgba(0,0,0,0.1)` | 工具栏阴影           |
+| `--mermaid-control-radius`          | `0.375rem`                  | 工具栏容器圆角       |
+| `--mermaid-control-padding`         | `0.375rem`                  | 工具栏容器内边距     |
+| `--mermaid-control-gap`             | `0.375rem`                  | 工具栏项目间距       |
+| `--mermaid-control-button-radius`   | `0.25rem`                   | 按钮圆角             |
+| `--mermaid-control-button-padding`  | `0.375rem`                  | 按钮内边距           |
+| `--mermaid-control-button-min-size` | `auto`                      | 按钮最小宽高         |
+| `--mermaid-control-icon-size`       | `18px`                      | 按钮图标宽高         |
+| `--mermaid-spinner-duration`        | `0.8s`                      | 加载动画周期         |
+| `--mermaid-notification-duration`   | `2s`                        | "已复制"通知时长     |
+| `--mermaid-error-bg`                | `var(--vp-c-bg-soft)`       | 错误容器背景         |
+| `--mermaid-error-border`            | `var(--vp-c-border)`        | 错误容器边框         |
+| `--mermaid-error-text`              | `var(--vp-c-danger)`        | 错误容器文字颜色     |
+
+### 桌面端与移动端共享同一套设计
+
+桌面端和移动端工具栏由同一批 CSS 规则渲染。移动端不会重新定义任何样式，只是调高上面四个令牌的取值，以保证控件便于点按：
+
+| 变量                                | 桌面端     | 移动端    |
+| :---------------------------------- | :--------- | :-------- |
+| `--mermaid-control-padding`         | `0.375rem` | `0.5rem`  |
+| `--mermaid-control-gap`             | `0.375rem` | `0.5rem`  |
+| `--mermaid-control-button-min-size` | `auto`     | `2.75rem` |
+| `--mermaid-control-icon-size`       | `18px`     | `20px`    |
+
+因此，在 `.mermaid-container`
+上覆盖某个令牌会同时改变两个工具栏。若只想调整移动端工具栏，请改为在
+`.mobile-controls` 上覆盖：
+
+```css
+.mobile-controls {
+  --mermaid-control-button-min-size: 3rem;
+}
+```
+
+按钮默认无边框。将 `--mermaid-control-border`
+设为可见颜色即可让两种模式都显示描边按钮：
+
+```css
+.mermaid-container {
+  --mermaid-control-border: var(--vp-c-divider);
+}
+```
 
 ## 可配置的缩放限制
 

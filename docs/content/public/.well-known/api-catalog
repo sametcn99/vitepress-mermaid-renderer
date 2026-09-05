@@ -1,0 +1,25 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://vitepress-mermaid-renderer.vercel.app/",
+      "service-desc": [
+        {
+          "href": "https://vitepress-mermaid-renderer.vercel.app/openapi.json",
+          "type": "application/vnd.oai.openapi+json;version=3.1"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://vitepress-mermaid-renderer.vercel.app/guide/getting-started",
+          "type": "text/html"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://vitepress-mermaid-renderer.vercel.app/robots.txt",
+          "type": "text/plain"
+        }
+      ]
+    }
+  ]
+}

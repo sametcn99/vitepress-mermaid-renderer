@@ -9,6 +9,41 @@ import {
 describe('resolveToolbarConfig', () => {
   it('returns the default toolbar configuration when no overrides are provided', () => {
     expect(resolveToolbarConfig()).toEqual(DEFAULT_TOOLBAR_CONFIG);
+    expect(resolveToolbarConfig().desktop.buttons.toggleToolbar).toBe(
+      'disabled',
+    );
+    expect(resolveToolbarConfig().mobile.buttons.toggleToolbar).toBe(
+      'disabled',
+    );
+    expect(resolveToolbarConfig().fullscreen.buttons.toggleToolbar).toBe(
+      'disabled',
+    );
+    expect(resolveToolbarConfig().desktop.collapsed).toBe('expanded');
+    expect(resolveToolbarConfig().mobile.collapsed).toBe('expanded');
+    expect(resolveToolbarConfig().fullscreen.collapsed).toBe('expanded');
+  });
+
+  it('resolves collapsible toolbar overrides independently for each mode', () => {
+    const resolved = resolveToolbarConfig({
+      desktop: { toggleToolbar: 'enabled', collapsed: 'collapsed' },
+      mobile: { toggleToolbar: 'enabled', collapsed: 'expanded' },
+      fullscreen: { toggleToolbar: 'disabled', collapsed: 'collapsed' },
+    });
+
+    expect(resolved.desktop.buttons.toggleToolbar).toBe('enabled');
+    expect(resolved.desktop.collapsed).toBe('collapsed');
+    expect(resolved.mobile.buttons.toggleToolbar).toBe('enabled');
+    expect(resolved.mobile.collapsed).toBe('expanded');
+    expect(resolved.fullscreen.buttons.toggleToolbar).toBe('disabled');
+    expect(resolved.fullscreen.collapsed).toBe('collapsed');
+  });
+
+  it('falls back to expanded for an invalid collapsed override', () => {
+    const resolved = resolveToolbarConfig({
+      desktop: { collapsed: 'hidden' as 'expanded' },
+    });
+
+    expect(resolved.desktop.collapsed).toBe('expanded');
   });
 
   it('merges nested overrides without dropping the untouched defaults', () => {
@@ -127,9 +162,25 @@ describe('isResolvedToolbarConfig', () => {
   it('rejects objects missing scalar resolution markers', () => {
     expect(
       isResolvedToolbarConfig({
-        desktop: { buttons: {}, positions: {}, zoomLevel: 'enabled' },
+        desktop: {
+          buttons: {},
+          positions: {},
+          zoomLevel: 'enabled',
+          collapsed: 'expanded',
+        },
       }),
     ).toBe(false);
+  });
+
+  it('rejects resolved-shaped objects missing the collapsed marker', () => {
+    const resolved = resolveToolbarConfig();
+    const withoutCollapsed = {
+      ...resolved,
+      desktop: { ...resolved.desktop },
+    } as Record<string, unknown>;
+    delete (withoutCollapsed.desktop as Record<string, unknown>).collapsed;
+
+    expect(isResolvedToolbarConfig(withoutCollapsed)).toBe(false);
   });
 });
 
@@ -148,6 +199,8 @@ describe('resolveToolbarI18n', () => {
       renderErrorText: 'Failed to render diagram',
       toggleErrorDetailsText: 'Show Details',
       toggleErrorDetailsHideText: 'Hide Details',
+      toggleToolbarExpand: 'Expand Toolbar',
+      toggleToolbarCollapse: 'Collapse Toolbar',
     });
   });
 

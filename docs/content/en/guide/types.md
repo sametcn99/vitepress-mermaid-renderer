@@ -25,24 +25,26 @@ These options are passed to `mermaidRenderer.setToolbar()`.
 The `desktop`, `mobile`, and `fullscreen` objects share the same structure to
 control toolbar behavior.
 
-| Key            | Type                      | Description                                                      |
-| :------------- | :------------------------ | :--------------------------------------------------------------- |
-| `[buttonName]` | `'enabled' \| 'disabled'` | Enable or disable specific buttons (e.g., `zoomIn`, `copyCode`). |
-| `zoomLevel`    | `'enabled' \| 'disabled'` | Controls the visibility of the zoom percentage indicator.        |
-| `positions`    | `object`                  | Defines where the toolbar is anchored on the screen.             |
+| Key            | Type                        | Description                                                      |
+| :------------- | :-------------------------- | :--------------------------------------------------------------- |
+| `[buttonName]` | `'enabled' \| 'disabled'`   | Enable or disable specific buttons (e.g., `zoomIn`, `copyCode`). |
+| `zoomLevel`    | `'enabled' \| 'disabled'`   | Controls the visibility of the zoom percentage indicator.        |
+| `collapsed`    | `'expanded' \| 'collapsed'` | Initial toolbar state when `toggleToolbar` is enabled.           |
+| `positions`    | `object`                    | Defines where the toolbar is anchored on the screen.             |
 
 ### Default Button States
 
 Below are the default visibility states for each button across different modes:
 
-| Button             | Desktop    | Mobile     | Fullscreen | Description                                           |
-| :----------------- | :--------- | :--------- | :--------- | :---------------------------------------------------- |
-| `zoomIn`           | `enabled`  | `disabled` | `disabled` | Button to zoom into the diagram.                      |
-| `zoomOut`          | `enabled`  | `disabled` | `disabled` | Button to zoom out of the diagram.                    |
-| `resetView`        | `enabled`  | `enabled`  | `disabled` | Resets the diagram to its original zoom and position. |
-| `copyCode`         | `enabled`  | `enabled`  | `disabled` | Copies the Mermaid source code to the clipboard.      |
-| `download`         | `disabled` | `disabled` | `disabled` | Downloads the diagram in the specified format.        |
-| `toggleFullscreen` | `enabled`  | `enabled`  | `enabled`  | Toggles the fullscreen mode for the diagram.          |
+| Button             | Desktop    | Mobile     | Fullscreen | Description                                               |
+| :----------------- | :--------- | :--------- | :--------- | :-------------------------------------------------------- |
+| `zoomIn`           | `enabled`  | `disabled` | `disabled` | Button to zoom into the diagram.                          |
+| `zoomOut`          | `enabled`  | `disabled` | `disabled` | Button to zoom out of the diagram.                        |
+| `resetView`        | `enabled`  | `enabled`  | `disabled` | Resets the diagram to its original zoom and position.     |
+| `copyCode`         | `enabled`  | `enabled`  | `disabled` | Copies the Mermaid source code to the clipboard.          |
+| `download`         | `disabled` | `disabled` | `disabled` | Downloads the diagram in the specified format.            |
+| `toggleFullscreen` | `enabled`  | `enabled`  | `enabled`  | Toggles the fullscreen mode for the diagram.              |
+| `toggleToolbar`    | `disabled` | `disabled` | `disabled` | Collapses or expands the other toolbar controls (opt-in). |
 
 ### Position Configuration
 
@@ -82,6 +84,8 @@ following shape:
 | `renderErrorText`            | `Failed to render diagram` |
 | `toggleErrorDetailsText`     | `Show Details`             |
 | `toggleErrorDetailsHideText` | `Hide Details`             |
+| `toggleToolbarExpand`        | `Expand Toolbar`           |
+| `toggleToolbarCollapse`      | `Collapse Toolbar`         |
 
 Resolution order per key: `locales[localeIndex].tooltips[key]` → `tooltips[key]`
 → built-in default. Empty strings are ignored at every level.

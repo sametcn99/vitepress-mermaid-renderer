@@ -108,6 +108,7 @@ export type FullscreenMode = 'browser' | 'dialog';
  * | `"copyCode"`         | Copies the raw Mermaid source to clipboard|
  * | `"toggleFullscreen"` | Toggles fullscreen display                |
  * | `"download"`         | Downloads the diagram as an image file    |
+ * | `"toggleToolbar"`    | Collapses / expands the toolbar itself    |
  *
  * @example
  * ```ts
@@ -120,22 +121,28 @@ export type ToolbarButton =
   | 'resetView'
   | 'copyCode'
   | 'toggleFullscreen'
-  | 'download';
+  | 'download'
+  | 'toggleToolbar';
 
 /**
  * Canonical key set for tooltip strings shown on toolbar buttons.
  *
- * Mirrors {@link ToolbarButton} so every interactive button has exactly
- * one tooltip key. Used as the index type of {@link ToolbarTooltipText}
- * and the `data-mermaid-control` attribute applied to each rendered
- * button in `MermaidControls.vue`.
+ * Mirrors the actionable members of {@link ToolbarButton} so every button
+ * with a static tooltip has exactly one tooltip key. Used as the index type
+ * of {@link ToolbarTooltipText} and the `data-mermaid-control` attribute
+ * applied to each rendered button in `MermaidControls.vue`.
+ *
+ * `"toggleToolbar"` is excluded because its label depends on the current
+ * collapsed state — it reads its text from
+ * {@link ToolbarStatusTextKey}.`toggleToolbarExpand` /
+ * `toggleToolbarCollapse` instead, so no key is ever unused.
  *
  * @example
  * ```ts
  * const key: ToolbarTooltipKey = "zoomIn";
  * ```
  */
-export type ToolbarTooltipKey = ToolbarButton;
+export type ToolbarTooltipKey = Exclude<ToolbarButton, 'toggleToolbar'>;
 
 /**
  * Canonical key set for non-button status text shown by the toolbar.
@@ -148,7 +155,9 @@ export type ToolbarStatusTextKey =
   | 'copyCodeCopied'
   | 'renderErrorText'
   | 'toggleErrorDetailsText'
-  | 'toggleErrorDetailsHideText';
+  | 'toggleErrorDetailsHideText'
+  | 'toggleToolbarExpand'
+  | 'toggleToolbarCollapse';
 
 /**
  * Canonical key set for every localized toolbar string.
@@ -304,7 +313,30 @@ export type MobileToolbarButton =
   | 'toggleFullscreen'
   | 'zoomIn'
   | 'zoomOut'
-  | 'download';
+  | 'download'
+  | 'toggleToolbar';
+
+/**
+ * Initial expansion state of a collapsible toolbar.
+ *
+ * - `"expanded"` — every enabled button is visible (the default, identical
+ *   to the toolbar's behaviour before collapsing existed).
+ * - `"collapsed"` — only the `toggleToolbar` button is visible until the
+ *   user expands the toolbar.
+ *
+ * Only meaningful when `toggleToolbar` is `"enabled"` for the same mode;
+ * without the toggle button there would be no way to expand again, so a
+ * collapsed toolbar is rendered expanded in that case.
+ *
+ * The state is per diagram instance and is intentionally **not**
+ * persisted — every mount starts from the configured value.
+ *
+ * @example
+ * ```ts
+ * const collapsed: ToolbarCollapsedState = "collapsed";
+ * ```
+ */
+export type ToolbarCollapsedState = 'expanded' | 'collapsed';
 
 /**
  * Valid vertical anchors for the toolbar container inside the diagram.
@@ -393,6 +425,11 @@ export type ToolbarModeOverrides<ButtonType extends string> = Partial<
    * Controls the visibility of the zoom level indicator.
    */
   zoomLevel?: ToolbarButtonState;
+  /**
+   * Initial expansion state of the toolbar. Defaults to `"expanded"`.
+   * Requires `toggleToolbar: "enabled"` to be useful.
+   */
+  collapsed?: ToolbarCollapsedState;
 };
 
 /**
@@ -519,6 +556,10 @@ export interface ToolbarModeConfig<ButtonType extends string> {
    * State of the zoom level indicator.
    */
   zoomLevel: ToolbarButtonState;
+  /**
+   * Initial expansion state for the current toolbar mode.
+   */
+  collapsed: ToolbarCollapsedState;
 }
 
 /**
@@ -586,9 +627,9 @@ export interface ResolvedToolbarConfig {
  * a partial options object that still needs resolution.
  *
  * The guard checks for structural markers that only exist after
- * resolution: the presence of nested `buttons`, `positions`, and
- * `zoomLevel` keys inside the `desktop` mode, plus the required
- * scalar fields `showLanguageLabel`, `downloadFormat`, and
+ * resolution: the presence of nested `buttons`, `positions`,
+ * `zoomLevel`, and `collapsed` keys inside the `desktop` mode, plus the
+ * required scalar fields `showLanguageLabel`, `downloadFormat`, and
  * `fullscreenMode`.
  *
  * @param value - The value to check.
@@ -616,6 +657,7 @@ export const isResolvedToolbarConfig = (
     'buttons' in candidate.desktop &&
     'positions' in candidate.desktop &&
     'zoomLevel' in candidate.desktop &&
+    'collapsed' in candidate.desktop &&
     typeof candidate.showLanguageLabel === 'boolean' &&
     typeof candidate.downloadFormat === 'string' &&
     typeof candidate.fullscreenMode === 'string' &&
@@ -644,8 +686,12 @@ export const isResolvedToolbarConfig = (
  * | `copyCode`          | enabled   | enabled   | disabled   |
  * | `toggleFullscreen`  | enabled   | enabled   | enabled    |
  * | `download`          | disabled  | disabled  | disabled   |
+ * | `toggleToolbar`     | disabled  | disabled  | disabled   |
  *
- * All modes default to `bottom-right` positioning and `zoomLevel: "enabled"`.
+ * All modes default to `bottom-right` positioning, `zoomLevel: "enabled"`,
+ * and `collapsed: "expanded"`. Toolbar collapsing is therefore opt-in: an
+ * existing site's toolbar looks and behaves exactly as before until
+ * `toggleToolbar` is explicitly enabled.
  *
  * @constant
  */
@@ -658,12 +704,14 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
       copyCode: 'enabled',
       toggleFullscreen: 'enabled',
       download: 'disabled',
+      toggleToolbar: 'disabled',
     },
     positions: {
       vertical: 'bottom',
       horizontal: 'right',
     },
     zoomLevel: 'enabled',
+    collapsed: 'expanded',
   },
   mobile: {
     buttons: {
@@ -673,12 +721,14 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
       copyCode: 'enabled',
       toggleFullscreen: 'enabled',
       download: 'disabled',
+      toggleToolbar: 'disabled',
     },
     positions: {
       vertical: 'bottom',
       horizontal: 'right',
     },
     zoomLevel: 'enabled',
+    collapsed: 'expanded',
   },
   fullscreen: {
     buttons: {
@@ -688,12 +738,14 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
       copyCode: 'disabled',
       toggleFullscreen: 'enabled',
       download: 'disabled',
+      toggleToolbar: 'disabled',
     },
     positions: {
       vertical: 'bottom',
       horizontal: 'right',
     },
     zoomLevel: 'enabled',
+    collapsed: 'expanded',
   },
   showLanguageLabel: true,
   downloadFormat: 'svg',
@@ -711,6 +763,8 @@ export const DEFAULT_TOOLBAR_CONFIG: ResolvedToolbarConfig = {
       renderErrorText: 'Failed to render diagram',
       toggleErrorDetailsText: 'Show Details',
       toggleErrorDetailsHideText: 'Hide Details',
+      toggleToolbarExpand: 'Expand Toolbar',
+      toggleToolbarCollapse: 'Collapse Toolbar',
     },
   },
 } as const;
@@ -756,9 +810,30 @@ const isToolbarButtonState = (value: unknown): value is ToolbarButtonState =>
   value === 'enabled' || value === 'disabled';
 
 /**
+ * Type guard for the two valid {@link ToolbarCollapsedState} literals.
+ *
+ * Used by {@link resolveToolbarMode} so an unknown or misspelled
+ * `collapsed` value falls back to the default instead of collapsing the
+ * toolbar unexpectedly.
+ *
+ * @param value - The value to check.
+ * @returns `true` if `value` is `"expanded"` or `"collapsed"`.
+ */
+const isToolbarCollapsedState = (
+  value: unknown,
+): value is ToolbarCollapsedState =>
+  value === 'expanded' || value === 'collapsed';
+
+/**
+ * Non-button keys that share the {@link ToolbarModeOverrides} object with
+ * per-button state entries and must be skipped when merging button states.
+ */
+const NON_BUTTON_OVERRIDE_KEYS = ['positions', 'zoomLevel', 'collapsed'];
+
+/**
  * Merges per-button state overrides with defaults while safely ignoring
- * the `positions` and `zoomLevel` keys that coexist in the same
- * {@link ToolbarModeOverrides} object.
+ * the `positions`, `zoomLevel`, and `collapsed` keys that coexist in the
+ * same {@link ToolbarModeOverrides} object.
  *
  * Only values that pass the {@link isToolbarButtonState} guard are
  * applied; all other keys are silently skipped.
@@ -789,7 +864,7 @@ const mergeToolbarButtons = <ButtonType extends string>(
 
   const merged = { ...defaults };
   (Object.keys(overrides) as Array<keyof typeof overrides>).forEach((key) => {
-    if (key === 'positions' || key === 'zoomLevel') {
+    if (NON_BUTTON_OVERRIDE_KEYS.includes(key as string)) {
       return;
     }
     const buttonKey = key as ButtonType;
@@ -819,6 +894,8 @@ const resolveToolbarMode = <ButtonType extends string>(
   defaults: ToolbarModeConfig<ButtonType>,
   overrides?: ToolbarModeOverrides<ButtonType>,
 ): ToolbarModeConfig<ButtonType> => {
+  const collapsedOverride = overrides?.collapsed;
+
   return {
     buttons: mergeToolbarButtons(defaults.buttons, overrides),
     positions: mergePosition(defaults.positions, overrides?.positions),
@@ -826,6 +903,9 @@ const resolveToolbarMode = <ButtonType extends string>(
       overrides?.zoomLevel && isToolbarButtonState(overrides.zoomLevel)
         ? overrides.zoomLevel
         : defaults.zoomLevel,
+    collapsed: isToolbarCollapsedState(collapsedOverride)
+      ? collapsedOverride
+      : defaults.collapsed,
   };
 };
 
@@ -923,6 +1003,8 @@ export const resolveToolbarI18n = (
     'renderErrorText',
     'toggleErrorDetailsText',
     'toggleErrorDetailsHideText',
+    'toggleToolbarExpand',
+    'toggleToolbarCollapse',
   ];
 
   const tooltips = keys.reduce((acc, key) => {

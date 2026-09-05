@@ -24,6 +24,8 @@ _Stay up to date with new releases in the
 - **High-Quality Downloads:** Export and download diagrams as SVG, PNG, or JPG.
 - **Complete Customization:** Selectively toggle toolbar buttons per display
   mode (desktop, mobile, fullscreen).
+- **Collapsible Toolbar:** Optionally collapse toolbar controls per diagram and
+  per display mode.
 - **i18n Support:** Easily localize all tooltips and states dynamically using
   VitePress locale data.
 

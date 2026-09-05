@@ -52,7 +52,9 @@ sığacak en büyük ölçekte otomatik olarak render edilir ve her iki eksende
 ortalanır.
 
 Sığdırma, tema kaynaklı yeniden render işlemleri ve runtime güncellemeleri dahil
-her Mermaid render işleminden sonra uygulanır. `static: true` diyagramları
+her Mermaid render işleminden sonra uygulanır. Tarayıcı veya çevre yerleşimi
+konteyner boyutunu değiştirirse kullanıcı zoom ve kaydırma durumunu kaybetmeden
+bir sonraki animasyon karesinde yeniden sığdırılır. `static: true` diyagramları
 etkilemez. Araç çubuğundaki **Görünümü sıfırla** işlemi sığdırılmış ve
 ortalanmış görünümü geri yükler.
 
@@ -158,20 +160,57 @@ Renderer stil dosyasındaki tüm görsel sabitler `.mermaid-container` üzerinde
 özel nitelikleri olarak sunulur. Stil dosyasını düzenlemeden görünümü
 özelleştirmek için bu nitelikleri override edin:
 
-| Nitelik                           | Varsayılan                  | Amaç                         |
-| :-------------------------------- | :-------------------------- | :--------------------------- |
-| `--mermaid-control-bg`            | `var(--vp-c-bg)`            | Araç çubuğu düğme arka planı |
-| `--mermaid-control-text`          | `var(--vp-c-text-1)`        | Araç çubuğu düğme metni      |
-| `--mermaid-control-border`        | `var(--vp-c-divider)`       | Araç çubuğu düğme kenarı     |
-| `--mermaid-control-shadow`        | `0 2px 4px rgba(0,0,0,0.1)` | Araç çubuğu düğme gölgesi    |
-| `--mermaid-control-radius`        | `0.375rem`                  | Araç çubuğu kenar yarıçapı   |
-| `--mermaid-control-padding`       | `0.375rem`                  | Araç çubuğu düğme iç boşluğu |
-| `--mermaid-control-gap`           | `0.25rem`                   | Araç çubuğu düğme aralığı    |
-| `--mermaid-spinner-duration`      | `1s`                        | Yükleme döngü süresi         |
-| `--mermaid-notification-duration` | `2s`                        | "Kopyalandı" bildirim süresi |
-| `--mermaid-error-bg`              | `var(--vp-c-danger-soft)`   | Hata konteyneri arka planı   |
-| `--mermaid-error-border`          | `var(--vp-c-danger-1)`      | Hata konteyneri kenarı       |
-| `--mermaid-error-text`            | `var(--vp-c-danger-1)`      | Hata konteyneri metni        |
+| Nitelik                             | Varsayılan                  | Amaç                            |
+| :---------------------------------- | :-------------------------- | :------------------------------ |
+| `--mermaid-control-bg`              | `var(--vp-c-bg)`            | Araç çubuğu ve düğme arka planı |
+| `--mermaid-control-text`            | `var(--vp-c-text-1)`        | Araç çubuğu ikon ve metin rengi |
+| `--mermaid-control-text-active`     | `var(--vp-c-brand)`         | Hover durumunda düğme rengi     |
+| `--mermaid-control-border`          | `transparent`               | Düğme kenar rengi               |
+| `--mermaid-control-shadow`          | `0 2px 4px rgba(0,0,0,0.1)` | Araç çubuğu gölgesi             |
+| `--mermaid-control-radius`          | `0.375rem`                  | Araç çubuğu kenar yarıçapı      |
+| `--mermaid-control-padding`         | `0.375rem`                  | Araç çubuğu iç boşluğu          |
+| `--mermaid-control-gap`             | `0.375rem`                  | Araç çubuğu öğe aralığı         |
+| `--mermaid-control-button-radius`   | `0.25rem`                   | Düğme kenar yarıçapı            |
+| `--mermaid-control-button-padding`  | `0.375rem`                  | Düğme iç boşluğu                |
+| `--mermaid-control-button-min-size` | `auto`                      | Düğmenin en küçük en ve boyu    |
+| `--mermaid-control-icon-size`       | `18px`                      | Düğme ikonunun en ve boyu       |
+| `--mermaid-spinner-duration`        | `0.8s`                      | Yükleme döngü süresi            |
+| `--mermaid-notification-duration`   | `2s`                        | "Kopyalandı" bildirim süresi    |
+| `--mermaid-error-bg`                | `var(--vp-c-bg-soft)`       | Hata konteyneri arka planı      |
+| `--mermaid-error-border`            | `var(--vp-c-border)`        | Hata konteyneri kenarı          |
+| `--mermaid-error-text`              | `var(--vp-c-danger)`        | Hata konteyneri metni           |
+
+### Masaüstü ve mobil aynı tasarımı paylaşır
+
+Masaüstü ve mobil araç çubukları aynı CSS kurallarından render edilir. Mobil
+hiçbir şeyi yeniden stillendirmez; yalnızca kontrollerin rahat dokunulabilir
+kalması için yukarıdaki dört tokenı büyütür:
+
+| Nitelik                             | Masaüstü   | Mobil     |
+| :---------------------------------- | :--------- | :-------- |
+| `--mermaid-control-padding`         | `0.375rem` | `0.5rem`  |
+| `--mermaid-control-gap`             | `0.375rem` | `0.5rem`  |
+| `--mermaid-control-button-min-size` | `auto`     | `2.75rem` |
+| `--mermaid-control-icon-size`       | `18px`     | `20px`    |
+
+Bu nedenle `.mermaid-container` üzerinde bir tokenı override etmek iki araç
+çubuğunu birden değiştirir. Yalnızca mobili ayarlamak isterseniz tokenı
+`.mobile-controls` üzerinde override edin:
+
+```css
+.mobile-controls {
+  --mermaid-control-button-min-size: 3rem;
+}
+```
+
+Düğmeler varsayılan olarak kenarlıksızdır. İki modda da çerçeveli düğmeler
+istiyorsanız `--mermaid-control-border` değerini görünür bir renge çekin:
+
+```css
+.mermaid-container {
+  --mermaid-control-border: var(--vp-c-divider);
+}
+```
 
 ## Yapılandırılabilir yakınlaştırma sınırları
 

@@ -1,0 +1,57 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "VitePress Mermaid Renderer discovery resources",
+    "version": "1.2.1",
+    "description": "Public, read-only discovery and documentation resources published by the project."
+  },
+  "servers": [
+    {
+      "url": "https://vitepress-mermaid-renderer.vercel.app"
+    }
+  ],
+  "paths": {
+    "/.well-known/ai-catalog.json": {
+      "get": {
+        "operationId": "getAgenticResourceCatalog",
+        "summary": "Get the ARD capability catalog",
+        "responses": {
+          "200": {
+            "description": "The site's machine-readable capabilities.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/api-catalog": {
+      "get": {
+        "operationId": "getApiCatalog",
+        "summary": "Get the API linkset",
+        "responses": {
+          "200": {
+            "description": "The site's API and service links.",
+            "content": {
+              "application/linkset+json": {}
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/agent-skills/index.json": {
+      "get": {
+        "operationId": "getAgentSkills",
+        "summary": "Get the Agent Skills discovery index",
+        "responses": {
+          "200": {
+            "description": "Available agent skill artifacts.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

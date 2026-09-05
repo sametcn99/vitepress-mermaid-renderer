@@ -1,0 +1,8 @@
+; DNS-AID deployment reference for vitepress-mermaid-renderer.vercel.app
+; Publish these records at the authoritative DNS provider for the site domain.
+; Enable DNSSEC signing for the zone so validating resolvers can authenticate
+; the discovery RRset. Vercel's shared vercel.app zone cannot be edited by this
+; repository, so this file is an operator hand-off rather than a live record.
+
+_index._agents.vitepress-mermaid-renderer.vercel.app. 3600 IN SVCB 1 vitepress-mermaid-renderer.vercel.app. alpn="h2" port=443 well-known="/.well-known/ai-catalog.json"
+_a2a._agents.vitepress-mermaid-renderer.vercel.app. 3600 IN SVCB 1 vitepress-mermaid-renderer.vercel.app. alpn="a2a,h2" port=443 well-known="/.well-known/mcp/server-card.json"

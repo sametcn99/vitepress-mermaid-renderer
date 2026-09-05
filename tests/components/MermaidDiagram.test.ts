@@ -407,6 +407,79 @@ describe('MermaidDiagram', () => {
     wrapper.unmount();
   });
 
+  it('re-fits after a ResizeObserver resize without resetting user zoom', async () => {
+    let containerWidth = 400;
+    let containerHeight = 200;
+    const resizeCallbacks: Array<() => void> = [];
+
+    class MockResizeObserver {
+      constructor(callback: () => void) {
+        resizeCallbacks.push(callback);
+      }
+
+      observe = vi.fn();
+      disconnect = vi.fn();
+    }
+
+    vi.stubGlobal('ResizeObserver', MockResizeObserver);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        if (this.classList.contains('diagram-wrapper')) {
+          return new DOMRect(0, 0, containerWidth, containerHeight);
+        }
+
+        const viewport = this.classList.contains('mermaid-viewport');
+        const diagram = this.classList.contains('mermaid');
+        if (viewport || diagram) {
+          const naturalWidth = 600;
+          const naturalHeight = 100;
+          const transform = (
+            viewport ? this : this.parentElement
+          )?.style.transform.match(
+            /scale\(([-\d.]+)\).*translate\(([-\d.]+)px, ([-\d.]+)px\)/,
+          );
+          const totalScale = transform ? Number(transform[1]) : 1;
+          const translateX = transform ? Number(transform[2]) : 0;
+          const translateY = transform ? Number(transform[3]) : 0;
+          const centerX = 300 + totalScale * translateX;
+          const centerY = 50 + totalScale * translateY;
+          return new DOMRect(
+            centerX - (naturalWidth * totalScale) / 2,
+            centerY - (naturalHeight * totalScale) / 2,
+            naturalWidth * totalScale,
+            naturalHeight * totalScale,
+          );
+        }
+
+        return new DOMRect();
+      },
+    );
+
+    const wrapper = mount(MermaidDiagram, {
+      attachTo: document.body,
+      props: { code: 'flowchart LR\nA-->B' },
+    });
+    await flushDiagramRender();
+
+    expect(resizeCallbacks).toHaveLength(1);
+    await wrapper.get('[data-mermaid-control="zoomIn"]').trigger('click');
+    expect(wrapper.get('.zoom-level').text()).toBe('120%');
+
+    containerWidth = 600;
+    containerHeight = 240;
+    resizeCallbacks[0]();
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    const transform = wrapper
+      .get('.mermaid-viewport')
+      .attributes('style') as string;
+    expect(transform).toContain('scale(1.2)');
+    expect(transform).not.toContain('scale(0.8)');
+    expect(wrapper.get('.zoom-level').text()).toBe('120%');
+    wrapper.unmount();
+  });
+
   it('surfaces render failures through the error component and event payload', async () => {
     vi.useRealTimers();
     mermaidMocks.run.mockRejectedValueOnce(new Error('render failed'));

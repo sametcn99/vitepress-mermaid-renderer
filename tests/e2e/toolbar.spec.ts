@@ -118,6 +118,63 @@ test.describe('toolbar interactions', () => {
     expect(finalTransform).toMatch(/scale\(/);
   });
 
+  test('collapses and expands the opt-in toolbar controls', async ({
+    page,
+  }) => {
+    const diagram = page.locator('.mermaid-container').first();
+    const controls = diagram.locator('.desktop-controls');
+    const toggle = controls.locator('[data-mermaid-control="toggleToolbar"]');
+    const items = controls.locator('.toolbar-items');
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(items).toBeVisible();
+
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(items).toBeHidden();
+    await expect(toggle).toBeVisible();
+
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(items).toBeVisible();
+  });
+
+  test('keeps the diagram centered when the browser viewport changes', async ({
+    page,
+  }) => {
+    const diagram = page.locator('.mermaid-container').first();
+    const wrapper = diagram.locator('.diagram-wrapper');
+    const viewport = diagram.locator('.mermaid-viewport');
+
+    const expectCentered = async () => {
+      await expect
+        .poll(async () => {
+          const wrapperBounds = await wrapper.boundingBox();
+          const viewportBounds = await viewport.boundingBox();
+          if (!wrapperBounds || !viewportBounds)
+            return Number.POSITIVE_INFINITY;
+          return Math.max(
+            Math.abs(
+              viewportBounds.x +
+                viewportBounds.width / 2 -
+                (wrapperBounds.x + wrapperBounds.width / 2),
+            ),
+            Math.abs(
+              viewportBounds.y +
+                viewportBounds.height / 2 -
+                (wrapperBounds.y + wrapperBounds.height / 2),
+            ),
+          );
+        })
+        .toBeLessThanOrEqual(1);
+    };
+
+    await page.setViewportSize({ width: 1200, height: 800 });
+    await expectCentered();
+    await page.setViewportSize({ width: 900, height: 620 });
+    await expectCentered();
+  });
+
   test('reset view restores the original transform', async ({ page }) => {
     const diagram = page.locator('.mermaid-container').first();
     const viewport = diagram.locator('.mermaid-viewport').first();

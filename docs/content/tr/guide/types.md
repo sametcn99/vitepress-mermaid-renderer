@@ -22,22 +22,24 @@ Bu seçenekler `mermaidRenderer.setToolbar()` içine geçirilir.
 
 `desktop`, `mobile` ve `fullscreen` nesneleri aynı yapıyı paylaşır.
 
-| Anahtar        | Tip                       | Açıklama                                     |
-| :------------- | :------------------------ | :------------------------------------------- |
-| `[buttonName]` | `'enabled' \| 'disabled'` | Belirli düğmeleri etkinleştirir veya gizler. |
-| `zoomLevel`    | `'enabled' \| 'disabled'` | Zoom yüzdesi göstergesini kontrol eder.      |
-| `positions`    | `object`                  | Araç çubuğunun konumunu belirler.            |
+| Anahtar        | Tip                         | Açıklama                                             |
+| :------------- | :-------------------------- | :--------------------------------------------------- |
+| `[buttonName]` | `'enabled' \| 'disabled'`   | Belirli düğmeleri etkinleştirir veya gizler.         |
+| `zoomLevel`    | `'enabled' \| 'disabled'`   | Zoom yüzdesi göstergesini kontrol eder.              |
+| `collapsed`    | `'expanded' \| 'collapsed'` | `toggleToolbar` etkinse başlangıç durumunu belirler. |
+| `positions`    | `object`                    | Araç çubuğunun konumunu belirler.                    |
 
 ### Varsayılan düğme durumları
 
-| Düğme              | Desktop    | Mobile     | Fullscreen | Açıklama                               |
-| :----------------- | :--------- | :--------- | :--------- | :------------------------------------- |
-| `zoomIn`           | `enabled`  | `disabled` | `disabled` | Diyagramı yakınlaştırır.               |
-| `zoomOut`          | `enabled`  | `disabled` | `disabled` | Diyagramı uzaklaştırır.                |
-| `resetView`        | `enabled`  | `enabled`  | `disabled` | Görünümü ilk haline döndürür.          |
-| `copyCode`         | `enabled`  | `enabled`  | `disabled` | Mermaid kaynak kodunu panoya kopyalar. |
-| `download`         | `disabled` | `disabled` | `disabled` | Diyagramı seçili formatta indirir.     |
-| `toggleFullscreen` | `enabled`  | `enabled`  | `enabled`  | Tam ekran modunu açıp kapatır.         |
+| Düğme              | Desktop    | Mobile     | Fullscreen | Açıklama                                                 |
+| :----------------- | :--------- | :--------- | :--------- | :------------------------------------------------------- |
+| `zoomIn`           | `enabled`  | `disabled` | `disabled` | Diyagramı yakınlaştırır.                                 |
+| `zoomOut`          | `enabled`  | `disabled` | `disabled` | Diyagramı uzaklaştırır.                                  |
+| `resetView`        | `enabled`  | `enabled`  | `disabled` | Görünümü ilk haline döndürür.                            |
+| `copyCode`         | `enabled`  | `enabled`  | `disabled` | Mermaid kaynak kodunu panoya kopyalar.                   |
+| `download`         | `disabled` | `disabled` | `disabled` | Diyagramı seçili formatta indirir.                       |
+| `toggleFullscreen` | `enabled`  | `enabled`  | `enabled`  | Tam ekran modunu açıp kapatır.                           |
+| `toggleToolbar`    | `disabled` | `disabled` | `disabled` | Diğer araç çubuğu düğmelerini katlar veya açar (opt-in). |
 
 ### Konum yapılandırması
 
@@ -68,6 +70,8 @@ Bu seçenekler `mermaidRenderer.setToolbar()` içine geçirilir.
 | `renderErrorText`            | `Failed to render diagram` |
 | `toggleErrorDetailsText`     | `Show Details`             |
 | `toggleErrorDetailsHideText` | `Hide Details`             |
+| `toggleToolbarExpand`        | `Expand Toolbar`           |
+| `toggleToolbarCollapse`      | `Collapse Toolbar`         |
 
 Çözüm sırası: `locales[localeIndex].tooltips[key]` → `tooltips[key]` → yerleşik
 varsayılan. Boş string değerleri her katmanda yok sayılır.

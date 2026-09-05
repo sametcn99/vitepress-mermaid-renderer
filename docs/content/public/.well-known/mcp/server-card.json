@@ -1,0 +1,25 @@
+{
+  "serverInfo": {
+    "name": "VitePress Mermaid Renderer documentation tools",
+    "version": "1.2.1"
+  },
+  "transport": {
+    "type": "webmcp",
+    "endpoint": "https://vitepress-mermaid-renderer.vercel.app/webmcp.js"
+  },
+  "capabilities": {
+    "tools": ["search_documentation", "navigate_documentation"],
+    "resources": [],
+    "prompts": []
+  },
+  "tools": [
+    {
+      "name": "search_documentation",
+      "description": "Find documentation links matching a query in the current site."
+    },
+    {
+      "name": "navigate_documentation",
+      "description": "Navigate the browser to a selected documentation path."
+    }
+  ]
+}

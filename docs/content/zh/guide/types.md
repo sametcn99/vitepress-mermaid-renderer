@@ -20,22 +20,24 @@
 
 `desktop`、`mobile` 和 `fullscreen` 对象共享同一结构。
 
-| Key            | 类型                      | 说明                 |
-| :------------- | :------------------------ | :------------------- |
-| `[buttonName]` | `'enabled' \| 'disabled'` | 启用或隐藏特定按钮。 |
-| `zoomLevel`    | `'enabled' \| 'disabled'` | 控制缩放百分比显示。 |
-| `positions`    | `object`                  | 定义工具栏锚定位置。 |
+| Key            | 类型                        | 说明                                      |
+| :------------- | :-------------------------- | :---------------------------------------- |
+| `[buttonName]` | `'enabled' \| 'disabled'`   | 启用或隐藏特定按钮。                      |
+| `zoomLevel`    | `'enabled' \| 'disabled'`   | 控制缩放百分比显示。                      |
+| `collapsed`    | `'expanded' \| 'collapsed'` | 启用 `toggleToolbar` 时的初始工具栏状态。 |
+| `positions`    | `object`                    | 定义工具栏锚定位置。                      |
 
 ### 默认按钮状态
 
-| 按钮               | Desktop    | Mobile     | Fullscreen | 说明                          |
-| :----------------- | :--------- | :--------- | :--------- | :---------------------------- |
-| `zoomIn`           | `enabled`  | `disabled` | `disabled` | 放大图表。                    |
-| `zoomOut`          | `enabled`  | `disabled` | `disabled` | 缩小图表。                    |
-| `resetView`        | `enabled`  | `enabled`  | `disabled` | 将图表恢复到初始视图。        |
-| `copyCode`         | `enabled`  | `enabled`  | `disabled` | 将 Mermaid 源码复制到剪贴板。 |
-| `download`         | `disabled` | `disabled` | `disabled` | 以指定格式下载图表。          |
-| `toggleFullscreen` | `enabled`  | `enabled`  | `enabled`  | 切换图表全屏模式。            |
+| 按钮               | Desktop    | Mobile     | Fullscreen | 说明                                   |
+| :----------------- | :--------- | :--------- | :--------- | :------------------------------------- |
+| `zoomIn`           | `enabled`  | `disabled` | `disabled` | 放大图表。                             |
+| `zoomOut`          | `enabled`  | `disabled` | `disabled` | 缩小图表。                             |
+| `resetView`        | `enabled`  | `enabled`  | `disabled` | 将图表恢复到初始视图。                 |
+| `copyCode`         | `enabled`  | `enabled`  | `disabled` | 将 Mermaid 源码复制到剪贴板。          |
+| `download`         | `disabled` | `disabled` | `disabled` | 以指定格式下载图表。                   |
+| `toggleFullscreen` | `enabled`  | `enabled`  | `enabled`  | 切换图表全屏模式。                     |
+| `toggleToolbar`    | `disabled` | `disabled` | `disabled` | 折叠或展开其他工具栏控件（可选启用）。 |
 
 ### 位置配置
 
@@ -66,6 +68,8 @@
 | `renderErrorText`            | `Failed to render diagram` |
 | `toggleErrorDetailsText`     | `Show Details`             |
 | `toggleErrorDetailsHideText` | `Hide Details`             |
+| `toggleToolbarExpand`        | `Expand Toolbar`           |
+| `toggleToolbarCollapse`      | `Collapse Toolbar`         |
 
 解析顺序：`locales[localeIndex].tooltips[key]` → `tooltips[key]`
 → 内置默认值。空字符串会在每层被忽略。

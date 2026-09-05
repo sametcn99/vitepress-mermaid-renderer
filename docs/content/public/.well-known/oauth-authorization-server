@@ -1,0 +1,17 @@
+{
+  "issuer": "https://vitepress-mermaid-renderer.vercel.app",
+  "authorization_endpoint": "https://vitepress-mermaid-renderer.vercel.app/oauth/authorize",
+  "token_endpoint": "https://vitepress-mermaid-renderer.vercel.app/oauth/token",
+  "jwks_uri": "https://vitepress-mermaid-renderer.vercel.app/.well-known/jwks.json",
+  "grant_types_supported": ["authorization_code"],
+  "response_types_supported": ["code"],
+  "token_endpoint_auth_methods_supported": ["none"],
+  "scopes_supported": [],
+  "agent_auth": {
+    "skill": "https://workos.com/auth-md",
+    "register_uri": "https://vitepress-mermaid-renderer.vercel.app/auth.md",
+    "identity_types_supported": ["anonymous"],
+    "credential_types_supported": ["none"],
+    "claim_uri": "https://vitepress-mermaid-renderer.vercel.app/auth.md"
+  }
+}

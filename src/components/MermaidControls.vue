@@ -29,15 +29,19 @@
     <div
       v-if="shouldRenderDesktopContainer"
       class="desktop-controls controls visible-controls"
-      :class="desktopPositionClasses"
+      :class="[desktopPositionClasses, { 'is-collapsed': isDesktopCollapsed }]"
       ref="controls"
     >
       <button
-        v-if="isDesktopEnabled('zoomIn')"
-        @click="$emit('zoomIn')"
-        :title="tooltipText('zoomIn')"
-        :aria-label="tooltipText('zoomIn')"
-        data-mermaid-control="zoomIn"
+        v-if="isDesktopEnabled('toggleToolbar')"
+        type="button"
+        class="toolbar-toggle"
+        @click="isDesktopCollapsed = !isDesktopCollapsed"
+        :title="toggleToolbarLabel(isDesktopCollapsed)"
+        :aria-label="toggleToolbarLabel(isDesktopCollapsed)"
+        :aria-expanded="!isDesktopCollapsed"
+        :aria-controls="desktopItemsId"
+        data-mermaid-control="toggleToolbar"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -46,112 +50,16 @@
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          v-html="ICON_PATHS.zoomIn"
+          v-html="ICON_PATHS.toggleToolbar"
         ></svg>
       </button>
-      <span v-if="shouldShowDesktopZoomLevel" class="zoom-level">
-        {{ Math.round(scale * 100) }}%
-      </span>
-      <button
-        v-if="isDesktopEnabled('zoomOut')"
-        @click="$emit('zoomOut')"
-        :title="tooltipText('zoomOut')"
-        :aria-label="tooltipText('zoomOut')"
-        data-mermaid-control="zoomOut"
+      <div
+        class="toolbar-items"
+        :id="desktopItemsId"
+        v-show="!isDesktopCollapsed"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          v-html="ICON_PATHS.zoomOut"
-        ></svg>
-      </button>
-      <button
-        v-if="isDesktopEnabled('resetView')"
-        @click="$emit('resetView')"
-        :title="tooltipText('resetView')"
-        :aria-label="tooltipText('resetView')"
-        data-mermaid-control="resetView"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          v-html="ICON_PATHS.resetView"
-        ></svg>
-      </button>
-      <button
-        v-if="isDesktopEnabled('copyCode')"
-        @click="copyDiagramCode"
-        :title="tooltipText('copyCode')"
-        :aria-label="tooltipText('copyCode')"
-        data-mermaid-control="copyCode"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          v-html="ICON_PATHS.copyCode"
-        ></svg>
-        <span v-if="showCopied" class="copied-notification">
-          {{ copiedNotificationText }}
-        </span>
-      </button>
-      <button
-        v-if="isDesktopEnabled('download')"
-        @click="emitDownload"
-        :title="tooltipText('download')"
-        :aria-label="tooltipText('download')"
-        data-mermaid-control="download"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          v-html="ICON_PATHS.download"
-        ></svg>
-      </button>
-      <button
-        v-if="isDesktopEnabled('toggleFullscreen')"
-        @click="$emit('toggleFullscreen')"
-        :title="tooltipText('toggleFullscreen')"
-        :aria-label="tooltipText('toggleFullscreen')"
-        data-mermaid-control="toggleFullscreen"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          v-html="ICON_PATHS.toggleFullscreen"
-        ></svg>
-      </button>
-    </div>
-
-    <!-- Mobile Controls -->
-    <div
-      v-if="shouldRenderMobileContainer"
-      class="mobile-controls controls visible-controls"
-      :class="mobilePositionClasses"
-      ref="mobileControls"
-    >
-      <div class="mobile-utility-controls">
         <button
-          v-if="isMobileEnabled('zoomIn')"
+          v-if="isDesktopEnabled('zoomIn')"
           @click="$emit('zoomIn')"
           :title="tooltipText('zoomIn')"
           :aria-label="tooltipText('zoomIn')"
@@ -167,14 +75,11 @@
             v-html="ICON_PATHS.zoomIn"
           ></svg>
         </button>
-        <span
-          v-if="shouldShowMobileZoomLevel"
-          class="zoom-level mobile-zoom-level"
-        >
+        <span v-if="shouldShowDesktopZoomLevel" class="zoom-level">
           {{ Math.round(scale * 100) }}%
         </span>
         <button
-          v-if="isMobileEnabled('zoomOut')"
+          v-if="isDesktopEnabled('zoomOut')"
           @click="$emit('zoomOut')"
           :title="tooltipText('zoomOut')"
           :aria-label="tooltipText('zoomOut')"
@@ -191,7 +96,7 @@
           ></svg>
         </button>
         <button
-          v-if="isMobileEnabled('resetView')"
+          v-if="isDesktopEnabled('resetView')"
           @click="$emit('resetView')"
           :title="tooltipText('resetView')"
           :aria-label="tooltipText('resetView')"
@@ -208,7 +113,7 @@
           ></svg>
         </button>
         <button
-          v-if="isMobileEnabled('copyCode')"
+          v-if="isDesktopEnabled('copyCode')"
           @click="copyDiagramCode"
           :title="tooltipText('copyCode')"
           :aria-label="tooltipText('copyCode')"
@@ -228,7 +133,7 @@
           </span>
         </button>
         <button
-          v-if="isMobileEnabled('download')"
+          v-if="isDesktopEnabled('download')"
           @click="emitDownload"
           :title="tooltipText('download')"
           :aria-label="tooltipText('download')"
@@ -245,7 +150,7 @@
           ></svg>
         </button>
         <button
-          v-if="isMobileEnabled('toggleFullscreen')"
+          v-if="isDesktopEnabled('toggleFullscreen')"
           @click="$emit('toggleFullscreen')"
           :title="tooltipText('toggleFullscreen')"
           :aria-label="tooltipText('toggleFullscreen')"
@@ -263,15 +168,165 @@
         </button>
       </div>
     </div>
+
+    <!-- Mobile Controls -->
+    <div
+      v-if="shouldRenderMobileContainer"
+      class="mobile-controls controls visible-controls"
+      :class="[mobilePositionClasses, { 'is-collapsed': isMobileCollapsed }]"
+      ref="mobileControls"
+    >
+      <div class="mobile-utility-controls">
+        <button
+          v-if="isMobileEnabled('toggleToolbar')"
+          type="button"
+          class="toolbar-toggle"
+          @click="isMobileCollapsed = !isMobileCollapsed"
+          :title="toggleToolbarLabel(isMobileCollapsed)"
+          :aria-label="toggleToolbarLabel(isMobileCollapsed)"
+          :aria-expanded="!isMobileCollapsed"
+          :aria-controls="mobileItemsId"
+          data-mermaid-control="toggleToolbar"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            v-html="ICON_PATHS.toggleToolbar"
+          ></svg>
+        </button>
+        <div
+          class="toolbar-items"
+          :id="mobileItemsId"
+          v-show="!isMobileCollapsed"
+        >
+          <button
+            v-if="isMobileEnabled('zoomIn')"
+            @click="$emit('zoomIn')"
+            :title="tooltipText('zoomIn')"
+            :aria-label="tooltipText('zoomIn')"
+            data-mermaid-control="zoomIn"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              v-html="ICON_PATHS.zoomIn"
+            ></svg>
+          </button>
+          <span
+            v-if="shouldShowMobileZoomLevel"
+            class="zoom-level mobile-zoom-level"
+          >
+            {{ Math.round(scale * 100) }}%
+          </span>
+          <button
+            v-if="isMobileEnabled('zoomOut')"
+            @click="$emit('zoomOut')"
+            :title="tooltipText('zoomOut')"
+            :aria-label="tooltipText('zoomOut')"
+            data-mermaid-control="zoomOut"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              v-html="ICON_PATHS.zoomOut"
+            ></svg>
+          </button>
+          <button
+            v-if="isMobileEnabled('resetView')"
+            @click="$emit('resetView')"
+            :title="tooltipText('resetView')"
+            :aria-label="tooltipText('resetView')"
+            data-mermaid-control="resetView"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              v-html="ICON_PATHS.resetView"
+            ></svg>
+          </button>
+          <button
+            v-if="isMobileEnabled('copyCode')"
+            @click="copyDiagramCode"
+            :title="tooltipText('copyCode')"
+            :aria-label="tooltipText('copyCode')"
+            data-mermaid-control="copyCode"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              v-html="ICON_PATHS.copyCode"
+            ></svg>
+            <span v-if="showCopied" class="copied-notification">
+              {{ copiedNotificationText }}
+            </span>
+          </button>
+          <button
+            v-if="isMobileEnabled('download')"
+            @click="emitDownload"
+            :title="tooltipText('download')"
+            :aria-label="tooltipText('download')"
+            data-mermaid-control="download"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              v-html="ICON_PATHS.download"
+            ></svg>
+          </button>
+          <button
+            v-if="isMobileEnabled('toggleFullscreen')"
+            @click="$emit('toggleFullscreen')"
+            :title="tooltipText('toggleFullscreen')"
+            :aria-label="tooltipText('toggleFullscreen')"
+            data-mermaid-control="toggleFullscreen"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              v-html="ICON_PATHS.toggleFullscreen"
+            ></svg>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type {
   DesktopToolbarButton,
   MobileToolbarButton,
   ResolvedToolbarConfig,
+  ToolbarCollapsedState,
   ToolbarPosition,
   ToolbarButtonState,
   ToolbarTooltipKey,
@@ -291,7 +346,18 @@ const ICON_PATHS = {
     '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line>',
   toggleFullscreen:
     '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>',
+  toggleToolbar: '<polyline points="9 18 15 12 9 6"></polyline>',
 } as const;
+
+/**
+ * Monotonic counter backing the unique `id` attributes used for the
+ * `aria-controls` relationship between a collapse toggle and the button
+ * group it controls.
+ *
+ * A module-level counter is used instead of Vue's `useId()` so the
+ * component keeps working on the full `vue@^3.0.0` peer range.
+ */
+let toolbarInstanceCount = 0;
 
 const props = defineProps<{
   scale: number;
@@ -363,6 +429,100 @@ const copiedNotificationText = computed(
   () => props.toolbar.i18n.tooltips.copyCodeCopied ?? 'Copied',
 );
 
+/**
+ * Returns the localized label for the collapse toggle, describing the
+ * action the button performs rather than the current state.
+ *
+ * @param collapsed - Whether the toolbar is currently collapsed.
+ * @returns `"Expand Toolbar"` when collapsed, `"Collapse Toolbar"` otherwise.
+ */
+const toggleToolbarLabel = (collapsed: boolean): string =>
+  collapsed
+    ? props.toolbar.i18n.tooltips.toggleToolbarExpand
+    : props.toolbar.i18n.tooltips.toggleToolbarCollapse;
+
+/** Unique suffix keeping `aria-controls` ids distinct across diagrams. */
+const toolbarInstanceId = ++toolbarInstanceCount;
+/** DOM id of the desktop button group controlled by the collapse toggle. */
+const desktopItemsId = `mermaid-toolbar-desktop-${toolbarInstanceId}`;
+/** DOM id of the mobile button group controlled by the collapse toggle. */
+const mobileItemsId = `mermaid-toolbar-mobile-${toolbarInstanceId}`;
+
+/**
+ * Resolves the effective initial collapsed state for a toolbar mode.
+ *
+ * A toolbar is only allowed to start collapsed when its `toggleToolbar`
+ * button is enabled — otherwise the user would have no way to expand it
+ * again and every control would be permanently unreachable.
+ *
+ * @param source - The active toolbar mode configuration.
+ * @returns Whether the toolbar should start collapsed.
+ */
+const resolveCollapsedState = (source: {
+  collapsed: ToolbarCollapsedState;
+  buttons: { toggleToolbar: ToolbarButtonState };
+}): boolean =>
+  source.collapsed === 'collapsed' &&
+  source.buttons.toggleToolbar === 'enabled';
+
+/**
+ * Keeps one local collapse state for each display mode. The state is scoped
+ * to this diagram instance (never shared between diagrams) and is not
+ * persisted across mounts. Keeping the mode states separate means a manual
+ * desktop collapse is still there after a fullscreen round-trip.
+ */
+const desktopCollapsed = ref(resolveCollapsedState(props.toolbar.desktop));
+const mobileCollapsed = ref(resolveCollapsedState(props.toolbar.mobile));
+const fullscreenCollapsed = ref(
+  resolveCollapsedState(props.toolbar.fullscreen),
+);
+
+const isDesktopCollapsed = computed({
+  get: () =>
+    props.isFullscreen ? fullscreenCollapsed.value : desktopCollapsed.value,
+  set: (collapsed: boolean) => {
+    if (props.isFullscreen) {
+      fullscreenCollapsed.value = collapsed;
+    } else {
+      desktopCollapsed.value = collapsed;
+    }
+  },
+});
+
+const isMobileCollapsed = computed({
+  get: () =>
+    props.isFullscreen ? fullscreenCollapsed.value : mobileCollapsed.value,
+  set: (collapsed: boolean) => {
+    if (props.isFullscreen) {
+      fullscreenCollapsed.value = collapsed;
+    } else {
+      mobileCollapsed.value = collapsed;
+    }
+  },
+});
+
+// Re-sync a mode's local state when a toolbar update changes its configured
+// initial state. A user click does not trigger this watcher unless the
+// incoming configuration actually changes, so mode switches preserve state.
+watch(
+  () => resolveCollapsedState(props.toolbar.desktop),
+  (collapsed) => {
+    desktopCollapsed.value = collapsed;
+  },
+);
+watch(
+  () => resolveCollapsedState(props.toolbar.mobile),
+  (collapsed) => {
+    mobileCollapsed.value = collapsed;
+  },
+);
+watch(
+  () => resolveCollapsedState(props.toolbar.fullscreen),
+  (collapsed) => {
+    fullscreenCollapsed.value = collapsed;
+  },
+);
+
 // Define emits
 const emit = defineEmits<{
   (event: 'zoomIn'): void;
@@ -415,13 +575,20 @@ const mobilePositionClasses = computed(() => {
  * `"enabled"`. Used to determine whether a toolbar container should
  * be rendered at all.
  *
+ * `toggleToolbar` is deliberately excluded: it only collapses and expands
+ * the other controls, so on its own it would render an empty toolbar
+ * shell that does nothing.
+ *
  * @typeParam T - The union of button name strings.
  * @param buttons - A record mapping button names to their states.
- * @returns Whether any button is enabled.
+ * @returns Whether any button other than `toggleToolbar` is enabled.
  */
 const hasEnabledButtons = <T extends string>(
   buttons: Record<T, ToolbarButtonState>,
-) => Object.values(buttons).some((state) => state === 'enabled');
+) =>
+  Object.entries(buttons).some(
+    ([button, state]) => button !== 'toggleToolbar' && state === 'enabled',
+  );
 
 /** `true` when the desktop zoom-level badge (e.g. "150 %") should be visible. */
 const shouldShowDesktopZoomLevel = computed(() => {

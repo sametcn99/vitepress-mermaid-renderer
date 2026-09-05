@@ -275,6 +275,10 @@ const transformOrigin = ref('center center');
 const isZoomTransitionActive = ref(false);
 let zoomTransitionTimeout: ReturnType<typeof setTimeout> | null = null;
 let diagramResizeObserver: ResizeObserver | null = null;
+let resizeRafId: number | null = null;
+let isFullscreenTransitionActive = false;
+let lastObservedWidth = 0;
+let lastObservedHeight = 0;
 let viewToRestoreAfterThemeRender: DiagramView | null = null;
 let fullscreenFitToRestore: {
   fitScale: number;
@@ -362,31 +366,160 @@ const applyFittedView = async (viewToRestore?: DiagramView) => {
   resetView();
 };
 
+/**
+ * Recomputes the fit base (`fitScale` / `fitTranslate*`) against the
+ * current container size **without** disturbing the user's zoom and pan.
+ *
+ * Unlike {@link applyFittedView}, this never resets the transform before
+ * measuring. The untransformed geometry is recovered arithmetically
+ * instead: because the transform is applied with `transform-origin` at
+ * the viewport's own center, a point's identity position satisfies
+ *
+ * ```
+ * naturalCenter = transformedCenter - totalScale * totalTranslate
+ * naturalSize   = transformedSize / totalScale
+ * ```
+ *
+ * That keeps the refit to a single frame with no visible flash, which
+ * matters because this runs on every container resize.
+ *
+ * @see applyFittedView for the initial, transform-resetting fit.
+ */
+const refitToContainer = () => {
+  if (isStatic.value || !isRendered.value || isPanning.value) return;
+
+  const container = diagramWrapper.value;
+  const diagram = document.getElementById(diagramId);
+  if (!container || !diagram) return;
+
+  const totalScale = fitScale.value * scale.value;
+  if (!Number.isFinite(totalScale) || totalScale <= 0) return;
+
+  const containerBounds = container.getBoundingClientRect();
+  const diagramBounds = diagram.getBoundingClientRect();
+  if (
+    containerBounds.width <= 0 ||
+    containerBounds.height <= 0 ||
+    diagramBounds.width <= 0 ||
+    diagramBounds.height <= 0
+  ) {
+    return;
+  }
+
+  const naturalWidth = diagramBounds.width / totalScale;
+  const naturalHeight = diagramBounds.height / totalScale;
+
+  const fittedScale = Math.min(
+    containerBounds.width / naturalWidth,
+    containerBounds.height / naturalHeight,
+  );
+  if (!Number.isFinite(fittedScale) || fittedScale <= 0) return;
+
+  const viewportBounds = viewportRef.value?.getBoundingClientRect();
+  if (viewportBounds && viewportBounds.width > 0 && viewportBounds.height > 0) {
+    const totalTranslateX = fitTranslateX.value + translateX.value;
+    const totalTranslateY = fitTranslateY.value + translateY.value;
+    const naturalCenterX =
+      viewportBounds.left +
+      viewportBounds.width / 2 -
+      totalScale * totalTranslateX;
+    const naturalCenterY =
+      viewportBounds.top +
+      viewportBounds.height / 2 -
+      totalScale * totalTranslateY;
+
+    fitTranslateX.value =
+      (containerBounds.left + containerBounds.width / 2 - naturalCenterX) /
+      fittedScale;
+    fitTranslateY.value =
+      (containerBounds.top + containerBounds.height / 2 - naturalCenterY) /
+      fittedScale;
+  } else {
+    fitTranslateX.value = (containerBounds.width - naturalWidth) / 2;
+    fitTranslateY.value = (containerBounds.height - naturalHeight) / 2;
+  }
+
+  fitScale.value = fittedScale;
+};
+
+/**
+ * Runs a refit at most once per animation frame, skipping frames where the
+ * container size did not actually change.
+ *
+ * A ResizeObserver fires continuously while the VitePress sidebar animates
+ * or the window is dragged, so the work is coalesced into one frame. The
+ * observed element (`.diagram-wrapper`) is absolutely positioned at
+ * `inset: 0`, so its size never depends on the transform this schedules —
+ * there is no feedback loop. Zoom transitions are deferred until their
+ * animated transform has settled so intermediate bounds are never measured.
+ */
+const scheduleRefit = () => {
+  if (isStatic.value || resizeRafId !== null) return;
+
+  resizeRafId = requestAnimationFrame(() => {
+    resizeRafId = null;
+    if (
+      isStatic.value ||
+      isFullscreenTransitionActive ||
+      isZoomTransitionActive.value ||
+      isPanning.value
+    ) {
+      return;
+    }
+
+    const bounds = diagramWrapper.value?.getBoundingClientRect();
+    if (!bounds || bounds.width <= 0 || bounds.height <= 0) return;
+    if (
+      bounds.width === lastObservedWidth &&
+      bounds.height === lastObservedHeight
+    ) {
+      return;
+    }
+
+    lastObservedWidth = bounds.width;
+    lastObservedHeight = bounds.height;
+    updateTransformOrigin();
+    refitToContainer();
+  });
+};
+
 /** Re-fits the diagram after fullscreen changes its available layout space. */
 const updateFullscreenFit = async (active: boolean) => {
   if (isStatic.value) return;
 
-  if (active) {
-    fullscreenFitToRestore = {
-      fitScale: fitScale.value,
-      fitTranslateX: fitTranslateX.value,
-      fitTranslateY: fitTranslateY.value,
-    };
+  isFullscreenTransitionActive = true;
+  try {
+    if (active) {
+      fullscreenFitToRestore = {
+        fitScale: fitScale.value,
+        fitTranslateX: fitTranslateX.value,
+        fitTranslateY: fitTranslateY.value,
+      };
 
-    await nextTick();
-    await new Promise<void>((resolve) =>
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-    );
-    await applyFittedView();
-    return;
+      await nextTick();
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      );
+      await applyFittedView();
+      return;
+    }
+
+    if (!fullscreenFitToRestore) return;
+
+    fitScale.value = fullscreenFitToRestore.fitScale;
+    fitTranslateX.value = fullscreenFitToRestore.fitTranslateX;
+    fitTranslateY.value = fullscreenFitToRestore.fitTranslateY;
+    fullscreenFitToRestore = null;
+  } finally {
+    isFullscreenTransitionActive = false;
+    // Force the next observer callback to re-measure: the wrapper changed
+    // size dramatically during the transition.
+    lastObservedWidth = 0;
+    lastObservedHeight = 0;
+    if (!isStatic.value) {
+      requestAnimationFrame(scheduleRefit);
+    }
   }
-
-  if (!fullscreenFitToRestore) return;
-
-  fitScale.value = fullscreenFitToRestore.fitScale;
-  fitTranslateX.value = fullscreenFitToRestore.fitTranslateX;
-  fitTranslateY.value = fullscreenFitToRestore.fitTranslateY;
-  fullscreenFitToRestore = null;
 };
 
 /** Recalculates the fit base after a theme-driven Mermaid rerender. */
@@ -411,6 +544,7 @@ const activateZoomTransition = () => {
   zoomTransitionTimeout = setTimeout(() => {
     isZoomTransitionActive.value = false;
     zoomTransitionTimeout = null;
+    scheduleRefit();
   }, 300);
 };
 
@@ -538,10 +672,19 @@ const handleMouseDown = (event: MouseEvent) => {
   deactivateZoomTransition();
   startPan(event);
 };
-const handleMouseUp = () => endPan();
-const handleMouseLeave = () => handleMouseUp();
+const handleMouseUp = () => {
+  endPan();
+  scheduleRefit();
+};
+const handleMouseLeave = () => {
+  handleMouseUp();
+  scheduleRefit();
+};
 const handleTouchStartEvent = (event: TouchEvent) => handleTouchStart(event);
-const handleTouchEndEvent = () => handleTouchEnd();
+const handleTouchEndEvent = () => {
+  handleTouchEnd();
+  scheduleRefit();
+};
 
 /**
  * requestAnimationFrame throttle state for high-frequency events.
@@ -656,8 +799,15 @@ onMounted(async () => {
     await renderMermaidDiagram(diagramId, props.code);
     updateTransformOrigin();
     await applyFittedView();
+    const initialBounds = diagramWrapper.value?.getBoundingClientRect();
+    if (initialBounds && initialBounds.width > 0 && initialBounds.height > 0) {
+      lastObservedWidth = initialBounds.width;
+      lastObservedHeight = initialBounds.height;
+    }
     if (typeof ResizeObserver !== 'undefined' && diagramWrapper.value) {
-      diagramResizeObserver = new ResizeObserver(updateTransformOrigin);
+      diagramResizeObserver = new ResizeObserver(() => {
+        scheduleRefit();
+      });
       diagramResizeObserver.observe(diagramWrapper.value);
     }
 
@@ -728,6 +878,7 @@ onUnmounted(() => {
   }
   unregisterFullscreenChangeListener();
   if (zoomTransitionTimeout) clearTimeout(zoomTransitionTimeout);
+  if (resizeRafId !== null) cancelAnimationFrame(resizeRafId);
   fullscreenFitToRestore = null;
   diagramResizeObserver?.disconnect();
   document.removeEventListener(

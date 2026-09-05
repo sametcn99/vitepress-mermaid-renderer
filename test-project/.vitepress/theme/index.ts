@@ -13,6 +13,8 @@ const toolbarTooltipsByLocale = {
     copyCodeCopied: 'Kopyalandı',
     download: 'Diyagramı indir',
     toggleFullscreen: 'Tam ekranı aç/kapa',
+    toggleToolbarExpand: 'Araç çubuğunu aç',
+    toggleToolbarCollapse: 'Araç çubuğunu katla',
   },
 } as const;
 
@@ -36,6 +38,21 @@ export default {
           zoomIn: 'enabled',
           zoomLevel: 'enabled',
           download: 'enabled',
+          toggleToolbar: 'enabled',
+          collapsed: 'expanded',
+        },
+        // Mirrors the desktop button set so the e2e suite can assert that
+        // both toolbars really are the same design at a different scale.
+        mobile: {
+          copyCode: 'enabled',
+          toggleFullscreen: 'enabled',
+          resetView: 'enabled',
+          zoomOut: 'enabled',
+          zoomIn: 'enabled',
+          zoomLevel: 'enabled',
+          download: 'enabled',
+          toggleToolbar: 'enabled',
+          collapsed: 'expanded',
         },
         fullscreen: {
           copyCode: 'disabled',
@@ -45,6 +62,8 @@ export default {
           zoomOut: 'enabled',
           zoomIn: 'enabled',
           download: 'enabled',
+          toggleToolbar: 'disabled',
+          collapsed: 'expanded',
         },
         downloadFormat: 'svg',
         i18n: {
