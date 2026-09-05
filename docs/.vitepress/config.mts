@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress';
+import { collectAgentPage, writeAgentMarkdown } from './agent-markdown.mts';
 import {
   commonThemeConfig,
   locales,
@@ -83,4 +84,12 @@ export default defineConfig({
   ],
 
   themeConfig: commonThemeConfig,
+
+  transformPageData(pageData, { siteConfig }) {
+    collectAgentPage(pageData, siteConfig.srcDir);
+  },
+
+  buildEnd(siteConfig) {
+    writeAgentMarkdown(siteConfig);
+  },
 });

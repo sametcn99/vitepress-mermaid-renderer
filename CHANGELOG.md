@@ -61,13 +61,21 @@ published package.
 - Added `auth.md`, an MCP Server Card, an Agent Skills index with SHA-256
   digests, and an ARD capability manifest for automated discovery.
 - Added a WebMCP script exposing documentation search and navigation as browser
-  tools, plus a Markdown `agent-home.md` served from `/` for clients that
-  request `text/markdown`.
+  tools.
+- Added Markdown content negotiation for every documentation page in all three
+  locales. The build emits a Markdown twin of each page next to its HTML, and a
+  Vercel Routing Middleware serves it with `Content-Type: text/markdown` and an
+  `x-markdown-tokens` hint when the request carries `Accept: text/markdown`.
+  HTML remains the default for browsers. The middleware replaces the earlier
+  `agent-home.md` rewrite, which never fired because Vercel gives the filesystem
+  precedence over `rewrites`.
 - Added RFC 8288 Link headers for the API catalog, OpenAPI description,
   documentation, and discovery metadata.
-- Added the Vercel rewrites and content-type/CORS headers backing those
-  resources, and advertised the AI catalog and Content Signals from `robots.txt`
-  and the page `<head>`.
+- Added the Vercel content-type/CORS headers backing those resources, and
+  advertised the AI catalog and Content Signals from `robots.txt` and the page
+  `<head>`. `docs/vercel.json` is now generated from `docs/vercel.base.json`
+  during `docs:build`, so the per-page Markdown headers stay in sync; edit the
+  base file and commit the generated output.
 - Added a DNS-AID zone reference with `_index._agents` and `_a2a._agents` SVCB
   records and DNSSEC deployment guidance for the authoritative DNS provider.
 

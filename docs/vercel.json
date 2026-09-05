@@ -2,21 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "bun run docs:build",
   "outputDirectory": ".vitepress/dist",
-  "rewrites": [
-    {
-      "source": "/",
-      "has": [
-        {
-          "type": "header",
-          "key": "accept",
-          "value": {
-            "re": "(^|,\\s*)text/markdown(;[^,]*)?(,|$)"
-          }
-        }
-      ],
-      "destination": "/agent-home.md"
-    }
-  ],
   "headers": [
     {
       "source": "/",
@@ -24,23 +9,6 @@
         {
           "key": "Link",
           "value": "</.well-known/api-catalog>; rel=\"api-catalog\", </openapi.json>; rel=\"service-desc\", </.well-known/ai-catalog.json>; rel=\"describedby\", </guide/getting-started>; rel=\"service-doc\", </.well-known/agent-skills/index.json>; rel=\"describedby\""
-        },
-        {
-          "key": "Vary",
-          "value": "Accept"
-        }
-      ]
-    },
-    {
-      "source": "/agent-home.md",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/markdown; charset=utf-8"
-        },
-        {
-          "key": "x-markdown-tokens",
-          "value": "220"
         }
       ]
     },
@@ -112,6 +80,666 @@
         {
           "key": "Content-Type",
           "value": "application/json; charset=utf-8"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/index.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "355"
+        }
+      ]
+    },
+    {
+      "source": "/examples/advanced",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/examples/advanced.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "2746"
+        }
+      ]
+    },
+    {
+      "source": "/examples/basic",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/examples/basic.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "487"
+        }
+      ]
+    },
+    {
+      "source": "/guide/configuration",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/guide/configuration.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "2871"
+        }
+      ]
+    },
+    {
+      "source": "/guide/getting-started",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/guide/getting-started.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "672"
+        }
+      ]
+    },
+    {
+      "source": "/guide/installation",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/guide/installation.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "915"
+        }
+      ]
+    },
+    {
+      "source": "/guide/toolbar",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/guide/toolbar.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "1856"
+        }
+      ]
+    },
+    {
+      "source": "/guide/troubleshooting",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/guide/troubleshooting.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "1102"
+        }
+      ]
+    },
+    {
+      "source": "/guide/types",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/guide/types.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "1687"
+        }
+      ]
+    },
+    {
+      "source": "/testing",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/testing.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "1435"
+        }
+      ]
+    },
+    {
+      "source": "/tr",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/tr.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "368"
+        }
+      ]
+    },
+    {
+      "source": "/tr/examples/advanced",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/tr/examples/advanced.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "2746"
+        }
+      ]
+    },
+    {
+      "source": "/tr/examples/basic",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/tr/examples/basic.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "553"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/configuration",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/configuration.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "2777"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/getting-started",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/getting-started.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "668"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/installation",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/installation.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "897"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/toolbar",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/toolbar.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "1477"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/troubleshooting",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/troubleshooting.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "1081"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/types",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/tr/guide/types.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "1294"
+        }
+      ]
+    },
+    {
+      "source": "/tr/testing",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/tr/testing.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "656"
+        }
+      ]
+    },
+    {
+      "source": "/zh",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/zh.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "240"
+        }
+      ]
+    },
+    {
+      "source": "/zh/examples/advanced",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/zh/examples/advanced.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "2746"
+        }
+      ]
+    },
+    {
+      "source": "/zh/examples/basic",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/zh/examples/basic.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "398"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/configuration",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/configuration.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "1851"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/getting-started",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/getting-started.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "359"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/installation",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/installation.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "735"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/toolbar",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/toolbar.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "946"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/troubleshooting",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/troubleshooting.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "533"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/types",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/zh/guide/types.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "1052"
+        }
+      ]
+    },
+    {
+      "source": "/zh/testing",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    },
+    {
+      "source": "/zh/testing.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "x-markdown-tokens",
+          "value": "483"
         }
       ]
     }
