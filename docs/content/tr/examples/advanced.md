@@ -325,6 +325,10 @@ timeline
 
 ## ZenUML Sequence Diagram
 
+> Opsiyonel `@mermaid-js/mermaid-zenuml` paketini gerektirir
+> (`npm i @mermaid-js/mermaid-zenuml`). Yalnızca bir `zenuml` diyagramı render
+> edilirken tembel (lazy) olarak yüklenir.
+
 ```mermaid
 zenuml
     title Order processing

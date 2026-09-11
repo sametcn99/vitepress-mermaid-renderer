@@ -325,6 +325,9 @@ timeline
 
 ## ZenUML Sequence Diagram
 
+> 需要可选的 `@mermaid-js/mermaid-zenuml`
+> 包（`npm i @mermaid-js/mermaid-zenuml`）。仅在渲染 `zenuml` 图表时才会懒加载。
+
 ```mermaid
 zenuml
     title Order processing

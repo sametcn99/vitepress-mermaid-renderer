@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => {
           propertyReadSideEffects: false,
           unknownGlobalSideEffects: false,
         },
-        external: ['vue', 'mermaid'],
+        external: ['vue', 'mermaid', '@mermaid-js/mermaid-zenuml'],
         output: {
           globals: {
             vue: 'Vue',

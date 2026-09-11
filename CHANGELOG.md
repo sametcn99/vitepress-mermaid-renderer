@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.2
+
+### Changed in 1.2.2
+
+- Made `@mermaid-js/mermaid-zenuml` an optional, lazily loaded plugin. It moved
+  from `dependencies` to an optional `peerDependencies` entry, is marked
+  `external` in the library build, and is imported only when a `zenuml` diagram
+  is actually rendered. The published bundle no longer ships the ~1.6MB ZenUML
+  chunk, and a missing plugin no longer breaks other diagram types. ZenUML users
+  install it with `npm i @mermaid-js/mermaid-zenuml`; the English, Turkish, and
+  Chinese advanced examples now document this requirement.
+- Widened the `mermaid` peer range from `^11.0.0` to `^11.0.0 || ^12.0.0`,
+  matching the versions the library is developed and tested against.
+- Added a `resetExternalDiagramRegistration` helper (also re-exported from the
+  components barrel) that clears the cached external-diagram registration.
+
 ## 1.2.1
 
 ### Added in 1.2.1

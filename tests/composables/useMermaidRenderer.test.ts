@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { defineComponent, h, nextTick } from 'vue';
-import { useMermaidRenderer } from '../../src/composables/useMermaidRenderer';
+import {
+  resetExternalDiagramRegistration,
+  useMermaidRenderer,
+} from '../../src/composables/useMermaidRenderer';
 
 const mermaidMocks = vi.hoisted(() => ({
   initialize: vi.fn(),
@@ -15,6 +18,10 @@ vi.mock('mermaid', () => ({
     run: mermaidMocks.run,
     registerExternalDiagrams: mermaidMocks.registerExternalDiagrams,
   },
+}));
+
+vi.mock('@mermaid-js/mermaid-zenuml', () => ({
+  default: { id: 'zenuml' },
 }));
 
 interface HostExpose {
@@ -55,6 +62,7 @@ const mountHost = (
 
 describe('useMermaidRenderer', () => {
   beforeEach(() => {
+    resetExternalDiagramRegistration();
     mermaidMocks.initialize.mockReset();
     mermaidMocks.run.mockReset();
     mermaidMocks.registerExternalDiagrams.mockReset();
@@ -288,6 +296,57 @@ describe('useMermaidRenderer', () => {
       'diagram-b:start',
       'diagram-b:end',
     ]);
+    wrapper.unmount();
+  });
+
+  it('skips the optional external-diagram import for non-zenuml diagrams', async () => {
+    const wrapper = mountHost({}, 'mermaid-no-zenuml');
+    const expose = wrapper.vm as unknown as HostExpose;
+
+    await expose.renderMermaidDiagram(
+      'mermaid-no-zenuml',
+      'flowchart LR\nA-->B',
+    );
+
+    expect(mermaidMocks.registerExternalDiagrams).not.toHaveBeenCalled();
+    expect(mermaidMocks.run).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
+  it('registers the ZenUML plugin only for zenuml diagrams', async () => {
+    const wrapper = mountHost({}, 'mermaid-zenuml');
+    const expose = wrapper.vm as unknown as HostExpose;
+
+    await expose.renderMermaidDiagram(
+      'mermaid-zenuml',
+      'zenuml\nCustomer->Service: Place order',
+    );
+
+    expect(mermaidMocks.registerExternalDiagrams).toHaveBeenCalledTimes(1);
+    expect(
+      mermaidMocks.registerExternalDiagrams.mock.calls[0]![0],
+    ).toMatchObject([{ id: 'zenuml' }]);
+    expect(mermaidMocks.run).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
+  it('still renders when the optional plugin registration fails', async () => {
+    const onRenderComplete = vi.fn();
+    mermaidMocks.registerExternalDiagrams.mockRejectedValueOnce(
+      new Error('missing optional plugin'),
+    );
+    const wrapper = mountHost({ onRenderComplete }, 'mermaid-optional-fail');
+    const expose = wrapper.vm as unknown as HostExpose;
+
+    await expose.renderMermaidDiagram(
+      'mermaid-optional-fail',
+      'zenuml\nCustomer->Service: Place order',
+    );
+
+    expect(mermaidMocks.run).toHaveBeenCalledTimes(1);
+    expect(onRenderComplete).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'mermaid-optional-fail', success: true }),
+    );
     wrapper.unmount();
   });
 });

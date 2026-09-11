@@ -325,6 +325,10 @@ timeline
 
 ## ZenUML Sequence Diagram
 
+> Requires the optional `@mermaid-js/mermaid-zenuml` package
+> (`npm i @mermaid-js/mermaid-zenuml`). It is loaded lazily, only when a
+> `zenuml` diagram is rendered.
+
 ```mermaid
 zenuml
     title Order processing

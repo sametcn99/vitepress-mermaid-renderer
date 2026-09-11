@@ -19,6 +19,10 @@ vi.mock('mermaid', () => ({
   },
 }));
 
+vi.mock('@mermaid-js/mermaid-zenuml', () => ({
+  default: { id: 'zenuml' },
+}));
+
 const flushDiagramRender = async () => {
   await nextTick();
   await vi.runAllTimersAsync();

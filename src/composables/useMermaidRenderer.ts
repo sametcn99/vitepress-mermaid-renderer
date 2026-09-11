@@ -26,8 +26,10 @@
  * @see {@link MermaidDiagram}    for the consuming component.
  */
 import { ref, onMounted, onUnmounted, nextTick, type Ref } from 'vue';
-import mermaid, { type MermaidConfig } from 'mermaid';
-import zenuml from '@mermaid-js/mermaid-zenuml';
+import mermaid, {
+  type ExternalDiagramDefinition,
+  type MermaidConfig,
+} from 'mermaid';
 
 /**
  * Global promise chain that serialises all `mermaid.run()` invocations
@@ -40,10 +42,38 @@ import zenuml from '@mermaid-js/mermaid-zenuml';
 let renderPipeline: Promise<void> = Promise.resolve();
 let externalDiagramRegistration: Promise<void> | null = null;
 
-/** Registers Mermaid diagram modules that are distributed as external plugins. */
-const registerExternalDiagrams = (): Promise<void> => {
-  externalDiagramRegistration ??= mermaid.registerExternalDiagrams([zenuml]);
+/**
+ * Matches diagrams handled by the optional ZenUML plugin (`zenuml` prefix).
+ */
+const isZenUMLDiagram = (code: string): boolean => /^\s*zenuml/i.test(code);
+
+/**
+ * Registers optional Mermaid diagram plugins (currently ZenUML).
+ *
+ * The plugin stays external to this package's bundle and is imported
+ * lazily — only when a `zenuml` diagram is actually rendered. When the
+ * consumer has not installed `@mermaid-js/mermaid-zenuml`, the import
+ * fails and resolves silently so all other diagram types keep working.
+ */
+const registerExternalDiagrams = (code?: string): Promise<void> => {
+  if (code !== undefined && !isZenUMLDiagram(code)) return Promise.resolve();
+  externalDiagramRegistration ??= (async () => {
+    try {
+      const { default: zenuml } =
+        (await import('@mermaid-js/mermaid-zenuml')) as unknown as {
+          default: ExternalDiagramDefinition;
+        };
+      if (zenuml) await mermaid.registerExternalDiagrams([zenuml]);
+    } catch {
+      // Optional plugin is not installed — render without it.
+    }
+  })();
   return externalDiagramRegistration;
+};
+
+/** Resets the cached external-diagram registration (test helper). */
+export const resetExternalDiagramRegistration = (): void => {
+  externalDiagramRegistration = null;
 };
 
 /**
@@ -525,7 +555,7 @@ export function useMermaidRenderer(
 
       await enqueueMermaidRender(async () => {
         try {
-          await registerExternalDiagrams();
+          await registerExternalDiagrams(code);
           await mermaid.run({
             nodes: [element],
             suppressErrors: false,

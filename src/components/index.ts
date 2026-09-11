@@ -40,7 +40,10 @@ export {
   offFullscreenChange,
 } from '../composables/useFullscreenManager';
 export { useMermaidDownload } from '../composables/useMermaidDownload';
-export { resetRenderPipeline } from '../composables/useMermaidRenderer';
+export {
+  resetRenderPipeline,
+  resetExternalDiagramRegistration,
+} from '../composables/useMermaidRenderer';
 
 // Types
 export type {
