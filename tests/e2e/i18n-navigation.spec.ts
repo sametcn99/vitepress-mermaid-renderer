@@ -57,7 +57,7 @@ test.describe('locale-aware VitePress chrome', () => {
     await expect(
       page
         .locator('footer')
-        .getByText(/Released under the GPL-3\.0 License/)
+        .getByText(/Released under the MIT License/)
         .first(),
     ).toHaveCount(1);
   });
